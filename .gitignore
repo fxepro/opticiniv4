@@ -18,3 +18,5 @@ dist/
 
 backend/logs/
 backend/media/
+
+scripts/
