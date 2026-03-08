@@ -17,7 +17,7 @@ import { Evidence, EvidenceSource, EvidenceStatus } from "@/lib/data/evidence";
 import { EvidenceTable } from "@/components/compliance/evidence-table";
 import { EvidenceCard } from "@/components/compliance/evidence-card";
 import { EvidenceDetailDrawer } from "@/components/compliance/evidence-detail-drawer";
-import { EvidenceRequirementsTable, EvidenceRequirement } from "@/components/compliance/evidence-requirements-table";
+import { EvidenceRequirementsTable, EvidenceRequirement, type EvidenceGroupBy } from "@/components/compliance/evidence-requirements-table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
+import { toast } from "sonner";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
 
@@ -37,7 +38,6 @@ export default function ComplianceEvidencePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sourceFilter, setSourceFilter] = useState<EvidenceSource | "all">("all");
   const [statusFilter, setStatusFilter] = useState<EvidenceStatus | "all">("all");
   const [frameworkFilter, setFrameworkFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
@@ -49,8 +49,6 @@ export default function ComplianceEvidencePage() {
   const [evidenceRequirements, setEvidenceRequirements] = useState<EvidenceRequirement[]>([]);
   const [requirementsEvidence, setRequirementsEvidence] = useState<Evidence[]>([]);
   const [requirementsLoading, setRequirementsLoading] = useState(true);
-  const [evidenceTypeFilter, setEvidenceTypeFilter] = useState<string>("all");
-  const [sourceFilterReq, setSourceFilterReq] = useState<string>("all");
   const [requiredFilter, setRequiredFilter] = useState<string>("all");
   const [statusFilterReq, setStatusFilterReq] = useState<string>("all");
   const [freshnessFilter, setFreshnessFilter] = useState<string>("all");
@@ -62,6 +60,7 @@ export default function ComplianceEvidencePage() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadLoading, setUploadLoading] = useState(false);
+  const [groupBy, setGroupBy] = useState<EvidenceGroupBy>("control");
 
   // Helper function to refresh token
   const refreshAccessToken = async (): Promise<string | null> => {
@@ -140,26 +139,27 @@ export default function ComplianceEvidencePage() {
     }));
   };
 
-  // Fetch frameworks for filter dropdown
+  // Fetch frameworks for filter dropdown (use catalog for all frameworks including SOC2)
   useEffect(() => {
     const fetchFrameworks = async () => {
-      try {
-        const token = localStorage.getItem("access_token");
-        if (!token) return;
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
 
-        const baseUrl = API_BASE?.replace(/\/$/, '') || '';
-        const url = `${baseUrl}/api/compliance/frameworks/`;
-        
-        const response = await makeAuthenticatedRequest(url, token);
-        
+      const baseUrl = API_BASE?.replace(/\/$/, "") || "";
+      try {
+        const response = await makeAuthenticatedRequest(`${baseUrl}/api/compliance/frameworks/catalog/`, token);
         if (Array.isArray(response.data)) {
-          setFrameworks(response.data.map((f: any) => ({
-            id: f.id,
-            name: f.name || '',
-          })));
+          setFrameworks(response.data.map((f: any) => ({ id: f.id, name: f.name || "" })));
         }
-      } catch (err) {
-        console.error("Error fetching frameworks:", err);
+      } catch {
+        try {
+          const res = await makeAuthenticatedRequest(`${baseUrl}/api/compliance/frameworks/`, token);
+          if (Array.isArray(res.data)) {
+            setFrameworks(res.data.map((f: any) => ({ id: f.id, name: f.name || "" })));
+          }
+        } catch {
+          // ignore
+        }
       }
     };
 
@@ -318,9 +318,6 @@ export default function ComplianceEvidencePage() {
         if (frameworkFilter !== "all") {
           params.append('framework_id', frameworkFilter);
         }
-        if (sourceFilter !== "all") {
-          params.append('source', sourceFilter);
-        }
         if (statusFilter !== "all") {
           params.append('status', statusFilter);
         }
@@ -358,7 +355,7 @@ export default function ComplianceEvidencePage() {
     };
 
     fetchData();
-  }, [frameworkFilter, sourceFilter, statusFilter, searchQuery]);
+  }, [frameworkFilter, statusFilter, searchQuery]);
 
   // Get unique frameworks from evidence
   const allFrameworks = useMemo(() => {
@@ -497,6 +494,7 @@ export default function ComplianceEvidencePage() {
       setUploadDescription("");
       setUploadTags("");
       setUploadFile(null);
+      toast.success("Evidence uploaded successfully");
 
       const updatedEvidence = await makeAuthenticatedRequest(`${baseUrl}/api/compliance/evidence/`, token);
       if (Array.isArray(updatedEvidence.data)) {
@@ -505,7 +503,9 @@ export default function ComplianceEvidencePage() {
         setRequirementsEvidence(mappedEvidence);
       }
     } catch (err: any) {
-      setUploadError(err.response?.data?.error || err.message || "Upload failed.");
+      const msg = err.response?.data?.error || err.message || "Upload failed.";
+      setUploadError(msg);
+      toast.error(msg);
     } finally {
       setUploadLoading(false);
     }
@@ -587,7 +587,6 @@ export default function ComplianceEvidencePage() {
               let url = `${baseUrl}/api/compliance/evidence/`;
               const params = new URLSearchParams();
               if (frameworkFilter !== "all") params.append('framework_id', frameworkFilter);
-              if (sourceFilter !== "all") params.append('source', sourceFilter);
               if (statusFilter !== "all") params.append('status', statusFilter);
               if (searchQuery) params.append('search', searchQuery);
               if (params.toString()) url += `?${params.toString()}`;
@@ -705,90 +704,49 @@ export default function ComplianceEvidencePage() {
 
         {/* Requirements Tab */}
         <TabsContent value="requirements" className="space-y-4">
-          {/* Filters for Requirements */}
-          <Card className="border-palette-accent-2/50 bg-palette-accent-3/30">
+          {/* Filters: Framework, Group by, Search, Status, Required, Freshness */}
+          <Card className="border-palette-primary/30 bg-sky-50/50">
             <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row gap-4 mb-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <div className="flex flex-col md:flex-row gap-4 flex-wrap items-start md:items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-700 whitespace-nowrap">Show evidence for</span>
+                  <Select value={frameworkFilter} onValueChange={(value: string) => setFrameworkFilter(value)}>
+                    <SelectTrigger className="w-[200px] bg-white border-slate-300 text-slate-800">
+                      <SelectValue placeholder="Framework" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Frameworks</SelectItem>
+                      {frameworks.map((fw) => (
+                        <SelectItem key={fw.id} value={fw.id}>{fw.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-700 whitespace-nowrap">Group by</span>
+                  <Select value={groupBy} onValueChange={(v: EvidenceGroupBy) => setGroupBy(v)}>
+                    <SelectTrigger className="w-[170px] bg-white border-slate-300 text-slate-800">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="control">Control</SelectItem>
+                      <SelectItem value="framework">Framework</SelectItem>
+                      <SelectItem value="missing">Missing evidence</SelectItem>
+                      <SelectItem value="expiring">Expiring evidence</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
-                    placeholder="Search requirements by control, framework, evidence type..."
+                    placeholder="Search by control, framework..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 bg-white border-slate-300 text-slate-800"
                   />
                 </div>
-                <Select
-                  value={frameworkFilter}
-                  onValueChange={(value: string) => setFrameworkFilter(value)}
-                >
-                  <SelectTrigger className="w-full md:w-[180px] bg-white border-slate-300 text-slate-800">
-                    <SelectValue placeholder="Framework" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Frameworks</SelectItem>
-                    {frameworks.map((fw) => (
-                      <SelectItem key={fw.id} value={fw.id}>
-                        {fw.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col md:flex-row gap-4">
-                <Select
-                  value={evidenceTypeFilter}
-                  onValueChange={(value: string) => setEvidenceTypeFilter(value)}
-                >
-                  <SelectTrigger className="w-full md:w-[180px] bg-white border-slate-300 text-slate-800">
-                    <SelectValue placeholder="Evidence Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="security_scan">Security Scan</SelectItem>
-                    <SelectItem value="tls_config">TLS Configuration</SelectItem>
-                    <SelectItem value="cloud_config">Cloud Configuration</SelectItem>
-                    <SelectItem value="access_log">Access Log</SelectItem>
-                    <SelectItem value="system_log">System Log</SelectItem>
-                    <SelectItem value="document">Document</SelectItem>
-                    <SelectItem value="attestation">Attestation</SelectItem>
-                    <SelectItem value="screenshot">Screenshot</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={sourceFilterReq}
-                  onValueChange={(value: string) => setSourceFilterReq(value)}
-                >
-                  <SelectTrigger className="w-full md:w-[180px] bg-white border-slate-300 text-slate-800">
-                    <SelectValue placeholder="Source" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Sources</SelectItem>
-                    {Array.from(new Set(evidenceRequirements.map(r => r.sourceApp).filter(s => s))).sort().map((source) => (
-                      <SelectItem key={source} value={source}>
-                        {source}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={requiredFilter}
-                  onValueChange={(value: string) => setRequiredFilter(value)}
-                >
-                  <SelectTrigger className="w-full md:w-[180px] bg-white border-slate-300 text-slate-800">
-                    <SelectValue placeholder="Required" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="required">Required</SelectItem>
-                    <SelectItem value="optional">Optional</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={statusFilterReq}
-                  onValueChange={(value: string) => setStatusFilterReq(value)}
-                >
-                  <SelectTrigger className="w-full md:w-[180px] bg-white border-slate-300 text-slate-800">
+                <Select value={statusFilterReq} onValueChange={(value: string) => setStatusFilterReq(value)}>
+                  <SelectTrigger className="w-[140px] bg-white border-slate-300 text-slate-800">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -799,15 +757,22 @@ export default function ComplianceEvidencePage() {
                     <SelectItem value="expiring_soon">Expiring Soon</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select
-                  value={freshnessFilter}
-                  onValueChange={(value: string) => setFreshnessFilter(value)}
-                >
-                  <SelectTrigger className="w-full md:w-[180px] bg-white border-slate-300 text-slate-800">
+                <Select value={requiredFilter} onValueChange={(value: string) => setRequiredFilter(value)}>
+                  <SelectTrigger className="w-[120px] bg-white border-slate-300 text-slate-800">
+                    <SelectValue placeholder="Required" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="required">Required</SelectItem>
+                    <SelectItem value="optional">Optional</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={freshnessFilter} onValueChange={(value: string) => setFreshnessFilter(value)}>
+                  <SelectTrigger className="w-[130px] bg-white border-slate-300 text-slate-800">
                     <SelectValue placeholder="Freshness" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Freshness</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
                     <SelectItem value="30">30 days</SelectItem>
                     <SelectItem value="90">90 days</SelectItem>
                     <SelectItem value="365">365 days</SelectItem>
@@ -820,17 +785,10 @@ export default function ComplianceEvidencePage() {
 
           {/* Requirements Table */}
           <EvidenceRequirementsTable
+            groupBy={groupBy}
             requirements={evidenceRequirements.filter((req) => {
               // Framework filter
               if (frameworkFilter !== "all" && !req.frameworkName.includes(frameworks.find(f => f.id === frameworkFilter)?.name || '')) {
-                return false;
-              }
-              // Evidence Category filter
-              if (evidenceTypeFilter !== "all" && req.evidenceCategory !== evidenceTypeFilter) {
-                return false;
-              }
-              // Source filter
-              if (sourceFilterReq !== "all" && req.sourceApp !== sourceFilterReq) {
                 return false;
               }
               // Required filter
@@ -876,106 +834,88 @@ export default function ComplianceEvidencePage() {
 
         {/* Collected Evidence Tab */}
         <TabsContent value="collected" className="space-y-4">
-          {/* Filters and Search */}
-          <Card className="border-palette-accent-2/50 bg-palette-accent-3/30">
-            <CardContent className="pt-6 flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="Search evidence by ID, name, control, framework..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-white border-slate-300 text-slate-800"
-                />
-              </div>
-              <Select
-                value={sourceFilter}
-                onValueChange={(value: EvidenceSource | "all") => setSourceFilter(value)}
-              >
-                <SelectTrigger className="w-full md:w-[180px] bg-white border-slate-300 text-slate-800">
-                  <SelectValue placeholder="Source" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sources</SelectItem>
-                  <SelectItem value="automated">Automated</SelectItem>
-                  <SelectItem value="manual">Manual</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={statusFilter}
-                onValueChange={(value: EvidenceStatus | "all") => setStatusFilter(value)}
-              >
-                <SelectTrigger className="w-full md:w-[180px] bg-white border-slate-300 text-slate-800">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="fresh">Fresh</SelectItem>
-                  <SelectItem value="expired">Expired</SelectItem>
-                  <SelectItem value="expiring_soon">Expiring Soon</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={frameworkFilter}
-                onValueChange={(value: string) => setFrameworkFilter(value)}
-              >
-                <SelectTrigger className="w-full md:w-[180px] bg-white border-slate-300 text-slate-800">
-                  <SelectValue placeholder="Framework" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Frameworks</SelectItem>
-                  {frameworks.map((fw) => (
-                    <SelectItem key={fw.id} value={fw.id}>
-                      {fw.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="flex gap-2">
-                <Button
-                  variant={viewMode === "table" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("table")}
-                  className={viewMode === "table" ? "bg-palette-primary" : ""}
-                >
-                  <Table2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "card" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("card")}
-                  className={viewMode === "card" ? "bg-palette-primary" : ""}
-                >
-                  <Grid3x3 className="h-4 w-4" />
-                </Button>
+          {/* Filters: Framework, Search, Status */}
+          <Card className="border-palette-primary/30 bg-sky-50/50">
+            <CardContent className="pt-6">
+              <div className="flex flex-col md:flex-row gap-4 flex-wrap items-start md:items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-700">Show evidence for</span>
+                  <Select value={frameworkFilter} onValueChange={(value: string) => setFrameworkFilter(value)}>
+                    <SelectTrigger className="w-[200px] bg-white border-slate-300 text-slate-800">
+                      <SelectValue placeholder="Framework" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Frameworks</SelectItem>
+                      {frameworks.map((fw) => (
+                        <SelectItem key={fw.id} value={fw.id}>{fw.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="Search by ID, name, control..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-white border-slate-300 text-slate-800"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={(value: EvidenceStatus | "all") => setStatusFilter(value)}>
+                  <SelectTrigger className="w-[140px] bg-white border-slate-300 text-slate-800">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="fresh">Fresh</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
+                    <SelectItem value="expiring_soon">Expiring Soon</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="flex gap-2">
+                  <Button
+                    variant={viewMode === "table" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setViewMode("table")}
+                    className={viewMode === "table" ? "bg-palette-primary" : ""}
+                  >
+                    <Table2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "card" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setViewMode("card")}
+                    className={viewMode === "card" ? "bg-palette-primary" : ""}
+                  >
+                    <Grid3x3 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Evidence List */}
-          {filteredEvidence.length > 0 ? (
-            viewMode === "table" ? (
-              <EvidenceTable
-                evidence={filteredEvidence}
-                selectedIds={selectedIds}
-                onSelect={handleSelect}
-                onSelectAll={handleSelectAll}
-                onViewDetails={handleViewDetails}
-                onDownload={handleDownload}
-                onLinkControl={handleLinkControl}
-              />
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredEvidence.map((ev) => (
-                  <EvidenceCard
-                    key={ev.id}
-                    evidence={ev}
-                    onViewDetails={handleViewDetails}
-                    onDownload={handleDownload}
-                  />
-                ))}
-              </div>
-            )
+          {/* Evidence List: table view always shows table (with headers); cards view shows grid or empty state */}
+          {viewMode === "table" ? (
+            <EvidenceTable
+              evidence={filteredEvidence}
+              selectedIds={selectedIds}
+              onSelect={handleSelect}
+              onSelectAll={handleSelectAll}
+              onViewDetails={handleViewDetails}
+              onDownload={handleDownload}
+              onLinkControl={handleLinkControl}
+            />
+          ) : filteredEvidence.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredEvidence.map((ev) => (
+                <EvidenceCard
+                  key={ev.id}
+                  evidence={ev}
+                  onViewDetails={handleViewDetails}
+                  onDownload={handleDownload}
+                />
+              ))}
+            </div>
           ) : (
             <Card className="text-center p-8 border-dashed border-2 border-gray-300 bg-gray-50">
               <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />

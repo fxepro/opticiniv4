@@ -14,6 +14,7 @@ import { BlogRichTextEditor } from '@/components/blog-rich-text-editor';
 import { createBlogPost, fetchCategories, fetchTags, type Category, type Tag } from '@/lib/api/blog';
 import { useDebounce } from '@/hooks/use-debounce';
 import { slugify } from '@/lib/utils';
+import { toast } from "sonner";
 
 export default function NewPostPage() {
   const router = useRouter();
@@ -70,10 +71,11 @@ export default function NewPostPage() {
         ...formData,
         tag_ids: selectedTagIds,
       });
+      toast.success("Blog post created");
       router.push(`/workspace/blogging/${post.id}`);
     } catch (error: any) {
       console.error('Error creating post:', error);
-      alert(error.message || 'Failed to create post');
+      toast.error(error.message || "Failed to create post");
     } finally {
       setLoading(false);
     }

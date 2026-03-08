@@ -32,6 +32,12 @@ interface User {
   is_active: boolean;
   date_joined: string;
   last_login: string;
+  profile?: { organization_id?: string | null };
+}
+
+interface Organization {
+  id: string;
+  name: string;
 }
 
 interface EditUserModalProps {
@@ -39,42 +45,72 @@ interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedUser: User) => void;
+  currentUserIsSuperuser?: boolean;
 }
 
 
-export function EditUserModal({ user, isOpen, onClose, onSave }: EditUserModalProps) {
-  const [formData, setFormData] = useState({
+export function EditUserModal({ user, isOpen, onClose, onSave, currentUserIsSuperuser }: EditUserModalProps) {
+  const [formData, setFormData] = useState<{
+    username: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    role: string;
+    role_id: number | null;
+    is_active: boolean;
+    organization_id: string | null;
+  }>({
     username: "",
     email: "",
     first_name: "",
     last_name: "",
     role: "viewer",
+    role_id: null,
     is_active: true,
+    organization_id: null,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [roles, setRoles] = useState<Role[]>([]);
   const [rolesLoading, setRolesLoading] = useState(false);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [organizationsLoading, setOrganizationsLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
-      setFormData({
+      const orgId = user.profile?.organization_id ?? null;
+      setFormData(prev => ({
+        ...prev,
         username: user.username || "",
         email: user.email || "",
         first_name: user.first_name || "",
         last_name: user.last_name || "",
         role: user.role || "viewer",
+        role_id: null,
         is_active: user.is_active,
-      });
+        organization_id: orgId != null ? String(orgId) : null,
+      }));
       setError("");
     }
   }, [user]);
 
   useEffect(() => {
+    if (user && roles.length > 0) {
+      const roleName = (user.role || "viewer").toLowerCase();
+      const match = roles.find(r => r.name.toLowerCase() === roleName);
+      setFormData(prev => ({
+        ...prev,
+        role_id: match ? match.id : null,
+      }));
+    }
+  }, [user, roles]);
+
+  useEffect(() => {
     if (isOpen) {
       fetchRoles();
+      if (currentUserIsSuperuser) fetchOrganizations();
     }
-  }, [isOpen]);
+  }, [isOpen, currentUserIsSuperuser]);
 
   const fetchRoles = async () => {
     setRolesLoading(true);
@@ -94,6 +130,25 @@ export function EditUserModal({ user, isOpen, onClose, onSave }: EditUserModalPr
     }
   };
 
+  const fetchOrganizations = async () => {
+    setOrganizationsLoading(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      const response = await axios.get(`${API_BASE}/api/users/organizations/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setOrganizations(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Error fetching organizations:", error);
+      setOrganizations([]);
+    } finally {
+      setOrganizationsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -107,9 +162,24 @@ export function EditUserModal({ user, isOpen, onClose, onSave }: EditUserModalPr
         throw new Error("No authentication token found");
       }
 
+      const payload: Record<string, unknown> = {
+        username: formData.username,
+        email: formData.email,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        is_active: formData.is_active,
+      };
+      if (formData.role_id != null) {
+        payload.role_id = formData.role_id;
+      } else {
+        payload.role = formData.role;
+      }
+      if (currentUserIsSuperuser && 'organization_id' in formData) {
+        payload.organization_id = formData.organization_id || null;
+      }
       const response = await axios.put(
         `${API_BASE}/api/users/${user.id}/update/`,
-        formData,
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -132,7 +202,7 @@ export function EditUserModal({ user, isOpen, onClose, onSave }: EditUserModalPr
     }
   };
 
-  const handleInputChange = (field: string, value: string | boolean) => {
+  const handleInputChange = (field: string, value: string | boolean | null) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -140,9 +210,11 @@ export function EditUserModal({ user, isOpen, onClose, onSave }: EditUserModalPr
   };
 
   const roleOptions = roles.map(role => ({
-    value: role.name,
-    label: role.name.charAt(0).toUpperCase() + role.name.slice(1)
+    value: role.id.toString(),
+    label: role.name,
   }));
+
+  const selectedRoleId = formData.role_id ?? roles.find(r => r.name.toLowerCase() === formData.role)?.id;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -220,8 +292,16 @@ export function EditUserModal({ user, isOpen, onClose, onSave }: EditUserModalPr
               Role
             </Label>
             <Select
-              value={formData.role}
-              onValueChange={(value) => handleInputChange("role", value)}
+              value={selectedRoleId != null ? String(selectedRoleId) : ""}
+              onValueChange={(value) => {
+                const id = parseInt(value, 10);
+                const r = roles.find(ro => ro.id === id);
+                setFormData(prev => ({
+                  ...prev,
+                  role_id: id,
+                  role: r ? r.name.toLowerCase() : prev.role,
+                }));
+              }}
             >
               <SelectTrigger className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent">
                 <SelectValue placeholder="Select a role" />
@@ -241,6 +321,38 @@ export function EditUserModal({ user, isOpen, onClose, onSave }: EditUserModalPr
               </SelectContent>
             </Select>
           </div>
+
+          {currentUserIsSuperuser && (
+            <div className="space-y-2">
+              <Label htmlFor="organization" className={applyTheme.text('label')}>
+                Organization
+              </Label>
+              <Select
+                value={formData.organization_id ?? "__none__"}
+                onValueChange={(value) => handleInputChange("organization_id", value === "__none__" ? null : value)}
+              >
+                <SelectTrigger className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent">
+                  <SelectValue placeholder="No organization" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">
+                    No organization
+                  </SelectItem>
+                  {organizationsLoading ? (
+                    <SelectItem value="__loading__" disabled>
+                      Loading...
+                    </SelectItem>
+                  ) : (
+                    organizations.map((org) => (
+                      <SelectItem key={org.id} value={org.id}>
+                        {org.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="flex items-center space-x-2">
             <Switch

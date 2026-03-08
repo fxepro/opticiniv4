@@ -19,6 +19,7 @@ import {
 import { applyTheme } from "@/lib/theme";
 import axios from "axios";
 import { getApiBaseUrl } from "@/lib/api-config";
+import { toast } from "sonner";
 
 // Helper function to refresh token
 const refreshAccessToken = async (): Promise<string | null> => {
@@ -246,8 +247,7 @@ export default function AdminAPIMonitoringPage() {
       // Handle 403 Forbidden - not admin
       if (error.response?.status === 403) {
         console.error("Admin access required");
-        alert("Admin access required. You do not have permission to view this page.");
-        // Could redirect to dashboard or show error message
+        toast.error("Admin access required. You do not have permission to view this page.");
       }
     } finally {
       setLoading(false);
@@ -263,10 +263,11 @@ export default function AdminAPIMonitoringPage() {
         'POST',
         {}
       );
+      toast.success("Endpoint tested");
       await fetchData();
     } catch (error: any) {
       console.error("Error testing endpoint:", error);
-      // Token refresh and redirect already handled in makeAuthenticatedRequest
+      toast.error(error.response?.data?.error || "Failed to test endpoint");
     } finally {
       setTesting((prev) => prev.filter((id) => id !== endpointId));
     }
@@ -284,10 +285,11 @@ export default function AdminAPIMonitoringPage() {
         'POST',
         { endpoint_ids: selected }
       );
+      toast.success("All active endpoints tested");
       await fetchData();
     } catch (error: any) {
       console.error("Error testing endpoints:", error);
-      // Token refresh and redirect already handled in makeAuthenticatedRequest
+      toast.error(error.response?.data?.error || "Failed to test endpoints");
     } finally {
       setTesting([]);
     }
@@ -305,16 +307,13 @@ export default function AdminAPIMonitoringPage() {
       
       // Show success feedback
       if (refreshMode && response.data.deleted > 0) {
-        console.log(`🔄 Refresh: Deleted ${response.data.deleted} old endpoints, discovered ${response.data.discovered} APIs, created ${response.data.created} new endpoints`);
-        alert(`Refresh complete! Deleted ${response.data.deleted} old endpoints, discovered ${response.data.discovered} APIs, and created ${response.data.created} new endpoints.`);
+        toast.success(`Refresh complete! Deleted ${response.data.deleted} old, created ${response.data.created} new endpoints`);
       } else if (response.data.created > 0) {
-        console.log(`✅ Discovered ${response.data.discovered} APIs, created ${response.data.created} new endpoints`);
-        alert(`Success! Discovered ${response.data.discovered} APIs and created ${response.data.created} new endpoints.`);
+        toast.success(`Discovered ${response.data.discovered} APIs, created ${response.data.created} new endpoints`);
       } else if (response.data.discovered > 0) {
-        console.log(`Found ${response.data.discovered} APIs (all already exist)`);
-        alert(`Found ${response.data.discovered} APIs, but they already exist in the system.`);
+        toast.info(`Found ${response.data.discovered} APIs, but they already exist`);
       } else {
-        alert('No APIs discovered. Check the base URL and ensure the server is accessible.');
+        toast.error("No APIs discovered. Check the base URL and ensure the server is accessible.");
       }
       
       await fetchData();
@@ -326,7 +325,7 @@ export default function AdminAPIMonitoringPage() {
         return;
       }
       const errorMsg = error.response?.data?.error || error.message || 'Unknown error';
-      alert(`Discovery failed: ${errorMsg}`);
+      toast.error(`Discovery failed: ${errorMsg}`);
     } finally {
       setDiscovering(false);
     }
@@ -340,11 +339,11 @@ export default function AdminAPIMonitoringPage() {
         `${apiBase}/api/admin-tools/endpoints/${id}/`,
         'DELETE'
       );
+      toast.success("Endpoint deleted");
       await fetchData();
     } catch (error: any) {
       console.error("Error deleting endpoint:", error);
-      // Token refresh and redirect already handled in makeAuthenticatedRequest
-      alert('Failed to delete endpoint: ' + (error.response?.data?.error || error.message));
+      toast.error("Failed to delete endpoint: " + (error.response?.data?.error || error.message));
     }
   };
 
@@ -366,7 +365,7 @@ export default function AdminAPIMonitoringPage() {
       );
       
       if (wrongPortEndpoints.length === 0) {
-        alert('No endpoints with wrong ports found!');
+        toast.info("No endpoints with wrong ports found");
         setFixingPorts(false);
         return;
       }
@@ -389,11 +388,11 @@ export default function AdminAPIMonitoringPage() {
         }
       }
       
-      alert(`Fixed ${fixed} out of ${wrongPortEndpoints.length} endpoints!`);
+      toast.success(`Fixed ${fixed} out of ${wrongPortEndpoints.length} endpoints`);
       await fetchData();
     } catch (error: any) {
       console.error("Error fixing ports:", error);
-      alert('Failed to fix endpoints: ' + (error.response?.data?.error || error.message));
+      toast.error("Failed to fix endpoints: " + (error.response?.data?.error || error.message));
     } finally {
       setFixingPorts(false);
     }
@@ -427,6 +426,7 @@ export default function AdminAPIMonitoringPage() {
         'POST',
         endpointData
       );
+      toast.success("Endpoint created");
       setShowAddForm(false);
       setFormData({
         name: "",
@@ -440,8 +440,7 @@ export default function AdminAPIMonitoringPage() {
       await fetchData();
     } catch (error: any) {
       console.error("Error creating endpoint:", error);
-      // Token refresh and redirect already handled in makeAuthenticatedRequest
-      alert('Failed to create endpoint: ' + (error.response?.data?.error || error.message));
+      toast.error("Failed to create endpoint: " + (error.response?.data?.error || error.message));
     }
   };
 
@@ -453,11 +452,11 @@ export default function AdminAPIMonitoringPage() {
         'POST',
         {}
       );
+      toast.success("Alert resolved");
       await fetchData();
     } catch (error: any) {
       console.error("Error resolving alert:", error);
-      // Token refresh and redirect already handled in makeAuthenticatedRequest
-      alert('Failed to resolve alert: ' + (error.response?.data?.error || error.message));
+      toast.error("Failed to resolve alert: " + (error.response?.data?.error || error.message));
     }
   };
 

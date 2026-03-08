@@ -1,0 +1,56 @@
+from django.contrib import admin
+from compliance.models import (
+    AssertionTemplate,
+    PolicyTemplate,
+    ComplianceFramework,
+    ComplianceControl,
+    ComplianceControlFrameworkMapping,
+    ControlEvidenceRequirement,
+    EvidenceTemplate,
+    ControlTemplate,
+    ControlAssignment,
+    ControlTask,
+    TaskEscalation,
+    ControlOwnerHistory,
+    ComplianceEvidence,
+    ComplianceEvidenceControlMapping,
+    ComplianceAudit,
+    ComplianceAuditFinding,
+    ComplianceAuditAuditor,
+    ComplianceAuditFrameworkMapping,
+    CompliancePolicy,
+    CompliancePolicyVersion,
+    CompliancePolicyAttestation,
+    CompliancePolicyFrameworkMapping,
+    ComplianceReport,
+    ComplianceReportShare,
+    ComplianceReportFrameworkMapping,
+    ComplianceTool,
+)
+
+admin.site.register(AssertionTemplate)
+admin.site.register(PolicyTemplate)
+admin.site.register(ComplianceFramework)
+admin.site.register(ComplianceControl)
+admin.site.register(ComplianceControlFrameworkMapping)
+admin.site.register(ControlEvidenceRequirement)
+admin.site.register(EvidenceTemplate)
+admin.site.register(ControlTemplate)
+admin.site.register(ControlAssignment)
+admin.site.register(ControlTask)
+admin.site.register(TaskEscalation)
+admin.site.register(ControlOwnerHistory)
+admin.site.register(ComplianceEvidence)
+admin.site.register(ComplianceEvidenceControlMapping)
+admin.site.register(ComplianceAudit)
+admin.site.register(ComplianceAuditFinding)
+admin.site.register(ComplianceAuditAuditor)
+admin.site.register(ComplianceAuditFrameworkMapping)
+admin.site.register(CompliancePolicy)
+admin.site.register(CompliancePolicyVersion)
+admin.site.register(CompliancePolicyAttestation)
+admin.site.register(CompliancePolicyFrameworkMapping)
+admin.site.register(ComplianceReport)
+admin.site.register(ComplianceReportShare)
+admin.site.register(ComplianceReportFrameworkMapping)
+admin.site.register(ComplianceTool)

@@ -1,5 +1,5 @@
-export type AuditType = 'soc2_readiness' | 'external_audit' | 'internal_audit' | 'customer_security_review' | 'annual_review';
-export type AuditStatus = 'planned' | 'in_progress' | 'under_review' | 'completed' | 'cancelled';
+export type AuditType = 'internal' | 'external' | 'readiness' | 'surveillance';
+export type AuditStatus = 'planned' | 'in_progress' | 'evidence_review' | 'findings_review' | 'completed' | 'cancelled';
 export type AuditSeverity = 'critical' | 'high' | 'medium' | 'low' | 'informational';
 
 export interface AuditFinding {
@@ -11,6 +11,8 @@ export interface AuditFinding {
   status: 'open' | 'in_remediation' | 'resolved' | 'accepted';
   controlId?: string;
   controlName?: string;
+  requirementId?: string;
+  requirementCode?: string;
   frameworkId?: string;
   frameworkName?: string;
   evidenceIds?: string[];
@@ -19,6 +21,52 @@ export interface AuditFinding {
   dueDate?: string;
   resolvedAt?: string;
   createdAt: string;
+}
+
+export interface AuditRequirementRollup {
+  requirementId: string;
+  requirementCode: string;
+  requirementTitle?: string;
+  primaryControlId?: string;
+  primaryControlName?: string;
+  testStatus: 'not_started' | 'in_progress' | 'completed';
+  result?: 'pass' | 'fail' | 'partial' | 'na';
+  findingsCount: number;
+}
+
+export interface AuditControlTest {
+  controlId: string;
+  controlName: string;
+  testPlanName?: string;
+  sampleCount: number;
+  result?: 'pass' | 'fail' | 'partial' | 'na';
+  exceptionsCount: number;
+}
+
+export interface AuditEvidenceItem {
+  id: string;
+  name: string;
+  controlId?: string;
+  controlName?: string;
+  status: 'uploaded' | 'missing' | 'late';
+  uploadedAt?: string;
+  dueDate?: string;
+}
+
+export interface AuditFrameworkVersion {
+  framework_id: string;
+  framework_name: string;
+  framework_version_id: string | null;
+  framework_version_name: string;
+}
+
+export interface AuditStatusHistoryEntry {
+  id: string;
+  from_status: string;
+  to_status: string;
+  changed_by_name: string | null;
+  notes: string;
+  changed_at: string;
 }
 
 export interface AuditAuditor {
@@ -42,6 +90,9 @@ export interface Audit {
   type: AuditType;
   frameworks: string[];
   frameworkNames: string[];
+  frameworkVersions?: AuditFrameworkVersion[];
+  frameworkVersionId?: string;
+  frameworkVersionDisplay?: string;
   
   // Status
   status: AuditStatus;
@@ -59,12 +110,14 @@ export interface Audit {
   evidenceCount?: number;
   evidenceIds?: string[];
   
-  // Controls
+  // Controls (controlsInScope = total; tested = passed + failed + partial)
   totalControls: number;
+  controlsInScope?: number;  // defaults to totalControls
   controlsPassed: number;
   controlsFailed: number;
   controlsPartial: number;
   controlsNotEvaluated: number;
+  controlsTested?: number;   // passed + failed + partial
   complianceScore?: number; // 0-100
   
   // Findings
@@ -96,9 +149,32 @@ export interface Audit {
   updatedBy?: string;
   completedAt?: string;
   
+  // Lifecycle history
+  statusHistory?: AuditStatusHistoryEntry[];
+
   // Related
-  previousAuditId?: string; // Link to previous audit
-  nextAuditId?: string; // Link to next audit
+  previousAuditId?: string;
+  nextAuditId?: string;
+
+  // Requirement-level scope
+  requirementsInScope?: number;
+  requirementsTested?: number;
+  requirementsFailing?: number;
+
+  // Evidence completeness
+  evidenceRequired?: number;
+  evidenceUploaded?: number;
+  evidenceMissing?: number;
+  evidenceLate?: number;
+  evidenceCompletenessPct?: number;
+
+  // Open high/critical findings
+  openHighFindings?: number;  // critical + high, status open or in_remediation
+
+  // Drill-down data for detail tabs
+  requirementRollups?: AuditRequirementRollup[];
+  controlTests?: AuditControlTest[];
+  evidenceItems?: AuditEvidenceItem[];
 }
 
 export const audits: Audit[] = [
@@ -110,6 +186,7 @@ export const audits: Audit[] = [
     type: 'soc2_readiness',
     frameworks: ['soc2-type2'],
     frameworkNames: ['SOC 2 Type II'],
+    frameworkVersionDisplay: 'SOC2 (TSC 2017) – Q2 2024',
     status: 'in_progress',
     startDate: '2024-01-15T00:00:00Z',
     scheduledEndDate: '2024-03-31T00:00:00Z',
@@ -117,11 +194,38 @@ export const audits: Audit[] = [
     evidenceFreezeDate: '2024-01-15T00:00:00Z',
     evidenceCount: 245,
     totalControls: 92,
+    controlsInScope: 92,
     controlsPassed: 61,
     controlsFailed: 12,
     controlsPartial: 8,
     controlsNotEvaluated: 11,
+    controlsTested: 81,
     complianceScore: 66,
+    requirementsInScope: 42,
+    requirementsTested: 38,
+    requirementsFailing: 2,
+    evidenceRequired: 280,
+    evidenceUploaded: 245,
+    evidenceMissing: 28,
+    evidenceLate: 7,
+    evidenceCompletenessPct: 88,
+    openHighFindings: 1,
+    requirementRollups: [
+      { requirementId: 'r1', requirementCode: 'CC1.1', requirementTitle: 'Control environment', primaryControlId: 'ctrl-001', primaryControlName: 'MFA Enforcement', testStatus: 'completed', result: 'fail', findingsCount: 1 },
+      { requirementId: 'r2', requirementCode: 'CC6.1', requirementTitle: 'Logical access', primaryControlId: 'ctrl-012', primaryControlName: 'Access Review', testStatus: 'completed', result: 'partial', findingsCount: 1 },
+      { requirementId: 'r3', requirementCode: 'CC6.2', primaryControlId: 'ctrl-025', primaryControlName: 'Access Removal', testStatus: 'completed', result: 'pass', findingsCount: 0 },
+      { requirementId: 'r4', requirementCode: 'CC7.1', primaryControlId: 'ctrl-030', primaryControlName: 'System Monitoring', testStatus: 'in_progress', findingsCount: 0 },
+    ],
+    controlTests: [
+      { controlId: 'ctrl-001', controlName: 'MFA Enforcement', testPlanName: 'MFA verification', sampleCount: 25, result: 'fail', exceptionsCount: 1 },
+      { controlId: 'ctrl-012', controlName: 'Access Review', testPlanName: 'Quarterly access review', sampleCount: 12, result: 'partial', exceptionsCount: 1 },
+      { controlId: 'ctrl-025', controlName: 'Access Removal', sampleCount: 8, result: 'pass', exceptionsCount: 0 },
+    ],
+    evidenceItems: [
+      { id: 'ev-001', name: 'MFA config export', controlName: 'MFA Enforcement', status: 'uploaded', uploadedAt: '2024-01-14T10:00:00Z' },
+      { id: 'ev-002', name: 'Access review Q4 2023', controlName: 'Access Review', status: 'missing' },
+      { id: 'ev-003', name: 'Termination checklist', controlName: 'Access Removal', status: 'late', dueDate: '2024-01-10T00:00:00Z', uploadedAt: '2024-01-16T00:00:00Z' },
+    ],
     findings: [
       {
         id: 'find-001',
@@ -132,6 +236,8 @@ export const audits: Audit[] = [
         status: 'in_remediation',
         controlId: 'ctrl-001',
         controlName: 'MFA Enforcement',
+        requirementId: 'r1',
+        requirementCode: 'CC1.1',
         frameworkId: 'soc2-type2',
         frameworkName: 'SOC 2 Type II',
         assignedTo: 'security-team',
@@ -147,6 +253,8 @@ export const audits: Audit[] = [
         status: 'open',
         controlId: 'ctrl-012',
         controlName: 'Access Review',
+        requirementId: 'r2',
+        requirementCode: 'CC6.1',
         frameworkId: 'soc2-type2',
         frameworkName: 'SOC 2 Type II',
         assignedTo: 'compliance-team',
@@ -205,6 +313,7 @@ export const audits: Audit[] = [
     type: 'external_audit',
     frameworks: ['iso27001'],
     frameworkNames: ['ISO 27001'],
+    frameworkVersionDisplay: 'ISO 27001:2022 – 2024',
     status: 'completed',
     startDate: '2024-01-01T00:00:00Z',
     endDate: '2024-01-31T00:00:00Z',
@@ -212,11 +321,18 @@ export const audits: Audit[] = [
     evidenceFreezeDate: '2024-01-01T00:00:00Z',
     evidenceCount: 312,
     totalControls: 114,
+    controlsInScope: 114,
+    controlsTested: 111,
     controlsPassed: 98,
     controlsFailed: 8,
     controlsPartial: 5,
     controlsNotEvaluated: 3,
     complianceScore: 86,
+    requirementsInScope: 93,
+    requirementsTested: 93,
+    requirementsFailing: 0,
+    evidenceCompletenessPct: 95,
+    openHighFindings: 0,
     findings: [
       {
         id: 'find-003',
@@ -277,6 +393,7 @@ export const audits: Audit[] = [
     type: 'customer_security_review',
     frameworks: ['soc2-type2', 'iso27001'],
     frameworkNames: ['SOC 2 Type II', 'ISO 27001'],
+    frameworkVersionDisplay: 'SOC2 + ISO – Q1 2024',
     status: 'completed',
     startDate: '2024-01-05T00:00:00Z',
     endDate: '2024-01-12T00:00:00Z',
@@ -284,11 +401,17 @@ export const audits: Audit[] = [
     evidenceFreezeDate: '2024-01-05T00:00:00Z',
     evidenceCount: 156,
     totalControls: 67,
+    controlsInScope: 67,
+    controlsTested: 67,
     controlsPassed: 64,
     controlsFailed: 2,
     controlsPartial: 1,
     controlsNotEvaluated: 0,
     complianceScore: 96,
+    requirementsInScope: 45,
+    requirementsTested: 45,
+    evidenceCompletenessPct: 98,
+    openHighFindings: 0,
     findings: [],
     findingsCount: 0,
     criticalFindings: 0,
@@ -339,11 +462,17 @@ export const audits: Audit[] = [
     evidenceLocked: false,
     evidenceCount: 189,
     totalControls: 78,
+    controlsInScope: 78,
+    controlsTested: 76,
     controlsPassed: 65,
     controlsFailed: 7,
     controlsPartial: 4,
     controlsNotEvaluated: 2,
     complianceScore: 83,
+    requirementsInScope: 52,
+    requirementsTested: 48,
+    evidenceCompletenessPct: 82,
+    openHighFindings: 0,
     findings: [
       {
         id: 'find-004',
@@ -403,6 +532,7 @@ export const audits: Audit[] = [
     type: 'soc2_readiness',
     frameworks: ['soc2-type2'],
     frameworkNames: ['SOC 2 Type II'],
+    frameworkVersionDisplay: 'SOC2 (TSC 2017) – Q4 2023',
     status: 'completed',
     startDate: '2023-10-01T00:00:00Z',
     endDate: '2023-12-31T00:00:00Z',
@@ -475,6 +605,7 @@ export const audits: Audit[] = [
     type: 'annual_review',
     frameworks: ['hipaa'],
     frameworkNames: ['HIPAA'],
+    frameworkVersionDisplay: 'HIPAA – 2024',
     status: 'planned',
     scheduledStartDate: '2024-03-01T00:00:00Z',
     scheduledEndDate: '2024-03-31T00:00:00Z',

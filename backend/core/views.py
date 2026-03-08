@@ -14,6 +14,9 @@ from django.conf import settings
 from django.db import connection
 from django.contrib.auth import authenticate
 from users.models import UserProfile
+from core.version import __version__ as APP_VERSION
+from core.models import VersionRelease
+from django.utils import timezone
 
 # Get logs directory
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,13 +41,107 @@ def health_check(request):
         return Response({
             'status': 'healthy',
             'service': 'Opticini Backend',
+            'version': _get_current_version(),
         }, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({
             'status': 'unhealthy',
             'service': 'Opticini Backend',
+            'version': _get_current_version(),
             'error': str(e),
         }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+def _get_current_version():
+    """Version from approved release (is_current) or fallback to version.py."""
+    try:
+        r = VersionRelease.objects.using("core").filter(is_current=True).first()
+        if r:
+            return r.version
+    except Exception:
+        pass
+    return APP_VERSION
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def version_info(request):
+    """Return app version for UI and tooling. No auth required."""
+    return Response({'version': _get_current_version()}, status=status.HTTP_200_OK)
+
+
+def _serialize_release(r):
+    return {
+        'id': str(r.id),
+        'version': r.version,
+        'release_notes': r.release_notes,
+        'status': r.status,
+        'is_current': r.is_current,
+        'proposed_by': r.proposed_by.username if r.proposed_by_id else None,
+        'approved_by': r.approved_by.username if r.approved_by_id else None,
+        'approved_at': r.approved_at.isoformat() if r.approved_at else None,
+        'created_at': r.created_at.isoformat(),
+        'updated_at': r.updated_at.isoformat(),
+    }
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def version_release_list(request):
+    """List all version releases (newest first)."""
+    qs = VersionRelease.objects.using('core').all()
+    return Response([_serialize_release(r) for r in qs], status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def version_release_create(request):
+    """Create a draft or pending release. Admin only."""
+    version = (request.data.get('version') or '').strip()
+    if not version:
+        return Response({'error': 'version is required'}, status=status.HTTP_400_BAD_REQUEST)
+    if VersionRelease.objects.using('core').filter(version=version).exists():
+        return Response({'error': 'This version already exists'}, status=status.HTTP_400_BAD_REQUEST)
+    release_notes = (request.data.get('release_notes') or '').strip()
+    status_val = request.data.get('status', VersionRelease.STATUS_DRAFT)
+    if status_val not in (VersionRelease.STATUS_DRAFT, VersionRelease.STATUS_PENDING):
+        status_val = VersionRelease.STATUS_DRAFT
+    r = VersionRelease.objects.using('core').create(
+        version=version,
+        release_notes=release_notes,
+        status=status_val,
+        proposed_by_id=request.user.id,
+    )
+    return Response(_serialize_release(r), status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def version_release_detail(request, release_id):
+    """Get or update a release. PATCH: edit notes / approve / set current (admin)."""
+    try:
+        r = VersionRelease.objects.using('core').get(id=release_id)
+    except VersionRelease.DoesNotExist:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'GET':
+        return Response(_serialize_release(r), status=status.HTTP_200_OK)
+    if request.method != 'PATCH':
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    if not request.user.is_staff:
+        return Response({'error': 'Admin required to update releases'}, status=status.HTTP_403_FORBIDDEN)
+    data = request.data
+    if 'release_notes' in data:
+        r.release_notes = (data.get('release_notes') or '').strip()
+    if 'status' in data and data['status'] in (VersionRelease.STATUS_APPROVED, VersionRelease.STATUS_PENDING, VersionRelease.STATUS_DRAFT):
+        r.status = data['status']
+        if data['status'] == VersionRelease.STATUS_APPROVED:
+            r.approved_by_id = request.user.id
+            r.approved_at = timezone.now()
+    if data.get('set_current') is True:
+        VersionRelease.objects.using('core').filter(is_current=True).update(is_current=False)
+        r.is_current = True
+    r.save(update_fields=['release_notes', 'status', 'approved_by_id', 'approved_at', 'is_current', 'updated_at'])
+    return Response(_serialize_release(r), status=status.HTTP_200_OK)
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):

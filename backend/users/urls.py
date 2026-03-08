@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     user_info, list_users, create_user, get_user,
     update_user, delete_user, assign_role, user_stats, register_user,
+    list_organizations,
     update_own_profile, change_password, corporate_profile,
     user_settings, monitored_site_list,
     monitored_site_detail
@@ -57,6 +58,7 @@ urlpatterns = [
     path('api/users/<int:user_id>/delete/', delete_user, name='delete_user'),
     path('api/users/<int:user_id>/role/', assign_role, name='assign_role'),
     path('api/users/stats/', user_stats, name='user_stats'),
+    path('api/users/organizations/', list_organizations, name='list_organizations'),
     
     # Role management endpoints
     path('api/roles/', list_roles, name='list_roles'),

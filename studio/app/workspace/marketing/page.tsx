@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { applyTheme } from "@/lib/theme";
 import axios from "axios";
+import { toast } from "sonner";
 import { Plus, Edit, Trash2, Star, Calendar, DollarSign } from "lucide-react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
@@ -84,7 +85,7 @@ export default function MarketingPage() {
       setDeals(response.data.deals || []);
     } catch (error: any) {
       console.error("Error fetching deals:", error);
-      alert(error.response?.data?.error || "Failed to load deals");
+      toast.error(error.response?.data?.error || "Failed to load deals");
     } finally {
       setLoading(false);
     }
@@ -151,10 +152,11 @@ export default function MarketingPage() {
       await axios.delete(`${API_BASE}/api/admin/deals/${dealId}/delete/`, {
         headers: getAuthHeaders(),
       });
+      toast.success("Deal deleted");
       fetchDeals();
     } catch (error: any) {
       console.error("Error deleting deal:", error);
-      alert(error.response?.data?.error || "Failed to delete deal");
+      toast.error(error.response?.data?.error || "Failed to delete deal");
     }
   };
 
@@ -178,11 +180,12 @@ export default function MarketingPage() {
         headers: getAuthHeaders(),
       });
 
+      toast.success(editingDeal ? "Deal updated" : "Deal created");
       setShowForm(false);
       fetchDeals();
     } catch (error: any) {
       console.error("Error saving deal:", error);
-      alert(error.response?.data?.error || error.response?.data?.message || "Failed to save deal");
+      toast.error(error.response?.data?.error || error.response?.data?.message || "Failed to save deal");
     }
   };
 

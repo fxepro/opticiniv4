@@ -29,6 +29,7 @@ interface PolicyDetailDrawerProps {
   open: boolean;
   onClose: () => void;
   onRegenerate?: (policyId: string) => void;
+  onEdit?: (policy: Policy) => void;
 }
 
 export function PolicyDetailDrawer({
@@ -36,6 +37,7 @@ export function PolicyDetailDrawer({
   open,
   onClose,
   onRegenerate,
+  onEdit,
 }: PolicyDetailDrawerProps) {
   if (!policy) return null;
 
@@ -101,6 +103,48 @@ export function PolicyDetailDrawer({
                 ))}
               </div>
             </div>
+
+            {policy.requirementIds && policy.requirementIds.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-slate-800 mb-2">Framework Requirements</h3>
+                <p className="text-xs text-slate-500 mb-2">SOC2 CC*, ISO clauses this policy supports</p>
+                <div className="flex flex-wrap gap-2">
+                  {policy.requirementIds.map((id) => (
+                    <Badge key={id} variant="secondary" className="font-mono text-xs">
+                      {id}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {policy.controlIds && policy.controlIds.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-slate-800 mb-2">Implementing Controls</h3>
+                <p className="text-xs text-slate-500 mb-2">Controls that implement this policy</p>
+                <div className="flex flex-wrap gap-2">
+                  {policy.controlIds.map((id) => (
+                    <Badge key={id} variant="secondary" className="font-mono text-xs">
+                      {id}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {policy.evidenceIds && policy.evidenceIds.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-slate-800 mb-2">Evidence</h3>
+                <p className="text-xs text-slate-500 mb-2">Approval, review, publication evidence</p>
+                <div className="flex flex-wrap gap-2">
+                  {policy.evidenceIds.map((id) => (
+                    <Badge key={id} variant="secondary" className="font-mono text-xs">
+                      {id}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -191,6 +235,12 @@ export function PolicyDetailDrawer({
             )}
 
             <div className="flex gap-2 pt-4">
+              {onEdit && (
+                <Button variant="outline" onClick={() => onEdit(policy)}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
               <Button variant="outline" className="flex-1">
                 <Download className="h-4 w-4 mr-2" />
                 Export

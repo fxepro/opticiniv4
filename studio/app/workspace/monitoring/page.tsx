@@ -572,29 +572,30 @@ export default function MonitoringPage() {
           <CardTitle>{t('monitoring.title')}</CardTitle>
         </CardHeader>
         <CardContent>
-          {sites.length === 0 ? (
-            <div className="text-center py-12 text-slate-600">
-              <TrendingUp className="h-12 w-12 mx-auto mb-3 text-slate-400" />
-              <p>{t('monitoring.noSites')}</p>
-              <p className="text-sm mt-1">{t('monitoring.addSite')}</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('dashboard.screenshot')}</TableHead>
+                <TableHead>{t('monitoring.status')}</TableHead>
+                <TableHead>{t('dashboard.website')}</TableHead>
+                <TableHead>{t('monitoring.uptime')}</TableHead>
+                <TableHead>{t('monitoring.responseTime')}</TableHead>
+                <TableHead>SSL</TableHead>
+                <TableHead>{t('monitoring.lastCheck')}</TableHead>
+                <TableHead className="text-center">{t('dashboard.detail')}</TableHead>
+                <TableHead className="text-right">{t('dashboard.actions')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sites.length === 0 ? (
                 <TableRow>
-                  <TableHead>{t('dashboard.screenshot')}</TableHead>
-                  <TableHead>{t('monitoring.status')}</TableHead>
-                  <TableHead>{t('dashboard.website')}</TableHead>
-                  <TableHead>{t('monitoring.uptime')}</TableHead>
-                  <TableHead>{t('monitoring.responseTime')}</TableHead>
-                  <TableHead>SSL</TableHead>
-                  <TableHead>{t('monitoring.lastCheck')}</TableHead>
-                  <TableHead className="text-center">{t('dashboard.detail')}</TableHead>
-                  <TableHead className="text-right">{t('dashboard.actions')}</TableHead>
+                  <TableCell colSpan={9} className="h-24 text-center text-slate-500">
+                    <TrendingUp className="h-8 w-8 mx-auto mb-2 text-slate-400" />
+                    <p>{t('monitoring.noSites')}</p>
+                    <p className="text-sm mt-1">{t('monitoring.addSite')}</p>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sites
+              ) : sites
                   .slice()
                   .sort((a, b) => (a.status === 'down' ? -1 : 1))
                   .map((site) => (
@@ -743,9 +744,8 @@ export default function MonitoringPage() {
                       </TableCell>
                     </TableRow>
                   ))}
-              </TableBody>
-            </Table>
-          )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

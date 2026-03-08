@@ -1,0 +1,33 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path("api/account/overview/", views.overview),
+    path("api/account/organization/", views.organization),
+    path("api/account/billing/summary/", views.billing_summary),
+    path("api/account/connectors/", views.connector_list),
+    path("api/account/connectors/scope/", views.connector_scope),
+    path("api/account/connectors/<uuid:connector_id>/", views.connector_detail),
+    path("api/account/countries/", views.country_list),
+    path("api/account/states/", views.state_list),
+    path("api/account/currencies/", views.currency_list),
+    path("api/account/timezones/", views.timezone_list),
+    path("api/account/regions/", views.organization_region_list),
+    path("api/account/regions/<uuid:region_id>/", views.organization_region_detail),
+    path("api/account/org-currencies/", views.org_currency_list),
+    path("api/account/org-currencies/<uuid:oc_id>/", views.org_currency_detail),
+    path("api/account/users/", views.org_user_list),
+    path("api/account/users/bulk-template/", views.org_user_bulk_template),
+    path("api/account/users/bulk-template-csv/", views.org_user_bulk_template_csv),
+    path("api/account/users/bulk-upload/", views.org_user_bulk_upload),
+    path("api/account/users/<int:user_id>/", views.org_user_detail),
+    path("api/account/departments/", views.org_department_list),
+    path("api/account/teams/", views.org_team_list),
+    path("api/account/teams/<uuid:team_id>/", views.org_team_detail),
+    path("api/account/personnel/", views.personnel_list),
+    path("api/account/personnel/csv-template/", views.personnel_csv_template),
+    path("api/account/personnel/csv-import/", views.personnel_csv_import),
+    path("api/account/personnel/<uuid:personnel_id>/", views.personnel_detail),
+    path("api/account/personnel/<uuid:personnel_id>/grant-access/", views.personnel_grant_access),
+    path("api/account/personnel/<uuid:personnel_id>/revoke-access/", views.personnel_revoke_access),
+]

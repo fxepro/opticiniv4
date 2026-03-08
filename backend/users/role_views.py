@@ -9,15 +9,19 @@ from .role_serializers import (
     RoleSerializer, RoleCreateSerializer, RoleUpdateSerializer, PermissionSerializer
 )
 
+# Superuser is a Django user flag (is_superuser), not a Group. If a Group named
+# "Superuser" exists, it is hidden from the UI and only manageable via Django admin or CLI.
+ROLE_HIDDEN_FROM_UI = 'Superuser'
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def list_roles(request):
-    """List all roles with their permissions"""
+    """List all roles with their permissions. Excludes Superuser (manageable only via Django admin/CLI)."""
     try:
         # Define role order by seniority: Admin, Agency, Executive, Director, Manager, Analyst, Auditor, Viewer
         ROLE_ORDER = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer']
         
-        roles = Group.objects.all().prefetch_related('permissions')
+        roles = Group.objects.exclude(name__iexact=ROLE_HIDDEN_FROM_UI).prefetch_related('permissions')
         
         # Sort roles: system roles first (by seniority), then custom roles (alphabetically)
         def role_sort_key(role):
@@ -34,8 +38,13 @@ def list_roles(request):
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def get_role(request, role_id):
-    """Get a specific role with its permissions"""
+    """Get a specific role with its permissions. Superuser role is not exposed."""
     role = get_object_or_404(Group, id=role_id)
+    if role.name == ROLE_HIDDEN_FROM_UI:
+        return Response(
+            {'error': 'Superuser role can only be accessed via Django admin or CLI.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
     serializer = RoleSerializer(role)
     return Response(serializer.data)
 
@@ -56,7 +65,11 @@ def create_role(request):
 def update_role(request, role_id):
     """Update a role and its permissions"""
     role = get_object_or_404(Group, id=role_id)
-    
+    if role.name == ROLE_HIDDEN_FROM_UI:
+        return Response(
+            {'error': 'Superuser role can only be managed via Django admin or CLI.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     # Prevent modification of system roles (capitalized names in Group model)
     # Ordered by seniority: Admin, Agency, Executive, Director, Manager, Analyst, Auditor, Viewer
     SYSTEM_ROLES = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer']
@@ -79,7 +92,11 @@ def update_role(request, role_id):
 def delete_role(request, role_id):
     """Delete a role"""
     role = get_object_or_404(Group, id=role_id)
-    
+    if role.name == ROLE_HIDDEN_FROM_UI:
+        return Response(
+            {'error': 'Superuser role can only be managed via Django admin or CLI.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     # Prevent deletion of system roles (capitalized names in Group model)
     SYSTEM_ROLES = ['Viewer', 'Analyst', 'Manager', 'Director', 'Admin']
     if role.name in SYSTEM_ROLES:
@@ -116,6 +133,11 @@ def list_permissions(request):
 def get_role_permissions(request, role_id):
     """Get permissions for a specific role"""
     role = get_object_or_404(Group, id=role_id)
+    if role.name == ROLE_HIDDEN_FROM_UI:
+        return Response(
+            {'error': 'Superuser role can only be accessed via Django admin or CLI.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
     permissions = role.permissions.all()
     serializer = PermissionSerializer(permissions, many=True)
     return Response(serializer.data)
@@ -132,7 +154,11 @@ def update_role_permissions(request, role_id):
     from django.db import transaction
     
     role = get_object_or_404(Group, id=role_id)
-    
+    if role.name == ROLE_HIDDEN_FROM_UI:
+        return Response(
+            {'error': 'Superuser role can only be managed via Django admin or CLI.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     # System roles CAN have permissions updated, just not renamed/deleted
     # This allows adding new permissions to system roles as features are added
     

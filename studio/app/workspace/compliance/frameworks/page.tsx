@@ -15,7 +15,7 @@ import {
 import { ShieldCheck, Search, Download, Plus, Filter, Table2, Grid3x3 } from "lucide-react";
 import { Framework, FrameworkCategory, FrameworkStatus } from "@/lib/data/frameworks";
 import { FrameworkCard } from "@/components/compliance/framework-card";
-import { FrameworksTable } from "@/components/compliance/frameworks-table";
+import { FrameworksTable, type FrameworkDetailResponse } from "@/components/compliance/frameworks-table";
 import { GenerateReportDialog } from "@/components/compliance/generate-report-dialog";
 import axios from "axios";
 
@@ -85,6 +85,15 @@ export default function ComplianceFrameworksPage() {
       }
       throw err;
     }
+  };
+
+  const fetchFrameworkDetail = async (frameworkId: string): Promise<FrameworkDetailResponse> => {
+    const token = localStorage.getItem("access_token");
+    if (!token) throw new Error("Not authenticated");
+    const baseUrl = API_BASE?.replace(/\/$/, "") || "";
+    const url = `${baseUrl}/api/compliance/frameworks/${frameworkId}/detail/`;
+    const res = await makeAuthenticatedRequest(url, token);
+    return res.data as FrameworkDetailResponse;
   };
 
   // Fetch frameworks and stats from API
@@ -233,41 +242,6 @@ export default function ComplianceFrameworksPage() {
       return true;
     });
   }, [frameworks, searchQuery, categoryFilter, statusFilter, enabledFilter]);
-
-  const handleToggle = async (id: string, enabled: boolean) => {
-    try {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        console.error("Not authenticated");
-        return;
-      }
-
-      const baseUrl = API_BASE?.replace(/\/$/, '') || '';
-      const url = `${baseUrl}/api/compliance/frameworks/${id}/update/`;
-      
-      await axios.patch(
-        url,
-        { enabled },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      // Update local state
-      setFrameworks((prev) =>
-        prev.map((f) => (f.id === id ? { ...f, enabled } : f))
-      );
-      
-      // Update stats
-      setStats((prev) => ({
-        ...prev,
-        enabled: enabled ? prev.enabled + 1 : prev.enabled - 1,
-      }));
-    } catch (err: any) {
-      console.error("Error toggling framework:", err);
-      alert(err.response?.data?.error || "Failed to update framework");
-    }
-  };
 
   if (loading) {
     return (
@@ -568,36 +542,29 @@ export default function ComplianceFrameworksPage() {
         )}
       </div>
 
-      {/* Framework Display */}
-      {filteredFrameworks.length > 0 ? (
-        viewMode === "table" ? (
-          <FrameworksTable
-            frameworks={filteredFrameworks}
-            onToggle={handleToggle}
-            onViewDetails={(framework) => {
-              // Could open a detail drawer/modal in the future
-              console.log("View details for:", framework);
-            }}
-            onGenerateReport={(frameworkId) => {
-              setSelectedFrameworkForReport(frameworkId);
-              setReportDialogOpen(true);
-            }}
-          />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredFrameworks.map((framework) => (
-              <FrameworkCard
-                key={framework.id}
-                framework={framework}
-                onToggle={handleToggle}
-                onGenerateReport={(frameworkId) => {
-                  setSelectedFrameworkForReport(frameworkId);
-                  setReportDialogOpen(true);
-                }}
-              />
-            ))}
-          </div>
-        )
+      {/* Framework Display: table view always shows table (with headers); cards view shows grid or empty state */}
+      {viewMode === "table" ? (
+        <FrameworksTable
+          frameworks={filteredFrameworks}
+          onFetchDetail={fetchFrameworkDetail}
+          onGenerateReport={(frameworkId) => {
+            setSelectedFrameworkForReport(frameworkId);
+            setReportDialogOpen(true);
+          }}
+        />
+      ) : filteredFrameworks.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredFrameworks.map((framework) => (
+            <FrameworkCard
+              key={framework.id}
+              framework={framework}
+              onGenerateReport={(frameworkId) => {
+                setSelectedFrameworkForReport(frameworkId);
+                setReportDialogOpen(true);
+              }}
+            />
+          ))}
+        </div>
       ) : (
         <Card>
           <CardContent className="pt-6">

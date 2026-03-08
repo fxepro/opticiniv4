@@ -8,8 +8,9 @@ Usage:
 """
 
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from users.models import UserProfile
+from users.role_sync import set_user_role_by_name
 
 
 class Command(BaseCommand):
@@ -117,21 +118,13 @@ class Command(BaseCommand):
                     user.set_password(password)
                     user.save()
                     
-                    # Update profile
+                    # Update profile and auth_user_groups (group_id is source of truth)
                     profile, _ = UserProfile.objects.get_or_create(user=user)
                     profile.role = role
                     profile.email_verified = True
                     profile.is_active = True
                     profile.save()
-                    
-                    # Update group membership
-                    try:
-                        group = Group.objects.get(name=group_name)
-                        user.groups.clear()
-                        user.groups.add(group)
-                    except Group.DoesNotExist:
-                        self.stdout.write(self.style.ERROR(f'  Group {group_name} does not exist. Run setup_roles first.'))
-                    
+                    set_user_role_by_name(user, role)
                     updated_count += 1
                     self.stdout.write(self.style.WARNING(f'↻ Updated: {username} ({role})'))
                 else:
@@ -145,21 +138,14 @@ class Command(BaseCommand):
                         is_active=True,
                     )
                     
-                    # Create profile
-                    profile = UserProfile.objects.create(
+                    # Create profile and set auth_user_groups (group_id is source of truth)
+                    UserProfile.objects.create(
                         user=user,
                         role=role,
                         email_verified=True,
                         is_active=True,
                     )
-                    
-                    # Assign to group
-                    try:
-                        group = Group.objects.get(name=group_name)
-                        user.groups.add(group)
-                    except Group.DoesNotExist:
-                        self.stdout.write(self.style.ERROR(f'  Group {group_name} does not exist. Run setup_roles first.'))
-                    
+                    set_user_role_by_name(user, role)
                     created_count += 1
                     self.stdout.write(self.style.SUCCESS(f'✓ Created: {username} ({role}) - {email}'))
                 

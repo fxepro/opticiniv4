@@ -1,0 +1,7 @@
+from django.apps import AppConfig
+
+
+class PlatformOrgConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "platform_org"
+    verbose_name = "Platform Org"

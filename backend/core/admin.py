@@ -297,3 +297,14 @@ def get_admin_urls():
 admin.site.get_urls = get_admin_urls
 print("[Admin] Custom admin URLs override registered")
 
+# Version releases (versioning workflow)
+from core.models import VersionRelease
+
+
+@admin.register(VersionRelease)
+class VersionReleaseAdmin(admin.ModelAdmin):
+    list_display = ("version", "status", "is_current", "approved_by", "approved_at", "created_at")
+    list_filter = ("status", "is_current")
+    search_fields = ("version", "release_notes")
+    readonly_fields = ("created_at", "updated_at", "approved_at")
+

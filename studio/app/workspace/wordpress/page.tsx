@@ -279,29 +279,29 @@ export default function WordPressPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {filteredSites.length === 0 ? (
-            <div className="text-center py-12 text-slate-600">
-              <Globe className="h-16 w-16 mx-auto mb-4 text-slate-400" />
-              <p className="text-h4-dynamic font-medium text-slate-700 mb-2">No sites found</p>
-              <p className="text-sm">Try adjusting your search or filter criteria</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Site</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Plugin Version</TableHead>
+                <TableHead>Content</TableHead>
+                <TableHead>Performance</TableHead>
+                <TableHead>SEO</TableHead>
+                <TableHead>Security</TableHead>
+                <TableHead>Last Sync</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredSites.length === 0 ? (
                 <TableRow>
-                  <TableHead>Site</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Plugin Version</TableHead>
-                  <TableHead>Content</TableHead>
-                  <TableHead>Performance</TableHead>
-                  <TableHead>SEO</TableHead>
-                  <TableHead>Security</TableHead>
-                  <TableHead>Last Sync</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableCell colSpan={9} className="h-24 text-center text-slate-500">
+                    <Globe className="h-8 w-8 mx-auto mb-2 text-slate-400" />
+                    <p>No sites found. Try adjusting your search or filter criteria.</p>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredSites.map((site) => (
+              ) : filteredSites.map((site) => (
                   <TableRow key={site.id}>
                     <TableCell>
                       <div>
@@ -380,9 +380,8 @@ export default function WordPressPage() {
                     </TableCell>
                   </TableRow>
                 ))}
-              </TableBody>
-            </Table>
-          )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

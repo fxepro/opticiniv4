@@ -36,6 +36,13 @@ import {
   FileText,
   GraduationCap,
   BookOpen,
+  CheckCircle2,
+  Building2,
+  Receipt,
+  Bell,
+  HelpCircle,
+  Tag,
+  Contact,
 } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
 import { sectionMatchesApp, WorkspaceAppId } from "@/lib/workspace-apps";
@@ -99,9 +106,16 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Lock, // Security icon
   Database, // Database Monitoring icon
   FileText, // Blogging icon
+  Tag, // Versioning icon
   GraduationCap, // Learning/Collateral icon
   BookOpen, // Alternative learning icon
   ShieldCheck, // Security Audit icon
+  CheckCircle2, // Assertions icon
+  Building2, // Account / Organization
+  Receipt, // Subscription
+  Bell, // Notifications
+  HelpCircle, // Support & Legal
+  Contact, // People
 };
 
 export function UnifiedSidebar({
@@ -253,20 +267,8 @@ export function UnifiedSidebar({
       )}
       style={leftOffset ? { left: leftOffset } : undefined}
     >
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        className={cn(
-          "absolute right-2 top-2 rounded-lg p-2 text-gray-500 hover:text-palette-primary hover:bg-palette-accent-3 transition",
-          collapsed && "right-1"
-        )}
-      >
-        {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-      </button>
-
       {/* Navigation Sections */}
-      <div className={cn("flex-1 overflow-y-auto pt-10", collapsed ? "p-4" : "p-6")}>
+      <div className={cn("flex-1 overflow-y-auto", collapsed ? "p-4 pt-4" : "p-6 pt-6")}>
         <div className="flex flex-col gap-6">
           {appFilteredSections.map((section) => (
             <div key={section.id}>
@@ -307,6 +309,18 @@ export function UnifiedSidebar({
           ))}
         </div>
       </div>
+      {onToggle && (
+        <div className="p-2 border-t border-palette-accent-1 shrink-0">
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="w-full flex items-center justify-center rounded-lg p-2 text-gray-500 hover:text-palette-primary hover:bg-palette-accent-3 transition"
+          >
+            {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

@@ -20,6 +20,7 @@ import { ReportDetailDrawer } from "@/components/compliance/report-detail-drawer
 import { GenerateReportDialog } from "@/components/compliance/generate-report-dialog";
 import { Framework } from "@/lib/data/frameworks";
 import axios from "axios";
+import { toast } from "sonner";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
 
@@ -140,11 +141,11 @@ export default function ComplianceReportsPage() {
       if (response?.data?.download_url) {
         window.open(response.data.download_url, "_blank", "noopener,noreferrer");
       } else {
-        alert("Report file is not available yet");
+        toast.error("Report file is not available yet");
       }
     } catch (err: any) {
       console.error("Download failed:", err);
-      alert(err.response?.data?.error || err.message || "Download failed");
+      toast.error(err.response?.data?.error || err.message || "Download failed");
     }
   };
 
@@ -157,13 +158,13 @@ export default function ComplianceReportsPage() {
       const response = await makeAuthenticatedPost(url, token, {});
       if (response?.data?.link) {
         await navigator.clipboard.writeText(response.data.link);
-        alert("Share link copied to clipboard");
+        toast.success("Share link copied to clipboard");
       } else {
-        alert("Share link not available");
+        toast.error("Share link not available");
       }
     } catch (err: any) {
       console.error("Share failed:", err);
-      alert(err.response?.data?.error || err.message || "Share failed");
+      toast.error(err.response?.data?.error || err.message || "Share failed");
     }
   };
 
@@ -538,16 +539,6 @@ export default function ComplianceReportsPage() {
               <p className="text-sm text-slate-500 mt-2">{reportsError}</p>
             </CardContent>
           </Card>
-        ) : filteredReports.length === 0 ? (
-          <Card>
-            <CardContent className="pt-12 pb-12 text-center">
-              <BarChart3 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-              <p className="text-slate-600 font-medium">No reports found</p>
-              <p className="text-sm text-slate-500 mt-2">
-                Try adjusting your search or filter criteria
-              </p>
-            </CardContent>
-          </Card>
         ) : viewMode === "table" ? (
           <ReportsTable
             reports={filteredReports}
@@ -558,7 +549,7 @@ export default function ComplianceReportsPage() {
             onDownload={handleDownload}
             onShare={handleShare}
           />
-        ) : (
+        ) : filteredReports.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredReports.map((report) => (
               <ReportCard
@@ -570,6 +561,16 @@ export default function ComplianceReportsPage() {
               />
             ))}
           </div>
+        ) : (
+          <Card>
+            <CardContent className="pt-12 pb-12 text-center">
+              <BarChart3 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+              <p className="text-slate-600 font-medium">No reports found</p>
+              <p className="text-sm text-slate-500 mt-2">
+                Try adjusting your search or filter criteria
+              </p>
+            </CardContent>
+          </Card>
         )}
       </div>
 

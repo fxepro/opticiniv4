@@ -21,6 +21,7 @@ xmltodict==0.13.0  # XML to dict conversion
 
 # User Management System
 django-extensions==3.2.3
+openpyxl>=3.1.2
 django-filter==23.5
 django-ratelimit==4.1.0
 django-activity-stream==2.0.0

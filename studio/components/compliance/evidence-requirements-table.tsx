@@ -37,9 +37,12 @@ export interface EvidenceRequirement {
   expiresAt?: string;
 }
 
+export type EvidenceGroupBy = "control" | "framework" | "missing" | "expiring";
+
 interface EvidenceRequirementsTableProps {
   requirements: EvidenceRequirement[];
   loading?: boolean;
+  groupBy?: EvidenceGroupBy;
 }
 
 interface GroupedControl {
@@ -50,14 +53,30 @@ interface GroupedControl {
   requirements: EvidenceRequirement[];
 }
 
-export function EvidenceRequirementsTable({ requirements, loading }: EvidenceRequirementsTableProps) {
-  const [expandedControls, setExpandedControls] = useState<Set<string>>(new Set());
+interface GroupedFramework {
+  frameworkId: string;
+  frameworkName: string;
+  requirements: EvidenceRequirement[];
+}
 
-  // Group requirements by control_id
-  const groupedControls = useMemo(() => {
+export function EvidenceRequirementsTable({ requirements, loading, groupBy = "control" }: EvidenceRequirementsTableProps) {
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+
+  // Filter requirements based on groupBy
+  const filteredRequirements = useMemo(() => {
+    if (groupBy === "missing") {
+      return requirements.filter((r) => r.status === "missing");
+    }
+    if (groupBy === "expiring") {
+      return requirements.filter((r) => r.status === "expired" || r.status === "expiring_soon");
+    }
+    return requirements;
+  }, [requirements, groupBy]);
+
+  // Group by control or framework
+  const groupedByControl = useMemo(() => {
     const groups = new Map<string, GroupedControl>();
-    
-    requirements.forEach((req) => {
+    filteredRequirements.forEach((req) => {
       const key = req.controlId;
       if (!groups.has(key)) {
         groups.set(key, {
@@ -70,18 +89,38 @@ export function EvidenceRequirementsTable({ requirements, loading }: EvidenceReq
       }
       groups.get(key)!.requirements.push(req);
     });
-    
     return Array.from(groups.values());
-  }, [requirements]);
+  }, [filteredRequirements]);
 
-  const toggleExpand = (controlId: string) => {
-    setExpandedControls((prev) => {
+  // Group by framework (split comma-separated framework names)
+  const groupedByFramework = useMemo(() => {
+    const groups = new Map<string, GroupedFramework>();
+    filteredRequirements.forEach((req) => {
+      const names = req.frameworkName.split(",").map((s) => s.trim()).filter(Boolean);
+      const frameworkNames = names.length > 0 ? names : [req.frameworkName || "Unknown"];
+      frameworkNames.forEach((fwName) => {
+        const key = fwName;
+        if (!groups.has(key)) {
+          groups.set(key, {
+            frameworkId: req.frameworkId,
+            frameworkName: fwName,
+            requirements: [],
+          });
+        }
+        groups.get(key)!.requirements.push(req);
+      });
+    });
+    return Array.from(groups.values());
+  }, [filteredRequirements]);
+
+  const groupedControls = groupBy === "framework" ? null : groupedByControl;
+  const groupedFrameworks = groupBy === "framework" ? groupedByFramework : null;
+
+  const toggleExpand = (key: string) => {
+    setExpandedKeys((prev) => {
       const next = new Set(prev);
-      if (next.has(controlId)) {
-        next.delete(controlId);
-      } else {
-        next.add(controlId);
-      }
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   };
@@ -90,14 +129,6 @@ export function EvidenceRequirementsTable({ requirements, loading }: EvidenceReq
     return (
       <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm p-8 text-center">
         <p className="text-palette-secondary">Loading requirements...</p>
-      </div>
-    );
-  }
-
-  if (requirements.length === 0) {
-    return (
-      <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm p-8 text-center">
-        <p className="text-palette-secondary">No evidence requirements found.</p>
       </div>
     );
   }
@@ -181,147 +212,128 @@ export function EvidenceRequirementsTable({ requirements, loading }: EvidenceReq
     return { total, collected, missing, expired, expiringSoon };
   };
 
+  const isEmpty = groupBy === "framework"
+    ? groupedFrameworks?.length === 0
+    : groupedControls?.length === 0;
+
+  const renderGroupRows = (
+    groupKey: string,
+    col1: string,
+    col2: string,
+    col3: string,
+    requirements: EvidenceRequirement[]
+  ) => {
+    const isExpanded = expandedKeys.has(groupKey);
+    const summary = getControlSummary(requirements);
+    const hasIssues = summary.missing > 0 || summary.expired > 0 || summary.expiringSoon > 0;
+
+    return (
+      <Fragment key={groupKey}>
+        <TableRow
+          className={`cursor-pointer hover:bg-slate-50 ${hasIssues ? "bg-yellow-50/30" : ""}`}
+          onClick={() => toggleExpand(groupKey)}
+        >
+          <TableCell>
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); toggleExpand(groupKey); }}>
+              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </Button>
+          </TableCell>
+          <TableCell className="font-mono text-sm">{col1}</TableCell>
+          <TableCell><div className="text-sm font-medium text-palette-primary">{col2}</div></TableCell>
+          <TableCell>{col3}</TableCell>
+          <TableCell>
+            <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
+              {summary.total} requirement{summary.total !== 1 ? "s" : ""}
+            </Badge>
+          </TableCell>
+          <TableCell>
+            <div className="flex flex-wrap gap-1">
+              {summary.collected > 0 && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">{summary.collected} collected</Badge>}
+              {summary.missing > 0 && <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 text-xs">{summary.missing} missing</Badge>}
+              {summary.expired > 0 && <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">{summary.expired} expired</Badge>}
+              {summary.expiringSoon > 0 && <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs">{summary.expiringSoon} expiring</Badge>}
+            </div>
+          </TableCell>
+        </TableRow>
+        {isExpanded && (
+          <>
+            <TableRow className="bg-slate-50/50">
+              <TableCell colSpan={5}>
+                <div className="px-4 py-2 text-xs font-semibold text-slate-600 uppercase tracking-wide border-b border-slate-200">
+                  Evidence Requirements ({requirements.length})
+                </div>
+              </TableCell>
+            </TableRow>
+            {requirements.map((req) => (
+              <TableRow key={`${groupKey}-${req.id}`} className="bg-slate-50/30 hover:bg-slate-50/50">
+                <TableCell />
+                <TableCell colSpan={4} className="pl-8">
+                  <div className="flex items-center gap-4 py-2 text-sm">
+                    <div className="flex-1 min-w-[200px] text-slate-600">{req.description || "No description"}</div>
+                    <div className="w-32">{getEvidenceCategoryBadge(req.evidenceCategory || req.evidenceType, req.evidenceCategoryDisplay)}</div>
+                    <div className="w-36">{getCollectionMethodBadge(req.collectionMethod || "manual_upload", req.collectionMethodDisplay)}</div>
+                    <div className="w-32 text-slate-600">{req.sourceApp || "N/A"}</div>
+                    <div className="w-24 text-slate-600">{req.freshnessDays} days</div>
+                    <div className="w-24">{req.required ? <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">Required</Badge> : <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 text-xs">Optional</Badge>}</div>
+                    <div className="w-32">{getStatusBadge(req)}</div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </>
+        )}
+      </Fragment>
+    );
+  };
+
+  const tableHeader = groupBy === "framework" ? (
+    <>
+      <TableHead className="w-12" />
+      <TableHead className="w-48">Framework</TableHead>
+      <TableHead>Controls</TableHead>
+      <TableHead className="w-24" />
+      <TableHead className="w-40">Evidence Requirements</TableHead>
+      <TableHead className="w-32">Summary</TableHead>
+    </>
+  ) : (
+    <>
+      <TableHead className="w-12" />
+      <TableHead className="w-32">Control ID</TableHead>
+      <TableHead>Control Name</TableHead>
+      <TableHead className="w-32">Framework</TableHead>
+      <TableHead className="w-40">Evidence Requirements</TableHead>
+      <TableHead className="w-32">Summary</TableHead>
+    </>
+  );
+
   return (
     <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="w-12"></TableHead>
-            <TableHead className="w-32">Control ID</TableHead>
-            <TableHead>Control Name</TableHead>
-            <TableHead className="w-32">Framework</TableHead>
-            <TableHead className="w-40">Evidence Requirements</TableHead>
-            <TableHead className="w-32">Summary</TableHead>
-          </TableRow>
+          <TableRow>{tableHeader}</TableRow>
         </TableHeader>
         <TableBody>
-          {groupedControls.map((group) => {
-            const isExpanded = expandedControls.has(group.controlId);
-            const summary = getControlSummary(group.requirements);
-            const hasIssues = summary.missing > 0 || summary.expired > 0 || summary.expiringSoon > 0;
-
-            return (
-              <Fragment key={group.controlId}>
-                {/* Control Row */}
-                <TableRow 
-                  className={`cursor-pointer hover:bg-slate-50 ${hasIssues ? 'bg-yellow-50/30' : ''}`}
-                  onClick={() => toggleExpand(group.controlId)}
-                >
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleExpand(group.controlId);
-                      }}
-                    >
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </TableCell>
-                  <TableCell className="font-mono text-sm">
-                    {group.controlId}
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm font-medium text-palette-primary">
-                      {group.controlName}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <div className="text-sm text-palette-primary font-semibold">
-                      {group.frameworkName}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
-                      {summary.total} requirement{summary.total !== 1 ? 's' : ''}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {summary.collected > 0 && (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                          {summary.collected} collected
-                        </Badge>
-                      )}
-                      {summary.missing > 0 && (
-                        <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 text-xs">
-                          {summary.missing} missing
-                        </Badge>
-                      )}
-                      {summary.expired > 0 && (
-                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
-                          {summary.expired} expired
-                        </Badge>
-                      )}
-                      {summary.expiringSoon > 0 && (
-                        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs">
-                          {summary.expiringSoon} expiring
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-                
-                {/* Expanded Requirements Rows */}
-                {isExpanded && (
-                  <>
-                    {/* Header for requirements */}
-                    <TableRow key={`${group.controlId}-header`} className="bg-slate-50/50">
-                      <TableCell colSpan={6}>
-                        <div className="px-4 py-2 text-xs font-semibold text-slate-600 uppercase tracking-wide border-b border-slate-200">
-                          Evidence Requirements ({group.requirements.length})
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                    {group.requirements.map((req) => (
-                      <TableRow key={`${group.controlId}-${req.id}`} className="bg-slate-50/30 hover:bg-slate-50/50">
-                        <TableCell></TableCell>
-                        <TableCell colSpan={5} className="pl-8">
-                          <div className="flex items-center gap-4 py-2 text-sm">
-                            <div className="flex-1 min-w-[200px] text-slate-600">
-                              {req.description || 'No description'}
-                            </div>
-                            <div className="w-32">
-                              {getEvidenceCategoryBadge(req.evidenceCategory || req.evidenceType, req.evidenceCategoryDisplay)}
-                            </div>
-                            <div className="w-36">
-                              {getCollectionMethodBadge(req.collectionMethod || 'manual_upload', req.collectionMethodDisplay)}
-                            </div>
-                            <div className="w-32 text-slate-600">
-                              {req.sourceApp || 'N/A'}
-                            </div>
-                            <div className="w-24 text-slate-600">
-                              {req.freshnessDays} days
-                            </div>
-                            <div className="w-24">
-                              {req.required ? (
-                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
-                                  Required
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 text-xs">
-                                  Optional
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="w-32">
-                              {getStatusBadge(req)}
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </>
-                )}
-              </Fragment>
-            );
-          })}
+          {isEmpty ? (
+            <TableRow>
+              <TableCell colSpan={6} className="h-24 text-center text-slate-500">
+                No evidence requirements found. Adjust filters or add controls.
+              </TableCell>
+            </TableRow>
+          ) : groupBy === "framework" && groupedFrameworks ? (
+            groupedFrameworks.map((group) =>
+              renderGroupRows(
+                group.frameworkName,
+                group.frameworkName,
+                group.requirements.map((r) => r.controlId).join(", "),
+                "",
+                group.requirements
+              )
+            )
+          ) : groupedControls ? (
+            groupedControls.map((group) =>
+              renderGroupRows(group.controlId, group.controlId, group.controlName, group.frameworkName, group.requirements)
+            )
+          ) : null}
         </TableBody>
       </Table>
     </div>

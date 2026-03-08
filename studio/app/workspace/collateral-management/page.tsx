@@ -267,24 +267,6 @@ export default function CollateralManagementPage() {
             <p className="text-muted-foreground">Loading materials...</p>
           </CardContent>
         </Card>
-      ) : materials.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-h4-dynamic font-semibold mb-2">No materials found</h3>
-            <p className="text-muted-foreground mb-4">
-              {searchTerm || statusFilter !== 'all' || categoryFilter !== 'all' || tagFilter !== 'all'
-                ? 'Try adjusting your filters'
-                : 'Get started by creating your first learning material'}
-            </p>
-            {!searchTerm && statusFilter === 'all' && categoryFilter === 'all' && tagFilter === 'all' && (
-              <Button onClick={() => router.push('/workspace/collateral/new')}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Material
-              </Button>
-            )}
-          </CardContent>
-        </Card>
       ) : (
         <>
           <Card>
@@ -344,7 +326,24 @@ export default function CollateralManagementPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {materials.map((material) => (
+                  {materials.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={10} className="h-24 text-center text-slate-500">
+                        <FileText className="h-8 w-8 mx-auto mb-2 text-slate-400" />
+                        <p>
+                          {searchTerm || statusFilter !== 'all' || categoryFilter !== 'all' || tagFilter !== 'all'
+                            ? 'No materials match your filters.'
+                            : 'No materials found. Create your first learning material.'}
+                        </p>
+                        {!searchTerm && statusFilter === 'all' && categoryFilter === 'all' && tagFilter === 'all' && (
+                          <Button onClick={() => router.push('/workspace/collateral/new')} variant="outline" size="sm" className="mt-2">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create Material
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ) : materials.map((material) => (
                     <TableRow key={material.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">

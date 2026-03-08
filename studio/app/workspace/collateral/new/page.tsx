@@ -20,6 +20,7 @@ import {
 } from '@/lib/api/collateral';
 import { slugify } from '@/lib/utils';
 import { useDebounce } from '@/hooks/use-debounce';
+import { toast } from "sonner";
 
 export default function NewCollateralPage() {
   const router = useRouter();
@@ -76,10 +77,11 @@ export default function NewCollateralPage() {
         ...formData,
         tag_ids: selectedTagIds,
       });
+      toast.success("Learning material created");
       router.push(`/workspace/collateral/${material.slug}`);
     } catch (error: any) {
       console.error('Error creating material:', error);
-      alert(error.message || 'Failed to create learning material');
+      toast.error(error.message || "Failed to create learning material");
     } finally {
       setLoading(false);
     }

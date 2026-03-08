@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Audit } from "@/lib/data/audits";
 import { AuditStatusBadge } from "./audit-status-badge";
-import { MoreVertical, Eye, Download, Lock, Calendar } from "lucide-react";
+import { MoreVertical, Eye, Download, Lock, Calendar, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AuditsTableProps {
@@ -73,13 +73,14 @@ export function AuditsTable({
       <Table>
         <TableHeader>
           <TableRow className="bg-slate-100 border-b border-slate-200">
+            <TableHead className="w-10" aria-label="Expand" />
             <TableHead className="w-12">
               <Checkbox checked={allSelected} onCheckedChange={onSelectAll} />
             </TableHead>
             <TableHead>Audit ID</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Type</TableHead>
-            <TableHead>Frameworks</TableHead>
+            <TableHead>Framework</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Controls</TableHead>
             <TableHead>Compliance</TableHead>
@@ -90,7 +91,13 @@ export function AuditsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {audits.map((audit) => {
+          {audits.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={13} className="h-24 text-center text-slate-500">
+                No audits found. Add audits or adjust filters.
+              </TableCell>
+            </TableRow>
+          ) : audits.map((audit) => {
             const isExpanded = expandedRows.has(audit.id);
             const isSelected = selectedAudits.includes(audit.id);
 
@@ -103,6 +110,20 @@ export function AuditsTable({
                   )}
                   onClick={() => toggleRow(audit.id)}
                 >
+                  <TableCell>
+                    <button
+                      type="button"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted"
+                      onClick={(e) => { e.stopPropagation(); toggleRow(audit.id); }}
+                      aria-label={isExpanded ? "Collapse" : "Expand"}
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </button>
+                  </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={isSelected}
@@ -134,7 +155,10 @@ export function AuditsTable({
                     <AuditStatusBadge status={audit.status} />
                   </TableCell>
                   <TableCell className="text-sm">
-                    {audit.controlsPassed} / {audit.totalControls}
+                    {audit.controlsPassed + audit.controlsFailed + audit.controlsPartial} / {audit.controlsInScope ?? audit.totalControls}
+                    <span className="block text-xs text-slate-500">
+                      P:{audit.controlsPassed} F:{audit.controlsFailed} NE:{audit.controlsNotEvaluated}
+                    </span>
                   </TableCell>
                   <TableCell className="text-sm font-semibold text-palette-primary">
                     {audit.complianceScore || 0}%
@@ -176,40 +200,45 @@ export function AuditsTable({
                 </TableRow>
                 {isExpanded && (
                   <TableRow className="bg-slate-50">
-                    <TableCell colSpan={12} className="p-4">
-                      <div className="space-y-3">
-                        {audit.description && (
-                          <div>
-                            <p className="text-sm font-medium text-slate-700 mb-1">Description:</p>
-                            <p className="text-sm text-slate-600">{audit.description}</p>
-                          </div>
-                        )}
-                        {audit.evidenceLocked && (
-                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
-                            <Lock className="h-4 w-4 text-blue-600" />
-                            <div>
-                              <p className="text-sm font-medium text-blue-800">Evidence Locked</p>
-                              <p className="text-xs text-blue-600">
-                                Frozen on {formatDate(audit.evidenceFreezeDate)}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                        {audit.summary && (
-                          <div>
-                            <p className="text-sm font-medium text-slate-700 mb-1">Summary:</p>
-                            <p className="text-sm text-slate-600">{audit.summary}</p>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-4 text-xs text-slate-500">
-                          {audit.evidenceCount && (
-                            <span>{audit.evidenceCount} evidence items</span>
-                          )}
-                          {audit.auditors.length > 0 && (
-                            <span>{audit.auditors.length} auditor{audit.auditors.length !== 1 ? "s" : ""}</span>
-                          )}
-                          {audit.ownerName && <span>Owner: {audit.ownerName}</span>}
+                    <TableCell colSpan={13} className="p-4">
+                      <div className="space-y-4">
+                        <div className="rounded-lg border bg-muted/30 p-4">
+                          <h4 className="mb-3 text-sm font-semibold text-muted-foreground">Controls breakdown</h4>
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="border-b">
+                                <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">In scope</th>
+                                <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Tested</th>
+                                <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Passed</th>
+                                <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Failed</th>
+                                <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Not evaluated</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr className="border-b">
+                                <td className="py-1.5 px-2">{audit.controlsInScope ?? audit.totalControls}</td>
+                                <td className="py-1.5 px-2">{audit.controlsPassed + audit.controlsFailed + audit.controlsPartial}</td>
+                                <td className="py-1.5 px-2 text-green-600">{audit.controlsPassed}</td>
+                                <td className="py-1.5 px-2 text-red-600">{audit.controlsFailed}</td>
+                                <td className="py-1.5 px-2 text-slate-500">{audit.controlsNotEvaluated}</td>
+                              </tr>
+                            </tbody>
+                          </table>
                         </div>
+                        {(audit.requirementsInScope != null || audit.requirementsTested != null) && (
+                          <div className="text-sm text-slate-600">
+                            Requirements: {audit.requirementsInScope ?? "—"} in scope · {audit.requirementsTested ?? "—"} tested
+                            {audit.requirementsFailing != null && ` · ${audit.requirementsFailing} failing`}
+                          </div>
+                        )}
+                        {audit.evidenceCompletenessPct != null && (
+                          <div className="text-sm text-slate-600">
+                            Evidence completeness: {audit.evidenceCompletenessPct}%
+                          </div>
+                        )}
+                        {audit.description && (
+                          <p className="text-sm text-slate-600">{audit.description}</p>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

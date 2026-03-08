@@ -63,6 +63,7 @@ export interface Policy {
   ownerId?: string;
   ownerName?: string;
   ownerEmail?: string;
+  ownerDept?: string;
   coOwners?: string[];
   
   // Generation
@@ -104,6 +105,10 @@ export interface Policy {
   // Evidence & Controls
   evidenceIds?: string[];
   controlIds?: string[];
+  controlNames?: string[];  // Display names for drilldown
+  requirementIds?: string[];
+  requirementCodes?: string[];  // Display codes (CC1.1, A.5.1.1) for drilldown
+  evidenceRequired?: number;  // e.g. 3 for "2/3 required complete"
   
   // Export
   exportFormats?: ('pdf' | 'docx' | 'html' | 'markdown')[];
@@ -154,6 +159,7 @@ export const policies: Policy[] = [
     ],
     ownerName: 'Sarah Johnson',
     ownerEmail: 'sarah.johnson@company.com',
+    ownerDept: 'Information Security',
     generationMethod: 'auto_generated',
     generatedFrom: {
       configs: ['iam-policies', 'aws-iam-roles', 'azure-rbac'],
@@ -222,7 +228,11 @@ This policy applies to all employees, contractors, and third-party users who req
     attestationCount: 45,
     lastAttestationDate: '2024-01-20T00:00:00Z',
     evidenceIds: ['ev-001', 'ev-005', 'ev-012'],
+    evidenceRequired: 3,
     controlIds: ['ctrl-001', 'ctrl-012', 'ctrl-025'],
+    controlNames: ['GOV-01', 'IAM-02', 'DATA-06'],
+    requirementIds: ['req-cc1', 'req-cc6'],
+    requirementCodes: ['CC1.1', 'CC6.1', 'A.9.1.1'],
     exportFormats: ['pdf', 'docx', 'html'],
     tags: ['security', 'access-control', 'authentication'],
   },
@@ -254,6 +264,7 @@ This policy applies to all employees, contractors, and third-party users who req
     ],
     ownerName: 'Michael Chen',
     ownerEmail: 'michael.chen@company.com',
+    ownerDept: 'Infrastructure',
     generationMethod: 'auto_generated',
     generatedFrom: {
       configs: ['tls-configs', 'database-encryption', 's3-encryption'],
@@ -309,7 +320,11 @@ All company data, systems, and communications are subject to this encryption pol
     attestationCount: 42,
     lastAttestationDate: '2024-01-18T00:00:00Z',
     evidenceIds: ['ev-003', 'ev-008', 'ev-015'],
+    evidenceRequired: 3,
     controlIds: ['ctrl-005', 'ctrl-018', 'ctrl-030'],
+    controlNames: ['ENC-01', 'KEY-02', 'DATA-08'],
+    requirementIds: ['req-cc6', 'req-iso'],
+    requirementCodes: ['CC6.2', 'A.10.1.1'],
     exportFormats: ['pdf', 'docx'],
     tags: ['security', 'encryption', 'data-protection'],
   },
@@ -341,6 +356,7 @@ All company data, systems, and communications are subject to this encryption pol
     ],
     ownerName: 'Sarah Johnson',
     ownerEmail: 'sarah.johnson@company.com',
+    ownerDept: 'Identity & Access',
     generationMethod: 'auto_generated',
     generatedFrom: {
       configs: ['auth-configs', 'mfa-settings'],
@@ -385,7 +401,11 @@ This policy defines authentication requirements to ensure secure access to compa
     attestationCount: 48,
     lastAttestationDate: '2024-01-19T00:00:00Z',
     evidenceIds: ['ev-002', 'ev-006'],
+    evidenceRequired: 2,
     controlIds: ['ctrl-002', 'ctrl-013'],
+    controlNames: ['IAM-01', 'AUTH-02'],
+    requirementIds: ['req-cc6'],
+    requirementCodes: ['CC6.1'],
     exportFormats: ['pdf', 'docx'],
     tags: ['security', 'authentication', 'mfa'],
   },

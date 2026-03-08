@@ -1,4 +1,5 @@
 "use client";
+import "@/lib/axios-config";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import axios from "axios";
@@ -15,7 +16,7 @@ import {
   WorkspaceAppId,
 } from "@/lib/workspace-apps";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
 export default function WorkspaceLayout({
   children,
@@ -25,6 +26,7 @@ export default function WorkspaceLayout({
   const [user, setUser] = useState<any>(null);
   const [navigation, setNavigation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [apiUnavailable, setApiUnavailable] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mainSidebarCollapsed, setMainSidebarCollapsed] = useState(false);
   const [activeAppId, setActiveAppId] = useState<WorkspaceAppId | null>(null);
@@ -119,6 +121,7 @@ export default function WorkspaceLayout({
       .then(([userRes, navRes]) => {
         setUser(userRes.data);
         setNavigation(navRes.data);
+        setApiUnavailable(false);
         // Debug: Log navigation in development
         if (process.env.NODE_ENV === 'development') {
           console.log('=== NAVIGATION DEBUG ===');
@@ -177,8 +180,9 @@ export default function WorkspaceLayout({
           localStorage.removeItem("refresh_token");
           router.push("/workspace/login");
         } else if (err.response?.status === 404) {
-          // 404 means API endpoint not found - likely nginx routing issue
-          console.error("404 Error: API endpoint not found. Check nginx configuration to proxy /api/* to Django backend.");
+          // 404 means API endpoint not found - proxy/backend not configured
+          console.error("404 Error: API endpoint not found. Start Django backend or set BACKEND_URL for production.");
+          setApiUnavailable(true);
           setLoading(false);
         } else {
           // Other errors - don't redirect, just show error state
@@ -267,8 +271,6 @@ export default function WorkspaceLayout({
           user={user}
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => setSidebarCollapsed((prev) => !prev)}
-          mainSidebarCollapsed={mainSidebarCollapsed}
-          onToggleMainSidebar={() => setMainSidebarCollapsed((prev) => !prev)}
           navigation={navigation}
           currentPath={pathname}
         />
@@ -278,6 +280,7 @@ export default function WorkspaceLayout({
           onSelectApp={handleSelectApp}
           width={mainSidebarWidth}
           collapsed={mainSidebarCollapsed}
+          onToggleCollapse={() => setMainSidebarCollapsed((prev) => !prev)}
           currentPath={pathname}
         />
         <UnifiedSidebar
@@ -296,6 +299,11 @@ export default function WorkspaceLayout({
               (sidebarCollapsed ? collapsedSidebarWidth : expandedSidebarWidth),
           }}
         >
+          {apiUnavailable && (
+            <div className="bg-amber-100 border-b border-amber-300 text-amber-900 px-4 py-2 text-sm text-center">
+              API unavailable (404). Start the Django backend, or in production set <code className="bg-amber-200/80 px-1 rounded">BACKEND_URL</code> so /api/* is proxied.
+            </div>
+          )}
           <div className="p-8">
             {children}
           </div>

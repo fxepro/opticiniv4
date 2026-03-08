@@ -1,60 +1,85 @@
 /**
- * Axios configuration with global interceptors
- * Handles authentication errors and session timeouts
+ * Global axios interceptors for auth token injection and 401 handling.
+ * Attaches to the default axios instance so all axios requests get:
+ * - Auth header from localStorage
+ * - 401 → token refresh → retry → redirect to login if refresh fails
+ *
+ * Import this file early (e.g. in workspace layout) to activate.
  */
 
-import axios from 'axios';
+import axios from "axios";
 
-// Use relative URL in production (browser), localhost in dev (SSR)
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+const getApiBase = () =>
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  (typeof window !== "undefined" ? "" : "http://localhost:8000");
 
-// Create axios instance
-const axiosInstance = axios.create({
-  baseURL: API_BASE,
-});
+async function refreshAccessToken(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (!refreshToken) return null;
+  try {
+    const base = getApiBase().replace(/\/$/, "") || "";
+    const res = await axios.post(`${base}/api/token/refresh/`, {
+      refresh: refreshToken,
+    });
+    const access = res.data.access;
+    localStorage.setItem("access_token", access);
+    if (res.data.refresh) {
+      localStorage.setItem("refresh_token", res.data.refresh);
+    }
+    return access;
+  } catch {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    return null;
+  }
+}
 
-// Request interceptor - add auth token to all requests
-axiosInstance.interceptors.request.use(
+function redirectToLogin() {
+  if (typeof window === "undefined") return;
+  const path = window.location.pathname;
+  const isWorkspace = path.startsWith("/workspace");
+  const loginPath = isWorkspace ? "/workspace/login" : "/login";
+  const msg = encodeURIComponent(
+    "Your session has expired. Please log in again."
+  );
+  window.location.href = `${loginPath}?error=${msg}`;
+}
+
+// Request: inject auth token
+axios.interceptors.request.use(
   (config) => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (err) => Promise.reject(err)
 );
 
-// Response interceptor - handle 401 errors globally
-axiosInstance.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    // Handle 401 Unauthorized - session expired or invalid token
-    if (error.response?.status === 401) {
-      // Clear tokens
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        
-        // Only redirect if we're not already on login/register/verify-email pages
-        const currentPath = window.location.pathname;
-        if (!currentPath.includes('/login') && 
-            !currentPath.includes('/register') && 
-            !currentPath.includes('/verify-email')) {
-          // Redirect to login with error message
-          const errorMessage = encodeURIComponent('Your session has expired or you have been logged out. Please log in again.');
-          window.location.href = `/login?error=${errorMessage}`;
-        }
-      }
+// Response: on 401, try refresh + retry, else redirect
+axios.interceptors.response.use(
+  (res) => res,
+  async (err) => {
+    if (err.response?.status !== 401) {
+      return Promise.reject(err);
     }
-    
-    return Promise.reject(error);
+    const config = err.config;
+    if (config?._retry) {
+      redirectToLogin();
+      return Promise.reject(err);
+    }
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      config._retry = true;
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${newToken}`;
+      return axios(config);
+    }
+    redirectToLogin();
+    return Promise.reject(err);
   }
 );
-
-export default axiosInstance;
-

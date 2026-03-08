@@ -18,6 +18,7 @@ import {
 import { Plus, Search, Edit, Trash2, Eye, FileText, RefreshCw, TrendingUp } from 'lucide-react';
 import { fetchBlogPosts, deleteBlogPost, type BlogPost } from '@/lib/api/blog';
 import { format } from 'date-fns';
+import { toast } from "sonner";
 
 export default function BloggingPage() {
   const router = useRouter();
@@ -68,10 +69,11 @@ export default function BloggingPage() {
     
     try {
       await deleteBlogPost(id);
+      toast.success("Post deleted");
       loadPosts();
     } catch (error) {
       console.error('Error deleting post:', error);
-      alert('Failed to delete post');
+      toast.error("Failed to delete post");
     }
   };
 
@@ -226,12 +228,6 @@ export default function BloggingPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-palette-primary mx-auto"></div>
               <p className="text-muted-foreground mt-4">Loading posts...</p>
             </div>
-          ) : posts.length === 0 ? (
-            <div className="text-center py-12 text-slate-600">
-              <FileText className="h-16 w-16 mx-auto mb-4 text-slate-400" />
-              <p className="text-h4-dynamic font-medium text-slate-700 mb-2">No posts found</p>
-              <p className="text-sm">Try adjusting your search or filter criteria</p>
-            </div>
           ) : (
             <>
               <Table>
@@ -245,7 +241,14 @@ export default function BloggingPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {posts.map((post) => (
+                  {posts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center text-slate-500">
+                        <FileText className="h-8 w-8 mx-auto mb-2 text-slate-400" />
+                        <p>No posts found. Try adjusting your search or filter criteria.</p>
+                      </TableCell>
+                    </TableRow>
+                  ) : posts.map((post) => (
                     <TableRow key={post.id}>
                       <TableCell className="w-[300px]">
                         <div className="max-w-[300px]">

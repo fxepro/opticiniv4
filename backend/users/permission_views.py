@@ -4,15 +4,17 @@ Permission API Views for RBAC
 API endpoints for permission checking and navigation.
 """
 
+import logging
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.models import Group
-from .permission_utils import has_permission, get_user_permissions, filter_navigation_by_permissions
+from .permission_utils import has_permission, get_user_permissions, get_user_permissions_for_navigation, filter_navigation_by_permissions
 from .permission_classes import HasFeaturePermission
 from .models import UserProfile
-from .navigation_data import build_nav_sections_from_doc
+from .navigation_data import NAV_APPS_FROM_DOC
 
 
 @api_view(['GET'])
@@ -82,22 +84,35 @@ def get_navigation(request):
     logger.info(f"is_staff: {request.user.is_staff}")
     logger.info(f"is_authenticated: {request.user.is_authenticated}")
     
-    # Get user permissions
-    user_permissions_list = get_user_permissions(request.user)
-    logger.info(f"Permissions count: {len(user_permissions_list)}")
+    # Superuser: full nav (bypass). Others: nav from auth_user_groups (group_id) so sidebar matches matrix.
+    if request.user.is_superuser:
+        user_permissions_list = get_user_permissions(request.user)
+    else:
+        user_permissions_list = get_user_permissions_for_navigation(request.user)
+    profile_role = getattr(getattr(request.user, 'profile', None), 'role', None)
+    has_account = 'account.overview.view' in user_permissions_list
+    has_admin = 'users.view' in user_permissions_list
+    logger.info(
+        "Nav permissions: user=%s is_superuser=%s profile.role=%s perm_count=%s has_account=%s has_admin=%s",
+        request.user.username,
+        request.user.is_superuser,
+        profile_role,
+        len(user_permissions_list),
+        has_account,
+        has_admin,
+    )
     
-    # Define navigation structure
-    # Using existing /dashboard and /admin routes - no new pages created
+    # Define navigation structure. Home first (landing page, free access for all), then Discovery, etc.
     navigation_structure = {
         "sections": [
             {
-                "id": "workspace",
-                "title": "Workspace",
+                "id": "home",
+                "title": "Home",
                 "icon": "Home",
                 "items": [
                     {
-                        "id": "overview",
-                        "title": "Home",
+                        "id": "home_overview",
+                        "title": "Overview",
                         "href": "/workspace/home",
                         "icon": "LayoutDashboard",
                         "permission": "workspace.overview.view"
@@ -113,7 +128,15 @@ def get_navigation(request):
                         "id": "discovery_overview",
                         "title": "Overview",
                         "href": "/workspace/discovery/overview",
-                        "icon": "LayoutDashboard"
+                        "icon": "LayoutDashboard",
+                        "permission": "discovery.overview.view"
+                    },
+                    {
+                        "id": "discovery_asset_inventory",
+                        "title": "Asset Inventory",
+                        "href": "/workspace/discovery/asset-inventory",
+                        "icon": "Server",
+                        "permission": "discovery.asset_inventory.view"
                     }
                 ]
             },
@@ -126,7 +149,8 @@ def get_navigation(request):
                         "id": "health_overview",
                         "title": "Overview",
                         "href": "/workspace/health/overview",
-                        "icon": "LayoutDashboard"
+                        "icon": "LayoutDashboard",
+                        "permission": "health.overview.view"
                     }
                 ]
             },
@@ -139,7 +163,8 @@ def get_navigation(request):
                         "id": "performance_overview",
                         "title": "Overview",
                         "href": "/workspace/performance/overview",
-                        "icon": "LayoutDashboard"
+                        "icon": "LayoutDashboard",
+                        "permission": "performance.overview.view"
                     }
                 ]
             },
@@ -152,7 +177,8 @@ def get_navigation(request):
                         "id": "security_overview",
                         "title": "Overview",
                         "href": "/workspace/security/overview",
-                        "icon": "LayoutDashboard"
+                        "icon": "LayoutDashboard",
+                        "permission": "security.overview.view"
                     }
                 ]
             },
@@ -165,7 +191,8 @@ def get_navigation(request):
                         "id": "configuration_overview",
                         "title": "Overview",
                         "href": "/workspace/configuration/overview",
-                        "icon": "LayoutDashboard"
+                        "icon": "LayoutDashboard",
+                        "permission": "configuration.overview.view"
                     }
                 ]
             },
@@ -200,6 +227,13 @@ def get_navigation(request):
                         "title": "Controls",
                         "href": "/workspace/compliance/controls",
                         "icon": "Shield",
+                        "permission": "compliance.controls.view"
+                    },
+                    {
+                        "id": "compliance_assertions",
+                        "title": "Assertions",
+                        "href": "/workspace/compliance/controls/assertions",
+                        "icon": "CheckCircle2",
                         "permission": "compliance.controls.view"
                     },
                     {
@@ -262,7 +296,8 @@ def get_navigation(request):
                         "id": "evidence_overview",
                         "title": "Overview",
                         "href": "/workspace/evidence/overview",
-                        "icon": "LayoutDashboard"
+                        "icon": "LayoutDashboard",
+                        "permission": "evidence.overview.view"
                     }
                 ]
             },
@@ -275,7 +310,8 @@ def get_navigation(request):
                         "id": "change_overview",
                         "title": "Overview",
                         "href": "/workspace/change/overview",
-                        "icon": "LayoutDashboard"
+                        "icon": "LayoutDashboard",
+                        "permission": "change.overview.view"
                     }
                 ]
             },
@@ -288,7 +324,8 @@ def get_navigation(request):
                         "id": "cost_overview",
                         "title": "Overview",
                         "href": "/workspace/cost/overview",
-                        "icon": "LayoutDashboard"
+                        "icon": "LayoutDashboard",
+                        "permission": "cost.overview.view"
                     }
                 ]
             },
@@ -301,7 +338,8 @@ def get_navigation(request):
                         "id": "risk_overview",
                         "title": "Overview",
                         "href": "/workspace/risk/overview",
-                        "icon": "LayoutDashboard"
+                        "icon": "LayoutDashboard",
+                        "permission": "risk.overview.view"
                     }
                 ]
             },
@@ -557,6 +595,13 @@ def get_navigation(request):
                         "permission": "settings.view"
                     },
                     {
+                        "id": "versioning",
+                        "title": "Versioning",
+                        "href": "/workspace/versioning",
+                        "icon": "Tag",
+                        "permission": "settings.view"
+                    },
+                    {
                         "id": "multi_language",
                         "title": "Multi-Language",
                         "href": "/workspace/multi-language",
@@ -589,7 +634,8 @@ def get_navigation(request):
             {
                 "id": "account",
                 "title": "Account",
-                "icon": "User",
+                "icon": "Building2",
+                "permission": "account.overview.view",
                 "items": [
                     {
                         "id": "account_overview",
@@ -599,11 +645,88 @@ def get_navigation(request):
                         "permission": "account.overview.view"
                     },
                     {
-                        "id": "profile",
-                        "title": "Profile",
-                        "href": "/workspace/profile",
-                        "icon": "User",
-                        "permission": "profile.view"
+                        "id": "account_organization",
+                        "title": "Organization",
+                        "href": "/workspace/account/organization",
+                        "icon": "Building2",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_personnel",
+                        "title": "People",
+                        "href": "/workspace/account/personnel",
+                        "icon": "Contact",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_users_access",
+                        "title": "Users & Access",
+                        "href": "/workspace/account/users-access",
+                        "icon": "Users",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_financials",
+                        "title": "Financials",
+                        "href": "/workspace/account/financials",
+                        "icon": "CreditCard",
+                        "permission": "account.billing.view"
+                    },
+                    {
+                        "id": "account_subscription",
+                        "title": "Subscription",
+                        "href": "/workspace/account/subscription",
+                        "icon": "Receipt",
+                        "permission": "account.billing.view"
+                    },
+                    {
+                        "id": "account_billing_history",
+                        "title": "Billing History",
+                        "href": "/workspace/account/billing-history",
+                        "icon": "FileText",
+                        "permission": "account.billing.view"
+                    },
+                    {
+                        "id": "account_data_retention",
+                        "title": "Data & Retention",
+                        "href": "/workspace/account/data-retention",
+                        "icon": "Database",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_frameworks",
+                        "title": "Frameworks",
+                        "href": "/workspace/account/frameworks",
+                        "icon": "BookOpen",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_audit_compliance",
+                        "title": "Audit & Compliance",
+                        "href": "/workspace/account/audit-compliance",
+                        "icon": "ShieldCheck",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_integrations",
+                        "title": "Integrations & APIs",
+                        "href": "/workspace/account/integrations",
+                        "icon": "Plug",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_notifications",
+                        "title": "Notifications & Alerts",
+                        "href": "/workspace/account/notifications",
+                        "icon": "Bell",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_support_legal",
+                        "title": "Support & Legal",
+                        "href": "/workspace/account/support-legal",
+                        "icon": "HelpCircle",
+                        "permission": "account.overview.view"
                     }
                 ]
             }
@@ -619,89 +742,180 @@ def get_navigation(request):
         ]
     }
 
-    # Replace Discovery, Health, Security, Configuration, Evidence, Change, Cost, Risk with options from All APPS doc
-    doc_sections = build_nav_sections_from_doc()
-    doc_by_id = {s["id"]: s for s in doc_sections}
-    for i, sec in enumerate(navigation_structure["sections"]):
-        if sec["id"] in doc_by_id:
-            navigation_structure["sections"][i] = doc_by_id[sec["id"]]
+    # Merge in additional submodules from NAV_APPS_FROM_DOC so the sidebar
+    # shows all documented sub-sections for the major apps.
+    sections_by_id = {s.get("id"): s for s in navigation_structure.get("sections", [])}
+    nav_apps = {"discovery", "health", "security", "configuration", "evidence", "change", "cost", "risk"}
 
-    # Superusers bypass permission filtering - they see everything
-    # CRITICAL: Always include compliance for superusers
+    for app in NAV_APPS_FROM_DOC:
+        app_id = app.get("id")
+        if app_id not in nav_apps:
+            continue
+        section = sections_by_id.get(app_id)
+        if not section:
+            continue
+        existing_ids = {item.get("id") for item in section.get("items", [])}
+        for it in app.get("items", []):
+            item_id = it.get("id")
+            # Skip if ID missing, already present, or is the overview (we already have explicit overview entries)
+            if not item_id or item_id in existing_ids or item_id.endswith("_overview"):
+                continue
+            # Derive a permission code from app + item id, e.g.
+            # discovery_network -> discovery.network.view
+            suffix = item_id[len(app_id) + 1 :] if item_id.startswith(app_id + "_") else item_id
+            base_code = f"{app_id}.{suffix.replace('_', '.')}"
+            permission_code = f"{base_code}.view"
+            section.setdefault("items", []).append(
+                {
+                    "id": item_id,
+                    "title": it.get("title", item_id),
+                    "href": it.get("path") or it.get("href") or "",
+                    "icon": it.get("icon", "LayoutDashboard"),
+                    "permission": permission_code,
+                }
+            )
+
+    # Do NOT replace with entire doc sections here: we keep the core structure
+    # (with explicit permissions) and only extend it with additional items.
+
+    # Always filter navigation by role permissions so sidebar matches matrix (Manager has no Account/Admin),
+    # but superusers should see ALL links regardless of permissions.
     if request.user.is_superuser:
         filtered_navigation = navigation_structure
-        compliance_section = next((s for s in filtered_navigation.get('sections', []) if s.get('id') == 'compliance'), None)
-        logger.error(f"🔴 SUPERUSER DETECTED - User: {request.user.username}, is_superuser: {request.user.is_superuser}")
-        logger.error(f"🔴 Returning full navigation: {len(filtered_navigation.get('sections', []))} sections")
-        if compliance_section:
-            logger.error(f"✅ Compliance section found with {len(compliance_section.get('items', []))} items")
-        else:
-            logger.error("❌❌❌ COMPLIANCE SECTION NOT FOUND IN NAVIGATION STRUCTURE! ❌❌❌")
-            logger.error(f"Available sections: {[s.get('id') for s in filtered_navigation.get('sections', [])]}")
     else:
-        logger.error(f"🔴 NOT SUPERUSER - User: {request.user.username}, is_superuser: {request.user.is_superuser}")
-        # Filter navigation by permissions for regular users
         filtered_navigation = filter_navigation_by_permissions(
-            navigation_structure, 
-            user_permissions_list
+            navigation_structure,
+            user_permissions_list,
         )
-        
-        # Debug logging (remove in production)
-        logger.debug(f"Filtered navigation sections: {len(filtered_navigation.get('sections', []))}")
-        for section in filtered_navigation.get('sections', []):
-            logger.debug(f"Section: {section.get('id')}, Items: {len(section.get('items', []))}")
-            for item in section.get('items', []):
-                logger.debug(f"  Item: {item.get('id')} ({item.get('title')}) - Permission: {item.get('permission')}")
-    
+    logger.debug(
+        "Filtered navigation sections: %d",
+        len(filtered_navigation.get("sections", [])),
+    )
+    for section in filtered_navigation.get("sections", []):
+        logger.debug(
+            "Section: %s, Items: %d",
+            section.get("id"),
+            len(section.get("items", [])),
+        )
+        for item in section.get("items", []):
+            logger.debug(
+                    "  Item: %s (%s) - Permission: %s",
+                    item.get("id"),
+                    item.get("title"),
+                    item.get("permission"),
+                )
+
     # CRITICAL: Log what's actually being returned
-    sections_returned = [s.get('id') for s in filtered_navigation.get('sections', [])]
-    logger.error(f"🔴🔴🔴 FINAL RESPONSE - Sections being returned: {sections_returned}")
-    compliance_in_response = 'compliance' in sections_returned
-    logger.error(f"🔴 Compliance in final response: {compliance_in_response}")
+    sections_returned = [s.get("id") for s in filtered_navigation.get("sections", [])]
+    logger.error("FINAL RESPONSE - Sections being returned: %s", sections_returned)
+    compliance_in_response = "compliance" in sections_returned
+    logger.error("Compliance in final response: %s", compliance_in_response)
     if not compliance_in_response:
-        logger.error(f"🔴🔴🔴 COMPLIANCE MISSING FROM FINAL RESPONSE! 🔴🔴🔴")
-        logger.error(f"🔴 All sections in navigation_structure: {[s.get('id') for s in navigation_structure.get('sections', [])]}")
-        logger.error(f"🔴 All sections in filtered_navigation: {sections_returned}")
-    
+        logger.error("COMPLIANCE MISSING FROM FINAL RESPONSE!")
+        logger.error(
+            "All sections in navigation_structure: %s",
+            [s.get("id") for s in navigation_structure.get("sections", [])],
+        )
+        logger.error(
+            "All sections in filtered_navigation: %s",
+            sections_returned,
+        )
+
     return Response(filtered_navigation)
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated, HasFeaturePermission('roles.view')])
-def get_sidebar_matrix(request):
-    """
-    Get sidebar matrix showing View/Edit/Both access for all roles.
-    
-    Returns matrix data with permission breakdown per role per sidebar item.
-    """
-    from django.contrib.auth.models import Group
-    from .permission_models import FeaturePermission
-    
-    # Get all roles (system + custom)
-    # Define role order by seniority: Admin, Agency, Executive, Director, Manager, Analyst, Auditor, Viewer
-    ROLE_ORDER = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer']
-    
-    def role_sort_key(group):
-        if group.name in ROLE_ORDER:
-            return (0, ROLE_ORDER.index(group.name))
-        return (1, group.name.lower())
-    
-    all_groups = sorted(Group.objects.all(), key=role_sort_key)
-    
-    # Get navigation structure (same as get_navigation)
-    navigation_structure = {
+def _build_navigation_structure_for_matrix():
+    """Build the navigation structure used by the sidebar matrix. Shared by get and update."""
+    return {
         "sections": [
             {
-                "id": "workspace",
-                "title": "Workspace",
+                "id": "home",
+                "title": "Home",
                 "icon": "Home",
                 "items": [
                     {
-                        "id": "overview",
-                        "title": "Home",
+                        "id": "home_overview",
+                        "title": "Overview",
                         "href": "/workspace/home",
                         "icon": "LayoutDashboard",
                         "permission": "workspace.overview.view"
+                    }
+                ]
+            },
+            {
+                "id": "discovery",
+                "title": "Discovery",
+                "icon": "Search",
+                "items": [
+                    {
+                        "id": "discovery_overview",
+                        "title": "Overview",
+                        "href": "/workspace/discovery/overview",
+                        "icon": "LayoutDashboard",
+                        "permission": "discovery.overview.view"
+                    },
+                    {
+                        "id": "discovery_asset_inventory",
+                        "title": "Asset Inventory",
+                        "href": "/workspace/discovery/asset-inventory",
+                        "icon": "Server",
+                        "permission": "discovery.asset_inventory.view"
+                    }
+                ]
+            },
+            {
+                "id": "health",
+                "title": "Health",
+                "icon": "Activity",
+                "items": [
+                    {
+                        "id": "health_overview",
+                        "title": "Overview",
+                        "href": "/workspace/health/overview",
+                        "icon": "LayoutDashboard",
+                        "permission": "health.overview.view"
+                    }
+                ]
+            },
+            {
+                "id": "performance",
+                "title": "Performance",
+                "icon": "Gauge",
+                "items": [
+                    {
+                        "id": "performance_overview",
+                        "title": "Overview",
+                        "href": "/workspace/performance/overview",
+                        "icon": "LayoutDashboard",
+                        "permission": "performance.overview.view"
+                    }
+                ]
+            },
+            {
+                "id": "security",
+                "title": "Security",
+                "icon": "Shield",
+                "items": [
+                    {
+                        "id": "security_overview",
+                        "title": "Overview",
+                        "href": "/workspace/security/overview",
+                        "icon": "LayoutDashboard",
+                        "permission": "security.overview.view"
+                    }
+                ]
+            },
+            {
+                "id": "configuration",
+                "title": "Configuration",
+                "icon": "Settings",
+                "items": [
+                    {
+                        "id": "configuration_overview",
+                        "title": "Overview",
+                        "href": "/workspace/configuration/overview",
+                        "icon": "LayoutDashboard",
+                        "permission": "configuration.overview.view"
                     }
                 ]
             },
@@ -739,11 +953,25 @@ def get_sidebar_matrix(request):
                         "permission": "compliance.controls.view"
                     },
                     {
+                        "id": "compliance_assertions",
+                        "title": "Assertions",
+                        "href": "/workspace/compliance/controls/assertions",
+                        "icon": "CheckCircle2",
+                        "permission": "compliance.controls.view"
+                    },
+                    {
                         "id": "compliance_evidence",
                         "title": "Evidence",
                         "href": "/workspace/compliance/evidence",
                         "icon": "FileText",
                         "permission": "compliance.evidence.view"
+                    },
+                    {
+                        "id": "compliance_monitoring",
+                        "title": "Monitoring",
+                        "href": "/workspace/compliance/monitoring",
+                        "icon": "Activity",
+                        "permission": "compliance.monitoring.view"
                     },
                     {
                         "id": "compliance_policies",
@@ -772,6 +1000,69 @@ def get_sidebar_matrix(request):
                         "href": "/workspace/compliance/tools",
                         "icon": "Settings",
                         "permission": "compliance.tools.view"
+                    },
+                    {
+                        "id": "compliance_audit_hub",
+                        "title": "Audit Hub",
+                        "href": "/workspace/compliance/audit-hub",
+                        "icon": "ShieldCheck",
+                        "permission": "compliance.audit_hub.view"
+                    }
+                ]
+            },
+            {
+                "id": "evidence",
+                "title": "Evidence",
+                "icon": "FileText",
+                "items": [
+                    {
+                        "id": "evidence_overview",
+                        "title": "Overview",
+                        "href": "/workspace/evidence/overview",
+                        "icon": "LayoutDashboard",
+                        "permission": "evidence.overview.view"
+                    }
+                ]
+            },
+            {
+                "id": "change",
+                "title": "Change",
+                "icon": "TrendingUp",
+                "items": [
+                    {
+                        "id": "change_overview",
+                        "title": "Overview",
+                        "href": "/workspace/change/overview",
+                        "icon": "LayoutDashboard",
+                        "permission": "change.overview.view"
+                    }
+                ]
+            },
+            {
+                "id": "cost",
+                "title": "Cost",
+                "icon": "DollarSign",
+                "items": [
+                    {
+                        "id": "cost_overview",
+                        "title": "Overview",
+                        "href": "/workspace/cost/overview",
+                        "icon": "LayoutDashboard",
+                        "permission": "cost.overview.view"
+                    }
+                ]
+            },
+            {
+                "id": "risk",
+                "title": "Risk",
+                "icon": "AlertTriangle",
+                "items": [
+                    {
+                        "id": "risk_overview",
+                        "title": "Overview",
+                        "href": "/workspace/risk/overview",
+                        "icon": "LayoutDashboard",
+                        "permission": "risk.overview.view"
                     }
                 ]
             },
@@ -1027,6 +1318,13 @@ def get_sidebar_matrix(request):
                         "permission": "settings.view"
                     },
                     {
+                        "id": "versioning",
+                        "title": "Versioning",
+                        "href": "/workspace/versioning",
+                        "icon": "Tag",
+                        "permission": "settings.view"
+                    },
+                    {
                         "id": "multi_language",
                         "title": "Multi-Language",
                         "href": "/workspace/multi-language",
@@ -1059,7 +1357,8 @@ def get_sidebar_matrix(request):
             {
                 "id": "account",
                 "title": "Account",
-                "icon": "User",
+                "icon": "Building2",
+                "permission": "account.overview.view",
                 "items": [
                     {
                         "id": "account_overview",
@@ -1069,22 +1368,180 @@ def get_sidebar_matrix(request):
                         "permission": "account.overview.view"
                     },
                     {
-                        "id": "profile",
-                        "title": "Profile",
-                        "href": "/workspace/profile",
-                        "icon": "User",
-                        "permission": "profile.view"
+                        "id": "account_organization",
+                        "title": "Organization",
+                        "href": "/workspace/account/organization",
+                        "icon": "Building2",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_personnel",
+                        "title": "People",
+                        "href": "/workspace/account/personnel",
+                        "icon": "Contact",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_users_access",
+                        "title": "Users & Access",
+                        "href": "/workspace/account/users-access",
+                        "icon": "Users",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_financials",
+                        "title": "Financials",
+                        "href": "/workspace/account/financials",
+                        "icon": "CreditCard",
+                        "permission": "account.billing.view"
+                    },
+                    {
+                        "id": "account_subscription",
+                        "title": "Subscription",
+                        "href": "/workspace/account/subscription",
+                        "icon": "Receipt",
+                        "permission": "account.billing.view"
+                    },
+                    {
+                        "id": "account_billing_history",
+                        "title": "Billing History",
+                        "href": "/workspace/account/billing-history",
+                        "icon": "FileText",
+                        "permission": "account.billing.view"
+                    },
+                    {
+                        "id": "account_data_retention",
+                        "title": "Data & Retention",
+                        "href": "/workspace/account/data-retention",
+                        "icon": "Database",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_frameworks",
+                        "title": "Frameworks",
+                        "href": "/workspace/account/frameworks",
+                        "icon": "BookOpen",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_audit_compliance",
+                        "title": "Audit & Compliance",
+                        "href": "/workspace/account/audit-compliance",
+                        "icon": "ShieldCheck",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_integrations",
+                        "title": "Integrations & APIs",
+                        "href": "/workspace/account/integrations",
+                        "icon": "Plug",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_notifications",
+                        "title": "Notifications & Alerts",
+                        "href": "/workspace/account/notifications",
+                        "icon": "Bell",
+                        "permission": "account.overview.view"
+                    },
+                    {
+                        "id": "account_support_legal",
+                        "title": "Support & Legal",
+                        "href": "/workspace/account/support-legal",
+                        "icon": "HelpCircle",
+                        "permission": "account.overview.view"
                     }
                 ]
             }
         ]
     }
+
+
+def _get_sidebar_managed_permission_codes():
+    """
+    Return the set of permission codes that are managed by the sidebar matrix.
+    Used when updating: we MERGE (preserve non-sidebar perms) instead of replacing.
+    """
+    from .permission_models import FeaturePermission
+    import copy
+
+    navigation_structure = copy.deepcopy(_build_navigation_structure_for_matrix())
+    sections_by_id = {s.get("id"): s for s in navigation_structure.get("sections", [])}
+    matrix_apps = {"discovery", "health", "security", "configuration", "evidence", "change", "cost", "risk"}
+
+    for app in NAV_APPS_FROM_DOC:
+        app_id = app.get("id")
+        if app_id not in matrix_apps:
+            continue
+        section = sections_by_id.get(app_id)
+        if not section:
+            continue
+        existing_ids = {item.get("id") for item in section.get("items", [])}
+        for it in app.get("items", []):
+            item_id = it.get("id")
+            if not item_id or item_id in existing_ids or item_id.endswith("_overview"):
+                continue
+            suffix = item_id[len(app_id) + 1 :] if item_id.startswith(app_id + "_") else item_id
+            base_code = f"{app_id}.{suffix.replace('_', '.')}"
+            permission_code = f"{base_code}.view"
+            section.setdefault("items", []).append({
+                "id": item_id,
+                "title": it.get("title", item_id),
+                "href": it.get("path") or it.get("href") or "",
+                "icon": it.get("icon", "LayoutDashboard"),
+                "permission": permission_code,
+            })
+
+    managed_codes = set()
+    for section in navigation_structure.get("sections", []):
+        for item in section.get("items", []):
+            item_permission = item.get("permission", "")
+            if not item_permission:
+                continue
+            base_code = item_permission.rsplit(".", 1)[0] if "." in item_permission else item_permission
+            feature_perms = FeaturePermission.objects.filter(code__startswith=base_code + ".")
+            for fp in feature_perms:
+                if ".view" in fp.code:
+                    managed_codes.add(fp.code)
+                elif ".create" in fp.code:
+                    managed_codes.add(fp.code)
+                elif ".edit" in fp.code:
+                    managed_codes.add(fp.code)
+                elif ".delete" in fp.code:
+                    managed_codes.add(fp.code)
+            if not feature_perms:
+                managed_codes.add(item_permission)
+    return managed_codes
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, HasFeaturePermission('roles.view')])
+def get_sidebar_matrix(request):
+    """
+    Get sidebar matrix showing View/Edit/Both access for all roles.
     
-    # System roles that cannot be modified
-    # Ordered by seniority: Admin, Agency, Executive, Director, Manager, Analyst, Auditor, Viewer
+    Returns matrix data with permission breakdown per role per sidebar item.
+    """
+    from django.contrib.auth.models import Group
+    from .permission_models import FeaturePermission
+
+    # Get all roles (system + custom). Exclude Superuser - manageable only via Django admin/CLI.
+    ROLE_ORDER = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer']
+    ROLE_HIDDEN_FROM_UI = 'Superuser'
+
+    def role_sort_key(group):
+        if group.name in ROLE_ORDER:
+            return (0, ROLE_ORDER.index(group.name))
+        return (1, group.name.lower())
+
+    all_groups = sorted(
+        Group.objects.exclude(name__iexact=ROLE_HIDDEN_FROM_UI),
+        key=role_sort_key
+    )
+
+    navigation_structure = _build_navigation_structure_for_matrix()
+
     SYSTEM_ROLES = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer']
-    
-    # Build roles list
     roles_data = []
     for group in all_groups:
         roles_data.append({
@@ -1092,9 +1549,42 @@ def get_sidebar_matrix(request):
             "name": group.name,
             "is_system_role": group.name in SYSTEM_ROLES
         })
-    
+
     # Build sidebar items with role access
     sidebar_items = []
+
+    # Merge in additional submodules from NAV_APPS_FROM_DOC so the role matrix
+    # can assign permissions for all documented sub-sections of the major apps.
+    sections_by_id = {s.get("id"): s for s in navigation_structure.get("sections", [])}
+    matrix_apps = {"discovery", "health", "security", "configuration", "evidence", "change", "cost", "risk"}
+
+    for app in NAV_APPS_FROM_DOC:
+        app_id = app.get("id")
+        if app_id not in matrix_apps:
+            continue
+        section = sections_by_id.get(app_id)
+        if not section:
+            continue
+        existing_ids = {item.get("id") for item in section.get("items", [])}
+        for it in app.get("items", []):
+            item_id = it.get("id")
+            # Skip if ID missing, already present, or is the overview (we already have explicit overview entries)
+            if not item_id or item_id in existing_ids or item_id.endswith("_overview"):
+                continue
+            # Derive a permission code from app + item id, e.g.
+            # discovery_network -> discovery.network.view
+            suffix = item_id[len(app_id) + 1 :] if item_id.startswith(app_id + "_") else item_id
+            base_code = f"{app_id}.{suffix.replace('_', '.')}"
+            permission_code = f"{base_code}.view"
+            section.setdefault("items", []).append(
+                {
+                    "id": item_id,
+                    "title": it.get("title", item_id),
+                    "href": it.get("path") or it.get("href") or "",
+                    "icon": it.get("icon", "LayoutDashboard"),
+                    "permission": permission_code,
+                }
+            )
     
     # Debug: Log compliance section processing
     import logging
@@ -1235,33 +1725,69 @@ def update_sidebar_matrix(request):
     role_id = request.data.get('role_id')
     permission_codes = request.data.get('permission_codes', [])
     
-    if not role_id:
+    if role_id is None or role_id == '':
         return Response(
             {'error': 'role_id is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    try:
+        role_id = int(role_id)
+    except (TypeError, ValueError):
+        return Response(
+            {'error': 'role_id must be an integer (group id)'},
             status=status.HTTP_400_BAD_REQUEST
         )
     
     try:
         role = Group.objects.get(id=role_id)
-        
+        if role.name == 'Superuser':
+            return Response(
+                {'error': 'Superuser role can only be managed via Django admin or CLI.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         # System roles CAN have their permissions edited, they just can't be renamed or deleted
         # This is the correct behavior - permissions should be editable for all roles
         
-        # Get all FeaturePermissions for the provided codes
-        feature_perms = FeaturePermission.objects.filter(code__in=permission_codes)
-        
-        # Get Django Permission objects linked to these FeaturePermissions
-        django_perms = []
         from django.contrib.contenttypes.models import ContentType
-        
-        # Get content type for FeaturePermission
+
         content_type = ContentType.objects.get_for_model(FeaturePermission)
-        
-        for fp in feature_perms:
-            if fp.django_permission:
-                django_perms.append(fp.django_permission)
-            else:
-                # If no linked permission, try to find or create it
+
+        # CRITICAL: MERGE with existing permissions instead of replacing.
+        # The frontend only sends sidebar-matrix permission codes. Non-sidebar perms
+        # (roles.edit, users.view, etc.) must be preserved or we strip admin access.
+        sidebar_managed_codes = _get_sidebar_managed_permission_codes()
+        current_perms = list(role.permissions.all())
+        current_codes = set()
+        for perm in current_perms:
+            try:
+                fp = FeaturePermission.objects.get(django_permission=perm)
+                current_codes.add(fp.code)
+            except FeaturePermission.DoesNotExist:
+                current_codes.add(perm.codename.replace('_', '.'))
+        other_codes = current_codes - sidebar_managed_codes
+        final_codes = other_codes | set(permission_codes)
+
+        # Get or create FeaturePermission + Django Permission for each final code
+        django_perms = []
+        seen_perm_ids = set()
+        for code in final_codes:
+            fp = FeaturePermission.objects.filter(code=code).first()
+            if not fp:
+                codename = code.replace('.', '_')
+                perm, _ = Permission.objects.get_or_create(
+                    codename=codename,
+                    content_type=content_type,
+                    defaults={'name': code.replace('_', ' ').title()}
+                )
+                fp, _ = FeaturePermission.objects.get_or_create(
+                    code=code,
+                    defaults={'name': perm.name, 'category': 'workspace', 'django_permission': perm}
+                )
+                if not fp.django_permission_id:
+                    fp.django_permission = perm
+                    fp.save(update_fields=['django_permission'])
+            perm = fp.django_permission if fp.django_permission else None
+            if not perm:
                 codename = fp.code.replace('.', '_')
                 perm, _ = Permission.objects.get_or_create(
                     codename=codename,
@@ -1270,12 +1796,39 @@ def update_sidebar_matrix(request):
                 )
                 fp.django_permission = perm
                 fp.save()
+            if perm.id not in seen_perm_ids:
+                seen_perm_ids.add(perm.id)
                 django_perms.append(perm)
-        
+
+        # Capture before state for audit
+        before_sidebar = sorted(current_codes & sidebar_managed_codes)
+        after_sidebar = sorted(set(permission_codes))
+        added = sorted(set(permission_codes) - current_codes)
+        removed = sorted((current_codes & sidebar_managed_codes) - set(permission_codes))
+
         # Update role permissions
         with transaction.atomic():
             role.permissions.set(django_perms)
             role.refresh_from_db()
+
+        # Audit log: who changed what, when
+        audit_log = logging.getLogger('users.audit')
+        audit_log.info(
+            'ROLE_PERMISSIONS_UPDATE role_id=%s role_name=%s user_id=%s user=%s added=%s removed=%s',
+            role_id, role.name,
+            getattr(request.user, 'id', None), getattr(request.user, 'username', 'unknown'),
+            added, removed,
+            extra={
+                'role_id': role_id,
+                'role_name': role.name,
+                'user_id': getattr(request.user, 'id', None),
+                'username': getattr(request.user, 'username', 'unknown'),
+                'before_sidebar': before_sidebar,
+                'after_sidebar': after_sidebar,
+                'added': added,
+                'removed': removed,
+            }
+        )
         
         # Return updated role data
         return Response({

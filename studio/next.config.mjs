@@ -25,20 +25,26 @@ const nextConfig = {
     root: __dirname,
   },
   async rewrites() {
-    // Only use rewrites in development - nginx handles routing in production
-    if (process.env.NODE_ENV === 'production') {
+    // Proxy /api/* to Django backend.
+    // Development: always proxy to localhost:8000.
+    // Production: no rewrites by default (nginx proxies); set BACKEND_URL for local "next start" (e.g. BACKEND_URL=http://localhost:8000).
+    const backend =
+      process.env.NODE_ENV === 'development'
+        ? 'http://localhost:8000'
+        : process.env.BACKEND_URL;
+    if (!backend) {
       return [];
     }
     return [
       {
         source: '/api/sitemap',
-        destination: 'http://localhost:8000/api/sitemap/',
+        destination: `${backend}/api/sitemap/`,
       },
       {
         source: '/api/:path*',
-        destination: 'http://localhost:8000/api/:path*',
+        destination: `${backend}/api/:path*`,
       },
-      // Note: Django admin should be accessed directly at http://localhost:8000/django-admin/
+      // Note: Django admin should be accessed directly at backend/django-admin/
       // to avoid redirect loops. Next.js rewrites don't handle Django's APPEND_SLASH redirects well.
     ];
   },

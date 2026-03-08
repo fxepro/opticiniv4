@@ -11,7 +11,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = [
-            'role', 'is_active', 'created_at', 'updated_at', 'last_login', 'login_count',
+            'role', 'is_active', 'organization_id', 'created_at', 'updated_at', 'last_login', 'login_count',
             'phone', 'bio', 'avatar_url', 'date_of_birth', 'timezone', 'locale', 'user_settings'
         ]
         read_only_fields = ['created_at', 'updated_at']
@@ -29,14 +29,17 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'date_joined']
     
     def get_role(self, obj):
-        # Get role from profile first (source of truth)
+        # Source of truth: auth_user_groups (user_id, group_id). Derive from user.groups.
+        from .permission_utils import _get_user_role_group
+        group = _get_user_role_group(obj)
+        if group:
+            return group.name.lower()
+        if obj.is_superuser:
+            return 'admin'
         try:
-            return obj.profile.role
+            return obj.profile.role or 'viewer'
         except UserProfile.DoesNotExist:
-            # If no profile exists, check if superuser
-            if obj.is_superuser:
-                return 'admin'
-            return 'viewer'  # Default role
+            return 'viewer'
     
     def get_is_active(self, obj):
         # Check if user is active in Django User model

@@ -143,6 +143,15 @@ LOGGING = {
             'formatter': 'verbose',
             'filters': ['require_debug_false'],
         },
+        # Audit log for role/permission changes (security trace)
+        'audit_file': {
+            'level': 'INFO',
+            '()': WindowsRotatingFileHandler,
+            'filename': str(LOGS_DIR / 'audit.log'),
+            'maxBytes': LOG_MAX_BYTES,
+            'backupCount': LOG_BACKUP_COUNT,
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
         # Django framework logger
@@ -184,6 +193,12 @@ LOGGING = {
         # Theme/palette logger
         'pagerodeo.theme': {
             'handlers': ['file', 'error_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # Role/permission audit - trace who changed what, when
+        'users.audit': {
+            'handlers': ['audit_file', 'file'],
             'level': 'INFO',
             'propagate': False,
         },

@@ -247,7 +247,16 @@ INSTALLED_APPS = [
     'auditlog',
     'drf_spectacular',
     'anymail',  # For Amazon SES email backend
-    'core.apps.CoreConfig',  # For management commands
+    'core.apps.CoreConfig',  # For management commands + platform core schema
+    'discovery',  # Platform discovery schema (assets, CMDB)
+    'identity',   # Platform identity schema (users, user_team_map)
+    'change',     # Platform change schema (change_events, deployments, approvals)
+    'cost',       # Platform cost schema (billing, cost_records, forecasts, budgets, waste)
+    'risk',       # Platform risk schema (asset_risk_scores, risk_factors, risk_register)
+    'platform_monitoring',  # Platform monitoring schema (incidents, alerts, uptime_metrics)
+    'platform_reports',     # Platform reports schema (materialized_asset_summary, compliance_summary, risk_trends)
+    'platform_org',         # Platform org schema (personnel, departments, roles, sync_sources)
+    'account',              # Account (org-level facade: org, billing, security; Executive-only)
     'users',
     'multilocation',
     'multilanguage',
@@ -272,14 +281,8 @@ INSTALLED_APPS = [
     'db_management',
     'collateral',  # Learning Materials (Collateral)
     'security_monitoring',  # Security Monitoring External Testing
-    # Compliance Module
-    'compliance_frameworks',
-    'compliance_controls',
-    'compliance_evidence',
-    'compliance_policies',
-    'compliance_audits',
-    'compliance_reports',
-    'compliance_tools',
+    # Compliance (single app: frameworks, controls, evidence, audits, policies, reports, tools)
+    'compliance',
 ]
 
 MIDDLEWARE = [
@@ -324,7 +327,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='opticini'),
+        'NAME': config('DB_NAME', default='opticiniv3'),
         'USER': config('DB_USER', default='postgres'),
         'PASSWORD': config('DB_PASSWORD', default='postgres'),
         'HOST': config('DB_HOST', default='127.0.0.1'),  # Use 127.0.0.1 instead of localhost to force IPv4
@@ -332,8 +335,177 @@ DATABASES = {
         'OPTIONS': {
             'connect_timeout': 10,
         },
-    }
+    },
+    # Platform core schema: same DB, search_path=core so core app tables resolve to core.*
+    'core': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='opticiniv3'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c search_path=core,public',
+        },
+    },
+    # Platform discovery schema: search_path=discovery so discovery app tables resolve to discovery.*
+    'discovery': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='opticiniv3'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c search_path=discovery,public',
+        },
+    },
+    # Platform identity schema: search_path=identity so identity app tables resolve to identity.*
+    'identity': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='opticiniv3'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c search_path=identity,public',
+        },
+    },
+    # Platform change schema: search_path=change so change app tables resolve to change.*
+    'change': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='opticiniv3'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c search_path=change,public',
+        },
+    },
+    # Platform compliance schema (single source of truth for frameworks, controls)
+    'compliance': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='opticiniv3'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c search_path=compliance,public',
+        },
+    },
+    # Platform evidence schema (single source of truth for evidence items)
+    'evidence': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='opticiniv3'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c search_path=evidence,public',
+        },
+    },
+    # Platform audit schema (single source of truth for audits)
+    'audit': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='opticiniv3'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c search_path=audit,public',
+        },
+    },
+    # Platform cost schema
+    'cost': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='opticiniv3'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c search_path=cost,public',
+        },
+    },
+    # Platform risk schema
+    'risk': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='opticini'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c search_path=risk,public',
+        },
+    },
+    # Platform monitoring schema (incidents, alerts, uptime_metrics)
+    'monitoring': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='opticiniv3'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c search_path=monitoring,public',
+        },
+    },
+    # Platform reports schema (materialized summaries, trends)
+    'reports': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='opticiniv3'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c search_path=reports,public',
+        },
+    },
+    # Platform org schema (personnel, departments, roles)
+    'org': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='opticiniv3'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c search_path=org,public',
+        },
+    },
 }
+DATABASE_ROUTERS = [
+    'core.db_router.UserTablesRouter',
+    'core.db_router.PlatformCoreRouter',
+    'core.db_router.PlatformDiscoveryRouter',
+    'core.db_router.PlatformIdentityRouter',
+    'core.db_router.PlatformChangeRouter',
+    'core.db_router.PlatformComplianceEvidenceAuditRouter',
+    'core.db_router.PlatformCostRouter',
+    'core.db_router.PlatformRiskRouter',
+    'core.db_router.PlatformMonitoringRouter',
+    'core.db_router.PlatformReportsRouter',
+    'core.db_router.PlatformOrgRouter',
+]
 
 
 # Password validation

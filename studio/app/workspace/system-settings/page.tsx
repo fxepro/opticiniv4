@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Shield, Settings, BarChart3, Bell, Save, Database, Globe, Lock } from "lucide-react";
+import { Shield, Settings, BarChart3, Bell, Save, Database, Globe, Lock, ExternalLink } from "lucide-react";
 import { applyTheme, LAYOUT, getCurrentTheme, setTheme, type ThemeVariant } from "@/lib/theme";
 import axios from "axios";
 import { toast } from "sonner";
@@ -404,6 +404,35 @@ export default function AdminSettingsPage() {
                 <Switch id="api-docs" defaultChecked />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Django Admin */}
+        <Card className={applyTheme.card()}>
+          <CardHeader>
+            <CardTitle className={`flex items-center ${applyTheme.text('primary')}`}>
+              <Database className="h-5 w-5 mr-2 text-slate-600" />
+              Backend / Django Admin
+            </CardTitle>
+            <CardDescription className={applyTheme.text('secondary')}>
+              Open the Django admin site to manage backend data (users, groups, models).
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="outline"
+              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+              asChild
+            >
+              <a
+                href={`${API_BASE?.replace(/\/$/, "") || ""}/django-admin/`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open Django Admin
+              </a>
+            </Button>
           </CardContent>
         </Card>
 

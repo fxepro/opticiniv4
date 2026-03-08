@@ -46,6 +46,7 @@ class UserProfile(models.Model):
     date_of_birth = models.DateField(null=True, blank=True, help_text='Date of birth')
     timezone = models.CharField(max_length=50, default='UTC', help_text='User timezone')
     locale = models.CharField(max_length=10, default='en-US', help_text='User locale preference')
+    organization_id = models.UUIDField(null=True, blank=True, help_text='Current organization for Account/org-level access')
     
     def __str__(self):
         return f"{self.user.username} - {self.role}"

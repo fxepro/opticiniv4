@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   ShieldAlert,
   Info,
+  Lightbulb,
   TrendingUp,
   Gauge,
   Target,
@@ -82,7 +83,7 @@ const quickAccessItems = [
 ];
 
 export default function RiskOverviewPage() {
-  const [activeTab, setActiveTab] = useState("kpis");
+  const [activeTab, setActiveTab] = useState("kpi");
 
   return (
     <div className="space-y-6">
@@ -95,18 +96,21 @@ export default function RiskOverviewPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-white border border-slate-200 p-1">
-          <TabsTrigger value="kpis" className="data-[state=active]:bg-palette-primary data-[state=active]:text-white">
-            KPIs
+          <TabsTrigger value="kpi" className="data-[state=active]:bg-palette-primary data-[state=active]:text-white">
+            KPI
           </TabsTrigger>
           <TabsTrigger value="alerts" className="data-[state=active]:bg-palette-primary data-[state=active]:text-white">
-            Alerts & Info
+            Alerts
           </TabsTrigger>
           <TabsTrigger value="quick-access" className="data-[state=active]:bg-palette-primary data-[state=active]:text-white">
-            Quick access
+            Quick Access
+          </TabsTrigger>
+          <TabsTrigger value="intelligence" className="data-[state=active]:bg-palette-primary data-[state=active]:text-white">
+            Intelligence
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="kpis" className="space-y-6 mt-4">
+        <TabsContent value="kpi" className="space-y-6 mt-4">
           {/* Top row – headline KPIs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <Card className="border border-slate-200 shadow-sm">
@@ -387,6 +391,27 @@ export default function RiskOverviewPage() {
               );
             })}
           </div>
+        </TabsContent>
+
+        <TabsContent value="intelligence" className="space-y-6 mt-4">
+          <Card className="border border-slate-200 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-palette-primary" />
+                Intelligence
+              </CardTitle>
+              <p className="text-sm text-slate-500 font-normal">
+                Insights and recommendations from this module&apos;s data.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                <p className="text-sm text-slate-600">
+                  Intelligence content will show insights, recommendations, and analysis. Connect to your intelligence or analytics API when ready.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

@@ -111,7 +111,13 @@ export function ReportsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {reports.map((report) => {
+          {reports.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={12} className="h-24 text-center text-slate-500">
+                No reports found. Generate reports or adjust filters.
+              </TableCell>
+            </TableRow>
+          ) : reports.map((report) => {
             const isExpanded = expandedRows.has(report.id);
             const isSelected = selectedReports.includes(report.id);
 

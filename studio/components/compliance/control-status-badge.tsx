@@ -36,9 +36,16 @@ export function ControlStatusBadge({ status, className }: ControlStatusBadgeProp
       className: 'bg-gray-100 text-gray-800 border-gray-200',
       iconClassName: 'text-gray-600',
     },
+    active: {
+      label: 'Active',
+      icon: CheckCircle2,
+      className: 'bg-slate-100 text-slate-800 border-slate-200',
+      iconClassName: 'text-slate-600',
+    },
   };
 
-  const config = statusConfig[status];
+  const defaultConfig = statusConfig.not_evaluated;
+  const config = statusConfig[status as keyof typeof statusConfig] ?? defaultConfig;
   const Icon = config.icon;
 
   return (

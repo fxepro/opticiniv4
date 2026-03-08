@@ -9,41 +9,60 @@ export interface Control {
   controlId: string; // e.g., "SOC2-CC6.1", "ISO27001-A.9.1.1"
   name: string;
   description: string;
-  
+
   // Framework mapping
   frameworks: string[]; // Framework IDs
   frameworkNames: string[]; // Display names
-  
+
+  // Requirements (e.g. CC1.1, AC-2)
+  requirements?: string[];
+
   // Status
   status: ControlStatus;
   severity: ControlSeverity;
-  
+
+  // Risk (score or severity fallback)
+  risk?: number | string;
+
+  // Owner (personnel ID or resolved name)
+  owner?: string | null;
+
+  // Health (healthy/warn/breach/unknown)
+  health?: string | null;
+
+  // Evidence % complete
+  evidencePctComplete?: number;
+
   // Evaluation
   lastEvaluated?: string; // ISO date
   evaluatedBy?: string; // User/system
   evaluationMethod: EvaluationMethod;
-  
+
   // Failure details
   failureReason?: string;
   failingAssets?: string[];
   failingCount?: number;
-  
+
   // Evidence
   evidenceCount: number;
   evidenceIds: string[];
-  
+
   // Metrics
   uptimePercentage?: number;
   timeOutOfCompliance?: number; // minutes
-  
+
   // Recommendations
   fixRecommendations?: string[];
   relatedControls?: string[];
-  
+
   // Metadata
   category?: string;
   controlType: ControlType;
   frequency: ControlFrequency;
+  nature?: string;
+  implementationStatus?: string;
+  maturityLevel?: string;
+  reviewDates?: { reviewed_at?: string; next_review_due_at?: string } | null;
 }
 
 export const controls: Control[] = [

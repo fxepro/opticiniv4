@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, RefreshCw, Loader2, Lock, Eye, Edit, Plus, Trash2 } from "lucide-react";
+import { Save, RefreshCw, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { applyTheme } from "@/lib/theme";
+import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 
 // Use relative URL in production (browser), localhost in dev (SSR)
@@ -45,15 +45,30 @@ interface MatrixData {
 }
 
 export function SidebarPermissionsMatrix() {
+  const { toast } = useToast();
   const [matrixData, setMatrixData] = useState<MatrixData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [changes, setChanges] = useState<Record<string, Record<string, string[]>>>({}); // role_id -> sidebar_item_id -> permission_codes
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchMatrix();
   }, []);
+
+  // Warn when leaving with unsaved changes (e.g. logout, refresh, navigate away)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasChanges()) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [changes]);
+
+  // Accordion starts closed; user expands sections as needed
 
   const fetchMatrix = async () => {
     try {
@@ -178,12 +193,63 @@ export function SidebarPermissionsMatrix() {
     return typeof permissionValue === 'boolean' ? permissionValue : false;
   };
 
+  /** True if role has at least one permission (V/C/E/D) for this item (including pending changes). */
+  const hasItemAnyPermission = (roleId: number, item: SidebarItem): boolean => {
+    const types: Array<'view' | 'create' | 'edit' | 'delete'> = ['view', 'create', 'edit', 'delete'];
+    return types.some(
+      (t) => item.required_permissions[t] && getPermissionChecked(roleId, item.id, t)
+    );
+  };
+
+  /** Module (section) checkbox: checked when at least one sub-module has any permission for this role. */
+  const getModuleChecked = (roleId: number, sectionId: string): boolean => {
+    if (!matrixData) return false;
+    const items = matrixData.sidebar_items.filter((i) => i.section === sectionId);
+    return items.some((item) => hasItemAnyPermission(roleId, item));
+  };
+
+  /** Module indeterminate when some but not all sub-modules have access. */
+  const getModuleIndeterminate = (roleId: number, sectionId: string): boolean => {
+    if (!matrixData) return false;
+    const items = matrixData.sidebar_items.filter((i) => i.section === sectionId);
+    if (items.length === 0) return false;
+    const withAccess = items.filter((item) => hasItemAnyPermission(roleId, item));
+    return withAccess.length > 0 && withAccess.length < items.length;
+  };
+
+  /** Set all sub-modules in section for this role to all permissions (grant=true) or none (grant=false). */
+  const handleModuleChange = (roleId: number, sectionId: string, grant: boolean) => {
+    if (!matrixData) return;
+    const items = matrixData.sidebar_items.filter((i) => i.section === sectionId);
+    const roleKey = roleId.toString();
+
+    setChanges((prev) => {
+      const newChanges = { ...prev };
+      if (!newChanges[roleKey]) newChanges[roleKey] = {};
+
+      items.forEach((item) => {
+        if (grant) {
+          const permCodes: string[] = [];
+          if (item.required_permissions.view) permCodes.push(item.required_permissions.view);
+          if (item.required_permissions.create) permCodes.push(item.required_permissions.create);
+          if (item.required_permissions.edit) permCodes.push(item.required_permissions.edit);
+          if (item.required_permissions.delete) permCodes.push(item.required_permissions.delete);
+          newChanges[roleKey][item.id] = permCodes;
+        } else {
+          newChanges[roleKey][item.id] = [];
+        }
+      });
+      return newChanges;
+    });
+  };
+
   const hasChanges = () => {
     return Object.keys(changes).length > 0;
   };
 
   const saveChanges = async () => {
     if (!matrixData || !hasChanges()) return;
+    if (!confirm("Save these permission changes? They will apply after users refresh or log in again.")) return;
 
     try {
       setSaving(true);
@@ -323,6 +389,10 @@ export function SidebarPermissionsMatrix() {
 
       // Refresh matrix data
       await fetchMatrix();
+      toast({
+        title: "Permissions saved",
+        description: "Role permission changes have been persisted. They will apply after users refresh or log in again.",
+      });
     } catch (error: any) {
       console.error("Error saving changes:", error);
       setError(error.response?.data?.error || "Failed to save changes. Please try again.");
@@ -361,46 +431,48 @@ export function SidebarPermissionsMatrix() {
     return null;
   }
 
-  // Group sidebar items by section
+  // Group sidebar items by section (module). Section order for stable display.
   const itemsBySection: Record<string, SidebarItem[]> = {};
-  matrixData.sidebar_items.forEach(item => {
+  matrixData.sidebar_items.forEach((item) => {
     if (!itemsBySection[item.section]) {
       itemsBySection[item.section] = [];
     }
     itemsBySection[item.section].push(item);
   });
+  const sectionOrder = Object.keys(itemsBySection).sort();
+  const sectionTitles: Record<string, string> = {};
+  sectionOrder.forEach((id) => {
+    const items = itemsBySection[id];
+    sectionTitles[id] = items[0]?.section_title ?? id;
+  });
+
+  const ROLE_ORDER = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer'];
+  const sortedRoles = [...matrixData.roles].sort((a, b) => {
+    const aIndex = ROLE_ORDER.indexOf(a.name);
+    const bIndex = ROLE_ORDER.indexOf(b.name);
+    if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+    if (aIndex !== -1) return -1;
+    if (bIndex !== -1) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(sectionId)) next.delete(sectionId);
+      else next.add(sectionId);
+      return next;
+    });
+  };
 
   return (
     <Card className={applyTheme.card()}>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Sidebar Permissions Matrix</CardTitle>
-            <CardDescription>
-              Manage which sidebar options each role can access. System roles (Viewer, Analyst, Manager, Director, Admin) can have permissions edited but cannot be renamed or deleted.
-            </CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={fetchMatrix} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-            {hasChanges() && (
-              <Button onClick={saveChanges} disabled={saving} size="sm">
-                {saving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
+        <div>
+          <CardTitle>Sidebar Permissions Matrix</CardTitle>
+          <CardDescription>
+            Manage which sidebar options each role can access. System roles (Viewer, Analyst, Manager, Director, Admin) can have permissions edited but cannot be renamed or deleted.
+          </CardDescription>
         </div>
       </CardHeader>
       <CardContent>
@@ -410,115 +482,159 @@ export function SidebarPermissionsMatrix() {
           </div>
         )}
 
+        {hasChanges() && (
+          <div className="mb-4 p-4 bg-amber-50 border-2 border-amber-400 rounded-lg">
+            <p className="text-amber-800 font-medium">
+              You have unsaved permission changes. Click &quot;Save Changes&quot; in the toolbar below to persist them to the database. Changes are not saved until you click Save.
+            </p>
+          </div>
+        )}
+
+        {/* Toolbar over table: Refresh / Save with space */}
+        <div className="mb-4 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-3">
+          <Button onClick={fetchMatrix} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          {hasChanges() && (
+            <Button onClick={saveChanges} disabled={saving} size="sm">
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-[250px] sticky left-0 bg-white z-10">Sidebar Option</TableHead>
-                      {/* Sort roles by seniority: Admin, Agency, Executive, Director, Manager, Analyst, Auditor, Viewer */}
-                      {(() => {
-                        const ROLE_ORDER = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer'];
-                        const sortedRoles = [...matrixData.roles].sort((a, b) => {
-                          const aIndex = ROLE_ORDER.indexOf(a.name);
-                          const bIndex = ROLE_ORDER.indexOf(b.name);
-                          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-                          if (aIndex !== -1) return -1;
-                          if (bIndex !== -1) return 1;
-                          return a.name.localeCompare(b.name);
-                        });
-                        return sortedRoles.map(role => (
-                          <TableHead key={role.id} className="text-center min-w-[120px]">
-                            <div className="flex flex-col items-center gap-1">
-                              <span>{role.name}</span>
-                              {role.is_system_role && (
-                                <Badge variant="outline" className="text-xs">
-                                  System
-                                </Badge>
-                              )}
-                            </div>
-                          </TableHead>
-                        ));
-                      })()}
+              <TableRow className="border-b-2 border-slate-200">
+                <TableHead className="w-[250px] sticky left-0 bg-white z-10 pb-4 pt-0">Module / Sub-module</TableHead>
+                {sortedRoles.map((role) => (
+                  <TableHead key={role.id} className="text-center min-w-[120px] pb-4 pt-0">
+                    <div className="flex flex-col items-center gap-1">
+                      <span>{role.name}</span>
+                      {role.is_system_role && (
+                        <Badge variant="outline" className="text-xs">
+                          System
+                        </Badge>
+                      )}
+                    </div>
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {Object.entries(itemsBySection).map(([sectionId, items]) => (
-                <React.Fragment key={sectionId}>
-                  <TableRow className="bg-slate-50">
-                    <TableCell colSpan={matrixData.roles.length + 1} className="font-semibold">
-                      {items[0]?.section_title || sectionId}
-                    </TableCell>
-                  </TableRow>
-                  {items.map(item => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium sticky left-0 bg-white z-10">
-                        {item.title}
+              {sectionOrder.map((sectionId) => {
+                const items = itemsBySection[sectionId];
+                const sectionTitle = sectionTitles[sectionId];
+                const isExpanded = expandedSections.has(sectionId);
+                return (
+                  <React.Fragment key={sectionId}>
+                    {/* Module row: section title + module-level checkboxes (derived from sub-modules) */}
+                    <TableRow
+                      className="bg-slate-100 hover:bg-slate-200/80 cursor-pointer border-b-2"
+                      onClick={() => toggleSection(sectionId)}
+                    >
+                      <TableCell className="font-semibold sticky left-0 bg-slate-100 z-10">
+                        <span className="inline-flex items-center gap-2">
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4 shrink-0" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 shrink-0" />
+                          )}
+                          {sectionTitle}
+                        </span>
                       </TableCell>
-                      {(() => {
-                        const ROLE_ORDER = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer'];
-                        const sortedRoles = [...matrixData.roles].sort((a, b) => {
-                          const aIndex = ROLE_ORDER.indexOf(a.name);
-                          const bIndex = ROLE_ORDER.indexOf(b.name);
-                          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-                          if (aIndex !== -1) return -1;
-                          if (bIndex !== -1) return 1;
-                          return a.name.localeCompare(b.name);
-                        });
-                        return sortedRoles.map(role => {
-                          const access = item.role_access[role.id.toString()] || { view: false, create: false, edit: false, delete: false };
-                          const displayValue = getAccessValue(role.id, item.id);
-
-                          return (
-                            <TableCell key={role.id} className="text-center">
-                            <div className="flex flex-col gap-1 items-center">
-                              {item.required_permissions.view && (
-                                <div className="flex gap-1 items-center">
-                                  <Checkbox
-                                    checked={getPermissionChecked(role.id, item.id, 'view')}
-                                    onCheckedChange={(checked) => handlePermissionChange(role.id, item.id, 'view', checked as boolean)}
-                                  />
-                                  <span className="text-xs text-gray-500">V</span>
-                                </div>
-                              )}
-                              {item.required_permissions.edit && (
-                                <div className="flex gap-1 items-center">
-                                  <Checkbox
-                                    checked={getPermissionChecked(role.id, item.id, 'edit')}
-                                    onCheckedChange={(checked) => handlePermissionChange(role.id, item.id, 'edit', checked as boolean)}
-                                  />
-                                  <span className="text-xs text-gray-500">E</span>
-                                </div>
-                              )}
-                              {item.required_permissions.create && (
-                                <div className="flex gap-1 items-center">
-                                  <Checkbox
-                                    checked={getPermissionChecked(role.id, item.id, 'create')}
-                                    onCheckedChange={(checked) => handlePermissionChange(role.id, item.id, 'create', checked as boolean)}
-                                  />
-                                  <span className="text-xs text-gray-500">C</span>
-                                </div>
-                              )}
-                              {item.required_permissions.delete && (
-                                <div className="flex gap-1 items-center">
-                                  <Checkbox
-                                    checked={getPermissionChecked(role.id, item.id, 'delete')}
-                                    onCheckedChange={(checked) => handlePermissionChange(role.id, item.id, 'delete', checked as boolean)}
-                                  />
-                                  <span className="text-xs text-gray-500">D</span>
-                                </div>
-                              )}
-                              <Badge variant="outline" className="text-xs mt-1">
-                                {displayValue}
-                              </Badge>
-                            </div>
+                      {sortedRoles.map((role) => {
+                        const checked = getModuleChecked(role.id, sectionId);
+                        const indeterminate = getModuleIndeterminate(role.id, sectionId);
+                        return (
+                          <TableCell
+                            key={role.id}
+                            className="text-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Checkbox
+                              checked={indeterminate ? "indeterminate" : checked}
+                              onCheckedChange={(value) =>
+                                handleModuleChange(role.id, sectionId, value === true)
+                              }
+                            />
                           </TableCell>
-                          );
-                        });
-                      })()}
+                        );
+                      })}
                     </TableRow>
-                  ))}
-                </React.Fragment>
-              ))}
+                    {/* Sub-module rows (visible when section expanded) */}
+                    {isExpanded &&
+                      items.map((item) => (
+                        <TableRow key={item.id} className="bg-white">
+                          <TableCell className="pl-12 font-medium sticky left-0 bg-white z-10">
+                            {item.title}
+                          </TableCell>
+                          {sortedRoles.map((role) => {
+                            const displayValue = getAccessValue(role.id, item.id);
+                            const types = [
+                              { key: "view" as const, letter: "V" },
+                              { key: "create" as const, letter: "C" },
+                              { key: "edit" as const, letter: "E" },
+                              { key: "delete" as const, letter: "D" },
+                            ];
+                            return (
+                              <TableCell key={role.id} className="align-top py-2">
+                                <div className="flex flex-col items-center gap-0.5">
+                                  {types.map(({ key, letter }) => {
+                                    const permCode = item.required_permissions[key];
+                                    if (!permCode) {
+                                      return (
+                                        <div
+                                          key={key}
+                                          className="flex h-6 w-full min-w-[2.5rem] items-center justify-center"
+                                          title={`${letter} not applicable`}
+                                        >
+                                          <span className="text-xs text-slate-300">—</span>
+                                        </div>
+                                      );
+                                    }
+                                    return (
+                                      <label
+                                        key={key}
+                                        className="flex h-6 w-full min-w-[2.5rem] cursor-pointer items-center justify-center gap-1"
+                                        title={letter === "V" ? "View" : letter === "C" ? "Create" : letter === "E" ? "Edit" : "Delete"}
+                                      >
+                                        <Checkbox
+                                          checked={getPermissionChecked(role.id, item.id, key)}
+                                          onCheckedChange={(c) =>
+                                            handlePermissionChange(role.id, item.id, key, c as boolean)
+                                          }
+                                          className="h-3.5 w-3.5 shrink-0"
+                                        />
+                                        <span className="text-xs font-medium text-slate-600 w-4 text-left">
+                                          {letter}
+                                        </span>
+                                      </label>
+                                    );
+                                  })}
+                                  <Badge variant="outline" className="mt-0.5 text-xs font-mono">
+                                    {displayValue}
+                                  </Badge>
+                                </div>
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      ))}
+                  </React.Fragment>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

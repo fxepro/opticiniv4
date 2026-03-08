@@ -143,9 +143,9 @@ export const WORKSPACE_APPS: WorkspaceApp[] = [
     id: "account",
     label: "Account",
     icon: "User",
-    matchIds: ["account", "settings", "profile"],
-    matchTitles: ["account", "settings", "profile"],
-    pathPrefixes: ["/workspace/account", "/workspace/settings", "/workspace/profile"],
+    matchIds: ["account"],
+    matchTitles: ["account"],
+    pathPrefixes: ["/workspace/account"],
     fallbackHref: "/workspace/account",
     isUtility: true,
   },
@@ -169,6 +169,30 @@ export const WORKSPACE_APPS: WorkspaceApp[] = [
     fallbackHref: "/workspace/integrations",
     isUtility: true,
   },
+];
+
+/** Main sidebar display order and separators. Use in main-sidebar for icon strip. */
+export const SIDEBAR_ORDER: (WorkspaceAppId | "separator")[] = [
+  "home",
+  "separator",
+  "discovery",
+  "health",
+  "performance",
+  "configuration",
+  "cost",
+  "separator",
+  "risk",
+  "compliance",
+  "evidence",
+  "security",
+  "change",
+  "separator",
+  "account",
+  "separator",
+  "collateral",
+  "integrations",
+  "separator",
+  "admin",
 ];
 
 export const isWorkspaceAppId = (

@@ -85,6 +85,7 @@ interface User {
   is_active: boolean;
   date_joined: string;
   last_login: string;
+  profile?: { organization_id?: string | null };
 }
 
 interface UserStats {
@@ -101,7 +102,7 @@ interface UserStats {
 }
 
 export default function AdminUsersPage() {
-  const { hasPermission } = usePermissions();
+  const { hasPermission, user: currentUser } = usePermissions();
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
@@ -467,6 +468,7 @@ export default function AdminUsersPage() {
         isOpen={isEditModalOpen}
         onClose={handleCloseEditModal}
         onSave={handleSaveUser}
+        currentUserIsSuperuser={!!currentUser?.is_superuser}
       />
     </div>
   );

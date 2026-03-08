@@ -35,8 +35,9 @@ class RoleSerializer(serializers.ModelSerializer):
         return f"Role: {obj.name.title()}"
     
     def get_is_system_role(self, obj):
-        # Consider admin and viewer as system roles
-        return obj.name in ['admin', 'viewer']
+        # Match backend update_role/delete_role: these cannot be renamed or deleted
+        SYSTEM_ROLES = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer']
+        return obj.name in SYSTEM_ROLES
 
 class RoleCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -44,6 +45,11 @@ class RoleCreateSerializer(serializers.ModelSerializer):
         fields = ['name']
     
     def validate_name(self, value):
+        # Superuser is only manageable via Django admin or CLI
+        if value and value.strip().lower() == 'superuser':
+            raise serializers.ValidationError(
+                "Superuser is not a manageable role in this app. It can only be set via Django admin or CLI."
+            )
         if Group.objects.filter(name__iexact=value).exists():
             raise serializers.ValidationError("A role with this name already exists.")
         return value

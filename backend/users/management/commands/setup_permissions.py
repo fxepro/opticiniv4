@@ -5,6 +5,9 @@ Usage:
     python manage.py setup_permissions
 """
 
+import logging
+import os
+
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Permission, Group, ContentType
 from django.contrib.contenttypes.models import ContentType
@@ -19,11 +22,23 @@ class Command(BaseCommand):
         
         # Define all permissions with their details
         PERMISSIONS = [
-            # Workspace
+            # Discovery (first app; Workspace removed - not an app)
+            {'code': 'discovery.overview.view', 'name': 'View Discovery Overview', 'category': 'discovery', 'description': 'View discovery overview'},
+            {'code': 'discovery.asset_inventory.view', 'name': 'View Asset Inventory', 'category': 'discovery', 'description': 'View asset inventory'},
+            # Health, Performance, Security, Configuration
+            {'code': 'health.overview.view', 'name': 'View Health Overview', 'category': 'health', 'description': 'View health overview'},
+            {'code': 'performance.overview.view', 'name': 'View Performance Overview', 'category': 'performance', 'description': 'View performance overview'},
+            {'code': 'security.overview.view', 'name': 'View Security Overview', 'category': 'security', 'description': 'View security overview'},
+            {'code': 'configuration.overview.view', 'name': 'View Configuration Overview', 'category': 'configuration', 'description': 'View configuration overview'},
+            # Evidence, Change, Cost, Risk
+            {'code': 'evidence.overview.view', 'name': 'View Evidence Overview', 'category': 'evidence', 'description': 'View evidence overview'},
+            {'code': 'change.overview.view', 'name': 'View Change Overview', 'category': 'change', 'description': 'View change overview'},
+            {'code': 'cost.overview.view', 'name': 'View Cost Overview', 'category': 'cost', 'description': 'View cost overview'},
+            {'code': 'risk.overview.view', 'name': 'View Risk Overview', 'category': 'risk', 'description': 'View risk overview'},
+            # Legacy/workspace (kept for backward compatibility; not shown as app)
             {'code': 'dashboard.view', 'name': 'View Dashboard', 'category': 'workspace', 'description': 'View workspace overview'},
             {'code': 'workspace.overview.view', 'name': 'View Workspace Overview', 'category': 'workspace', 'description': 'View workspace overview page'},
             {'code': 'dashboard.edit', 'name': 'Edit Dashboard', 'category': 'workspace', 'description': 'Edit dashboard settings'},
-            
             # Compliance
             {'code': 'compliance.view', 'name': 'View Compliance', 'category': 'compliance', 'description': 'View compliance information and reports'},
             {'code': 'compliance.overview.view', 'name': 'View Compliance Overview', 'category': 'compliance', 'description': 'View compliance overview'},
@@ -47,6 +62,8 @@ class Command(BaseCommand):
             {'code': 'compliance.reports.export', 'name': 'Export Compliance Reports', 'category': 'compliance', 'description': 'Export compliance reports and attestations'},
             {'code': 'compliance.tools.view', 'name': 'View Compliance Tools', 'category': 'compliance', 'description': 'View compliance tools configuration'},
             {'code': 'compliance.tools.edit', 'name': 'Edit Compliance Tools', 'category': 'compliance', 'description': 'Edit compliance tools configuration'},
+            {'code': 'compliance.monitoring.view', 'name': 'View Compliance Monitoring', 'category': 'compliance', 'description': 'View compliance monitoring and coverage'},
+            {'code': 'compliance.audit_hub.view', 'name': 'View Audit Hub', 'category': 'compliance', 'description': 'View and manage audit hub'},
             
             # Evidence
             {'code': 'evidence.view', 'name': 'View Evidence', 'category': 'evidence', 'description': 'View evidence and audit trails'},
@@ -83,8 +100,10 @@ class Command(BaseCommand):
             # Integrations
             {'code': 'integrations.overview.view', 'name': 'View Integrations Overview', 'category': 'integrations', 'description': 'View integrations overview'},
 
-            # Account
-            {'code': 'account.overview.view', 'name': 'View Account Overview', 'category': 'account', 'description': 'View account overview'},
+            # Account (org-level; Executive-only; Manager manages billing)
+            {'code': 'account.overview.view', 'name': 'View Account Overview', 'category': 'account', 'description': 'View account overview (org)'},
+            {'code': 'account.billing.view', 'name': 'View Account Billing', 'category': 'account', 'description': 'View billing under Account'},
+            {'code': 'account.billing.manage', 'name': 'Manage Account Billing', 'category': 'account', 'description': 'Manage billing (Manager/Executive)'},
             {'code': 'profile.view', 'name': 'View Profile', 'category': 'account', 'description': 'View user profile'},
             {'code': 'profile.edit', 'name': 'Edit Profile', 'category': 'account', 'description': 'Edit own profile'},
             
@@ -166,7 +185,17 @@ class Command(BaseCommand):
         # Note: Role names are capitalized in Group model
         ROLE_PERMISSIONS = {
             'Viewer': [
-                'dashboard.view',  # Workspace Overview
+                'discovery.overview.view',
+                'discovery.asset_inventory.view',
+                'health.overview.view',
+                'performance.overview.view',
+                'security.overview.view',
+                'configuration.overview.view',
+                'evidence.overview.view',
+                'change.overview.view',
+                'cost.overview.view',
+                'risk.overview.view',
+                'dashboard.view',
                 'workspace.overview.view',
                 'compliance.view',  # Compliance
                 'compliance.overview.view',
@@ -177,6 +206,7 @@ class Command(BaseCommand):
                 'compliance.policies.view',  # Compliance Policies
                 'compliance.audits.view',  # Compliance Audits
                 'compliance.reports.view',  # Compliance Reports
+                'compliance.monitoring.view',  # Assertions, templates (generic, not org-scoped)
                 'evidence.view',  # Evidence
                 'user_features.overview.view',
                 'site_audit.view',  # Site Audit
@@ -188,6 +218,16 @@ class Command(BaseCommand):
                 'profile.edit',
             ],
             'Analyst': [
+                'discovery.overview.view',
+                'discovery.asset_inventory.view',
+                'health.overview.view',
+                'performance.overview.view',
+                'security.overview.view',
+                'configuration.overview.view',
+                'evidence.overview.view',
+                'change.overview.view',
+                'cost.overview.view',
+                'risk.overview.view',
                 'dashboard.view',
                 'workspace.overview.view',
                 'compliance.view',  # Compliance
@@ -202,6 +242,7 @@ class Command(BaseCommand):
                 'compliance.reports.view',  # Compliance Reports
                 'compliance.reports.export',  # Compliance Reports
                 'compliance.tools.view',  # Compliance Tools
+                'compliance.monitoring.view',  # Assertions, templates (generic, not org-scoped)
                 'evidence.view',  # Evidence
                 'user_features.overview.view',
                 'site_audit.view',
@@ -220,6 +261,16 @@ class Command(BaseCommand):
                 'profile.edit',
             ],
             'Manager': [
+                'discovery.overview.view',
+                'discovery.asset_inventory.view',
+                'health.overview.view',
+                'performance.overview.view',
+                'security.overview.view',
+                'configuration.overview.view',
+                'evidence.overview.view',
+                'change.overview.view',
+                'cost.overview.view',
+                'risk.overview.view',
                 'dashboard.view',
                 'workspace.overview.view',
                 'dashboard.edit',
@@ -245,6 +296,7 @@ class Command(BaseCommand):
                 'compliance.reports.export',  # Compliance Reports
                 'compliance.tools.view',  # Compliance Tools
                 'compliance.tools.edit',  # Compliance Tools
+                'compliance.monitoring.view',  # Assertions, templates (generic, not org-scoped)
                 'evidence.view',  # Evidence
                 'evidence.create',  # Evidence
                 'evidence.edit',  # Evidence
@@ -270,11 +322,21 @@ class Command(BaseCommand):
                 'collateral.view',  # Collateral - Learning & Resources
                 'collateral.overview.view',
                 'integrations.overview.view',
-                'account.overview.view',
+                # Manager: no Account access (matrix); Account is Director+ and billing is separate
                 'profile.view',
                 'profile.edit',
             ],
             'Director': [
+                'discovery.overview.view',
+                'discovery.asset_inventory.view',
+                'health.overview.view',
+                'performance.overview.view',
+                'security.overview.view',
+                'configuration.overview.view',
+                'evidence.overview.view',
+                'change.overview.view',
+                'cost.overview.view',
+                'risk.overview.view',
                 'dashboard.view',
                 'workspace.overview.view',
                 'dashboard.edit',
@@ -300,6 +362,7 @@ class Command(BaseCommand):
                 'compliance.reports.export',  # Compliance Reports
                 'compliance.tools.view',  # Compliance Tools
                 'compliance.tools.edit',  # Compliance Tools
+                'compliance.monitoring.view',  # Assertions, templates (generic, not org-scoped)
                 'evidence.view',  # Evidence
                 'evidence.create',  # Evidence
                 'evidence.edit',  # Evidence
@@ -345,6 +408,16 @@ class Command(BaseCommand):
             ],
             'Executive': [
                 # Executive has all Director permissions plus additional admin capabilities
+                'discovery.overview.view',
+                'discovery.asset_inventory.view',
+                'health.overview.view',
+                'performance.overview.view',
+                'security.overview.view',
+                'configuration.overview.view',
+                'evidence.overview.view',
+                'change.overview.view',
+                'cost.overview.view',
+                'risk.overview.view',
                 'dashboard.view',
                 'workspace.overview.view',
                 'dashboard.edit',
@@ -370,6 +443,7 @@ class Command(BaseCommand):
                 'compliance.reports.export',  # Compliance Reports
                 'compliance.tools.view',  # Compliance Tools
                 'compliance.tools.edit',  # Compliance Tools
+                'compliance.monitoring.view',  # Assertions, templates (generic, not org-scoped)
                 'evidence.view',  # Evidence
                 'evidence.create',  # Evidence
                 'evidence.edit',  # Evidence
@@ -396,6 +470,8 @@ class Command(BaseCommand):
                 'admin_features.overview.view',
                 'collateral.overview.view',
                 'account.overview.view',
+                'account.billing.view',
+                'account.billing.manage',
                 'profile.view',
                 'profile.edit',
                 'analytics.view',
@@ -450,6 +526,7 @@ class Command(BaseCommand):
                 'compliance.reports.export',  # Compliance Reports
                 'compliance.tools.view',  # Compliance Tools
                 'compliance.tools.edit',  # Compliance Tools
+                'compliance.monitoring.view',  # Assertions, templates (generic, not org-scoped)
                 'evidence.view',  # Evidence
                 'evidence.create',  # Evidence
                 'evidence.edit',  # Evidence
@@ -493,6 +570,16 @@ class Command(BaseCommand):
             ],
             'Auditor': [
                 # Auditor role - read-only access with reporting capabilities
+                'discovery.overview.view',
+                'discovery.asset_inventory.view',
+                'health.overview.view',
+                'performance.overview.view',
+                'security.overview.view',
+                'configuration.overview.view',
+                'evidence.overview.view',
+                'change.overview.view',
+                'cost.overview.view',
+                'risk.overview.view',
                 'dashboard.view',
                 'workspace.overview.view',
                 'compliance.view',  # Compliance
@@ -506,6 +593,7 @@ class Command(BaseCommand):
                 'compliance.reports.view',  # Compliance Reports
                 'compliance.reports.export',  # Compliance Reports
                 'compliance.tools.view',  # Compliance Tools
+                'compliance.monitoring.view',  # Assertions, templates (generic, not org-scoped)
                 'evidence.view',  # Evidence
                 'user_features.overview.view',
                 'site_audit.view',
@@ -541,12 +629,33 @@ class Command(BaseCommand):
             model='featurepermission'
         )
         
+        # Audit log: setup_permissions invoked
+        audit_log = logging.getLogger('users.audit')
+        audit_log.info(
+            'SETUP_PERMISSIONS_START pid=%s cwd=%s',
+            os.getpid(), os.getcwd(),
+            extra={'pid': os.getpid(), 'cwd': os.getcwd()}
+        )
+
         # Assign permissions to groups
         for role_name, permission_codes in ROLE_PERMISSIONS.items():
             try:
                 group = Group.objects.get(name=role_name)
                 self.stdout.write(f'\nAssigning permissions to role: {role_name}')
-                
+
+                # Capture before state for audit
+                before_codes = set()
+                for perm in group.permissions.all():
+                    try:
+                        fp = FeaturePermission.objects.get(django_permission=perm)
+                        before_codes.add(fp.code)
+                    except FeaturePermission.DoesNotExist:
+                        before_codes.add(perm.codename.replace('_', '.'))
+                before_codes = sorted(before_codes)
+                after_codes = sorted(set(permission_codes))
+                added = sorted(set(after_codes) - set(before_codes))
+                removed = sorted(set(before_codes) - set(after_codes))
+
                 # Clear existing permissions first
                 group.permissions.clear()
                 
@@ -580,11 +689,27 @@ class Command(BaseCommand):
                         self.stdout.write(self.style.WARNING(f'  Could not assign {perm_code}: {str(e)}'))
                 
                 self.stdout.write(self.style.SUCCESS(f'  Assigned {assigned_count} permissions to {role_name}'))
-                
+
+                # Audit log: what changed for this role
+                if added or removed:
+                    audit_log.info(
+                        'SETUP_PERMISSIONS_ROLE role_id=%s role_name=%s added=%s removed=%s',
+                        group.id, role_name, added, removed,
+                        extra={
+                            'role_id': group.id,
+                            'role_name': role_name,
+                            'before': before_codes,
+                            'after': after_codes,
+                            'added': added,
+                            'removed': removed,
+                        }
+                    )
+
             except Group.DoesNotExist:
                 self.stdout.write(self.style.WARNING(f'Role {role_name} does not exist. Run setup_roles first.'))
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f'Error assigning permissions to {role_name}: {str(e)}'))
         
+        audit_log.info('SETUP_PERMISSIONS_END pid=%s', os.getpid(), extra={'pid': os.getpid()})
         self.stdout.write(self.style.SUCCESS('\nPermission setup complete!'))
 

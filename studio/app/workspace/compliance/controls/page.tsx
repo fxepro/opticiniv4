@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,12 +18,12 @@ import { Shield, Search, Download, RefreshCw, Filter, Table2, Grid3x3, List } fr
 import { Control, ControlStatus, ControlSeverity } from "@/lib/data/controls";
 import { ControlsTable } from "@/components/compliance/controls-table";
 import { ControlCard } from "@/components/compliance/control-card";
-import { ControlDetailDrawer } from "@/components/compliance/control-detail-drawer";
 import axios from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
 
 export default function ComplianceControlsPage() {
+  const router = useRouter();
   const [controls, setControls] = useState<Control[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,8 +33,6 @@ export default function ComplianceControlsPage() {
   const [severityFilter, setSeverityFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
   const [selectedControls, setSelectedControls] = useState<string[]>([]);
-  const [selectedControl, setSelectedControl] = useState<Control | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [frameworks, setFrameworks] = useState<Array<{id: string, name: string}>>([]);
 
   // Helper function to refresh token
@@ -108,6 +107,56 @@ export default function ComplianceControlsPage() {
     fetchFrameworks();
   }, []);
 
+  const mapApiControlToControl = (c: any): Control => {
+    let frameworkNames: string[] = [];
+    let frameworkIds: string[] = [];
+    if (Array.isArray(c.frameworks)) {
+      if (c.frameworks.length > 0 && typeof c.frameworks[0] === "string") {
+        frameworkNames = c.frameworks;
+      } else if (c.frameworks.length > 0 && typeof c.frameworks[0] === "object") {
+        frameworkNames = c.frameworks.map((f: any) => f.name || f);
+        frameworkIds = c.frameworks.map((f: any) => f.id || "");
+      }
+    }
+    const requirements = Array.isArray(c.requirements)
+      ? c.requirements.map((r: any) => (typeof r === "string" ? r : r?.code ?? r?.title ?? ""))
+      : [];
+    return {
+      id: c.id,
+      controlId: c.control_id || "",
+      name: c.name || "",
+      description: c.description || "",
+      frameworks: frameworkIds,
+      frameworkNames,
+      requirements,
+      status: (c.status || "not_evaluated") as ControlStatus,
+      severity: (c.severity || "medium") as ControlSeverity,
+      risk: c.risk,
+      owner: c.owner,
+      health: c.health,
+      evidencePctComplete: c.evidence_pct_complete ?? 0,
+      lastEvaluated: c.last_evaluated,
+      evaluatedBy: c.evaluated_by_username,
+      evaluationMethod: (c.evaluation_method || "automated") as any,
+      failureReason: c.failure_reason,
+      failingAssets: c.failing_assets || [],
+      failingCount: c.failing_count || 0,
+      evidenceCount: c.evidence_count ?? 0,
+      evidenceIds: c.evidence_ids || [],
+      uptimePercentage: c.uptime_percentage,
+      timeOutOfCompliance: c.time_out_of_compliance,
+      fixRecommendations: c.fix_recommendations || [],
+      relatedControls: c.related_control_ids?.map((id: string) => id) || [],
+      category: c.category,
+      controlType: (c.control_type || "preventive") as any,
+      frequency: (c.frequency || "continuous") as any,
+      nature: c.nature,
+      implementationStatus: c.implementation_status,
+      maturityLevel: c.maturity_level,
+      reviewDates: c.review_dates,
+    };
+  };
+
   // Fetch controls from API
   useEffect(() => {
     const fetchData = async () => {
@@ -143,77 +192,14 @@ export default function ComplianceControlsPage() {
           url += `?${params.toString()}`;
         }
         
-        console.log('Fetching controls from:', url);
         const response = await makeAuthenticatedRequest(url, token);
         
-        console.log('Controls API response:', response.data);
-        console.log('Response type:', typeof response.data, 'Is array:', Array.isArray(response.data));
-        console.log('Response length:', Array.isArray(response.data) ? response.data.length : 'N/A');
-        
         if (!Array.isArray(response.data)) {
-          console.error('Invalid API response format:', response.data);
           throw new Error('Invalid API response format');
         }
         
-        if (response.data.length === 0) {
-          console.log('No controls found in API response - database may be empty');
-        }
-
-        // Map API response to Control interface
-        // Note: ComplianceControlListSerializer returns frameworks as array of strings (names)
-        const mappedControls: Control[] = response.data.map((c: any) => {
-          // Handle frameworks - could be array of strings or array of objects
-          let frameworkNames: string[] = [];
-          let frameworkIds: string[] = [];
-          
-          if (Array.isArray(c.frameworks)) {
-            if (c.frameworks.length > 0 && typeof c.frameworks[0] === 'string') {
-              // Array of strings (from ComplianceControlListSerializer)
-              frameworkNames = c.frameworks;
-            } else if (c.frameworks.length > 0 && typeof c.frameworks[0] === 'object') {
-              // Array of objects (from ComplianceControlSerializer)
-              frameworkNames = c.frameworks.map((f: any) => f.name || f);
-              frameworkIds = c.frameworks.map((f: any) => f.id || '');
-            }
-          }
-          
-          console.log(`Mapping control ${c.control_id}:`, {
-            frameworks: c.frameworks,
-            frameworkNames,
-            frameworkIds
-          });
-          
-          return {
-            id: c.id,
-            controlId: c.control_id || '',
-            name: c.name || '',
-            description: c.description || '',
-            frameworks: frameworkIds,
-            frameworkNames: frameworkNames,
-            status: (c.status || 'not_evaluated') as ControlStatus,
-            severity: (c.severity || 'medium') as ControlSeverity,
-            lastEvaluated: c.last_evaluated,
-            evaluatedBy: c.evaluated_by_username,
-            evaluationMethod: (c.evaluation_method || 'automated') as any,
-            failureReason: c.failure_reason,
-            failingAssets: c.failing_assets || [],
-            failingCount: c.failing_count || 0,
-            evidenceCount: 0, // Will be fetched separately if needed
-            evidenceIds: [],
-            uptimePercentage: c.uptime_percentage,
-            timeOutOfCompliance: c.time_out_of_compliance,
-            fixRecommendations: c.fix_recommendations || [],
-            relatedControls: c.related_control_ids?.map((id: string) => id) || [],
-            category: c.category,
-            controlType: (c.control_type || 'preventive') as any,
-            frequency: (c.frequency || 'continuous') as any,
-          };
-        });
+        const mappedControls: Control[] = response.data.map(mapApiControlToControl);
         
-        console.log('Mapped controls count:', mappedControls.length);
-        if (mappedControls.length > 0) {
-          console.log('First mapped control:', mappedControls[0]);
-        }
         setControls(mappedControls);
         setError(null);
       } catch (err: any) {
@@ -308,14 +294,18 @@ export default function ComplianceControlsPage() {
     }
   };
 
-  const handleViewDetails = (control: Control) => {
-    setSelectedControl(control);
-    setDrawerOpen(true);
-  };
 
   const handleReEvaluate = (controlId: string) => {
     // TODO: Connect to backend API
     console.log(`Re-evaluate control ${controlId}`);
+  };
+
+  const fetchControlDetail = async (controlId: string): Promise<Control> => {
+    const token = localStorage.getItem("access_token");
+    if (!token) throw new Error("Not authenticated");
+    const baseUrl = API_BASE?.replace(/\/$/, "") || "";
+    const response = await makeAuthenticatedRequest(`${baseUrl}/api/compliance/controls/${controlId}/`, token);
+    return mapApiControlToControl(response.data);
   };
 
   if (loading) {
@@ -379,50 +369,7 @@ export default function ComplianceControlsPage() {
               const url = `${baseUrl}/api/compliance/controls/`;
               try {
                 const response = await makeAuthenticatedRequest(url, token);
-                // Map API response to Control interface
-                const mappedControls: Control[] = response.data.map((c: any) => {
-                  // Handle frameworks - could be array of strings or array of objects
-                  let frameworkNames: string[] = [];
-                  let frameworkIds: string[] = [];
-                  
-                  if (Array.isArray(c.frameworks)) {
-                    if (c.frameworks.length > 0 && typeof c.frameworks[0] === 'string') {
-                      // Array of strings (from ComplianceControlListSerializer)
-                      frameworkNames = c.frameworks;
-                    } else if (c.frameworks.length > 0 && typeof c.frameworks[0] === 'object') {
-                      // Array of objects (from ComplianceControlSerializer)
-                      frameworkNames = c.frameworks.map((f: any) => f.name || f);
-                      frameworkIds = c.frameworks.map((f: any) => f.id || '');
-                    }
-                  }
-                  
-                  return {
-                    id: c.id,
-                    controlId: c.control_id || '',
-                    name: c.name || '',
-                    description: c.description || '',
-                    frameworks: frameworkIds,
-                    frameworkNames: frameworkNames,
-                    status: (c.status || 'not_evaluated') as ControlStatus,
-                    severity: (c.severity || 'medium') as ControlSeverity,
-                    lastEvaluated: c.last_evaluated,
-                    evaluatedBy: c.evaluated_by_username,
-                    evaluationMethod: (c.evaluation_method || 'automated') as any,
-                    failureReason: c.failure_reason,
-                    failingAssets: c.failing_assets || [],
-                    failingCount: c.failing_count || 0,
-                    evidenceCount: 0,
-                    evidenceIds: [],
-                    uptimePercentage: c.uptime_percentage,
-                    timeOutOfCompliance: c.time_out_of_compliance,
-                    fixRecommendations: c.fix_recommendations || [],
-                    relatedControls: c.related_control_ids?.map((id: string) => id) || [],
-                    category: c.category,
-                    controlType: (c.control_type || 'preventive') as any,
-                    frequency: (c.frequency || 'continuous') as any,
-                  };
-                });
-                setControls(mappedControls);
+                setControls(response.data.map(mapApiControlToControl));
               } catch (err: any) {
                 setError(err.message || "Failed to refresh");
               } finally {
@@ -610,29 +557,28 @@ export default function ComplianceControlsPage() {
         </div>
       </div>
 
-      {/* Controls Display */}
-      {filteredControls.length > 0 ? (
-        viewMode === "table" ? (
-          <ControlsTable
-            controls={filteredControls}
-            selectedControls={selectedControls}
-            onSelectControl={handleSelectControl}
-            onSelectAll={handleSelectAll}
-            onViewDetails={handleViewDetails}
-            onReEvaluate={handleReEvaluate}
-          />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredControls.map((control) => (
-              <ControlCard
-                key={control.id}
-                control={control}
-                onViewDetails={handleViewDetails}
-                onReEvaluate={handleReEvaluate}
-              />
-            ))}
-          </div>
-        )
+      {/* Controls Display: table view always shows table (with headers); cards view shows grid or empty state */}
+      {viewMode === "table" ? (
+        <ControlsTable
+          controls={filteredControls}
+          selectedControls={selectedControls}
+          onSelectControl={handleSelectControl}
+          onSelectAll={handleSelectAll}
+          onViewDetails={() => {}}
+          onReEvaluate={handleReEvaluate}
+          onFetchDetail={fetchControlDetail}
+        />
+      ) : filteredControls.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredControls.map((control) => (
+            <ControlCard
+              key={control.id}
+              control={control}
+              onViewDetails={(c) => router.push(`/workspace/compliance/controls/${c.id}`)}
+              onReEvaluate={handleReEvaluate}
+            />
+          ))}
+        </div>
       ) : (
         <Card>
           <CardContent className="pt-6">
@@ -658,16 +604,6 @@ export default function ComplianceControlsPage() {
         </Card>
       )}
 
-      {/* Control Detail Drawer */}
-      <ControlDetailDrawer
-        control={selectedControl}
-        open={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false);
-          setSelectedControl(null);
-        }}
-        onReEvaluate={handleReEvaluate}
-      />
     </div>
   );
 }

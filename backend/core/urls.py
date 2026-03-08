@@ -87,9 +87,12 @@ urlpatterns += [
     path('api/monitoring/logs/', views.log_files_list, name='log_files_list'),
     path('api/monitoring/logs/<str:log_type>/', views.view_logs, name='view_logs'),
     path('api/monitoring/status/', views.system_status, name='system_status'),
-    # Health check endpoint at /api/ root (must come after specific routes but before router)
-    # This handles /api/ requests when path is exactly /api/
+    # Health check and version (no auth)
     path('api/', views.health_check, name='api_health'),
+    path('api/version/', views.version_info, name='api_version'),
+    path('api/version/releases/', views.version_release_list, name='version_release_list'),
+    path('api/version/releases/create/', views.version_release_create, name='version_release_create'),
+    path('api/version/releases/<uuid:release_id>/', views.version_release_detail, name='version_release_detail'),
     # Audit reports router (includes /api/reports/ via router.urls)
     # Note: When accessing /api/reports/, Django will skip the health_check pattern
     # because it requires an exact match for /api/, and will match this include instead
@@ -109,12 +112,10 @@ urlpatterns += [
     path('api/collateral/', include('collateral.urls')),  # Learning Materials (Collateral)
     path('api/affiliates/', include('affiliates.urls')),  # Affiliates Management
     path('api/security/', include('security_monitoring.urls')),  # Security Monitoring
-    # Compliance Module
-    path('', include('compliance_frameworks.urls')),  # Compliance Frameworks
-    path('api/compliance/', include('compliance_controls.urls')),  # Compliance Controls
-    path('api/compliance/', include('compliance_evidence.urls')),  # Compliance Evidence
-    path('api/compliance/', include('compliance_reports.urls')),  # Compliance Reports
-    path('api/compliance/tools/', include('compliance_tools.urls')),  # Compliance Tools
+    path('', include('account.urls')),  # Account (org-level: overview, organization, billing)
+    path('api/discovery/', include('discovery.urls')),  # Discovery (assets, inventory)
+    # Compliance (single app: frameworks, controls, evidence, audits, policies, reports, tools)
+    path("", include("compliance.urls")),
     path('favicon.ico', favicon_view, name='favicon'),  # Prevent 404s in logs
 ]
 

@@ -8,6 +8,7 @@ from rest_framework import status
 from .permission_classes import HasFeaturePermission
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from .role_sync import normalize_role, set_user_role_by_group_id, set_user_role_by_name
 from django.db.models import Q
 from django.utils import timezone
 from core.rate_limiting import rate_limit_register, rate_limit_api
@@ -21,6 +22,9 @@ from .two_factor import (
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Source of truth: auth_user_groups (user_id, group_id). We write/read by group_id.
+
 from .models import (
     UserProfile,
     UserActivity,
@@ -77,6 +81,8 @@ def user_info(request):
             'is_active': profile.is_active if profile else user.is_active,
             'roles': [role],  # Keep for compatibility
             'permissions': permissions,  # Add permissions list
+            # Expose superuser flag so frontend PermissionProvider can grant full access
+            'is_superuser': bool(user.is_superuser),
         }
         
         # Add profile personal info if profile exists
@@ -327,15 +333,50 @@ def update_user(request, user_id):
         user.last_name = request.data.get('last_name', user.last_name)
         user.save()
         
-        # Update profile fields
-        profile.role = request.data.get('role', profile.role)
         profile.is_active = request.data.get('is_active', profile.is_active)
+        # Org scoping: only superuser can set a user's organization_id (until full org solution).
+        if request.user.is_superuser and 'organization_id' in request.data:
+            raw = request.data.get('organization_id')
+            if raw is None or raw == '':
+                profile.organization_id = None
+            else:
+                try:
+                    import uuid
+                    profile.organization_id = uuid.UUID(str(raw))
+                except (ValueError, TypeError):
+                    pass  # leave unchanged on invalid UUID
         profile.save()
-        
+        # Role: auth_user_groups (group_id). Accept role_id (preferred) or role name.
+        role_id = request.data.get('role_id')
+        if role_id is not None:
+            set_user_role_by_group_id(user, int(role_id))
+        else:
+            raw_role = request.data.get('role', None)
+            role_name = normalize_role(raw_role) or (getattr(profile, 'role', None) and normalize_role(profile.role)) or 'viewer'
+            set_user_role_by_name(user, role_name)
+
         serializer = UserSerializer(user)
         return Response(serializer.data)
     except User.DoesNotExist:
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_organizations(request):
+    """List organizations (core DB) for org scoping. Superuser only until full org solution."""
+    if not request.user.is_superuser:
+        return Response(
+            {'error': 'Only superusers can list organizations.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    try:
+        from platform_org.models import Organization
+        orgs = Organization.objects.using('org').order_by('name').values('id', 'name')
+        return Response([{'id': str(o['id']), 'name': o['name']} for o in orgs])
+    except Exception as e:
+        logger.warning('list_organizations failed: %s', e)
+        return Response([], status=status.HTTP_200_OK)
+
 
 @api_view(['DELETE'])
 @permission_classes([IsAdminUser])
@@ -351,14 +392,24 @@ def delete_user(request, user_id):
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def assign_role(request, user_id):
-    """Assign role to user"""
+    """Assign role by group_id (auth_user_groups). Accepts role_id (preferred) or role name."""
     try:
+        role_id = request.data.get('role_id')
+        role_name = request.data.get('role', '').strip()
+        if role_name and role_name.lower() == 'superuser':
+            return Response(
+                {'error': 'Superuser cannot be assigned via this app. Use Django admin or CLI.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         user = User.objects.get(id=user_id)
-        profile = user.profile
-        profile.role = request.data['role']
-        profile.save()
-        
-        return Response({'message': f'Role updated to {profile.role}'})
+        if role_id is not None:
+            set_user_role_by_group_id(user, int(role_id))
+        else:
+            set_user_role_by_name(user, role_name or 'viewer')
+        from .permission_utils import _get_user_role_group
+        g = _get_user_role_group(user)
+        role_display = g.name.lower() if g else 'viewer'
+        return Response({'message': f'Role updated to {role_display}'})
     except User.DoesNotExist:
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 

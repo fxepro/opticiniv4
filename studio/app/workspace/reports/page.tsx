@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Trash2, RefreshCw, AlertCircle, CheckCircle, Clock, FileText, ExternalLink } from 'lucide-react';
 import { applyTheme } from '@/lib/theme';
+import { toast } from "sonner";
 
 interface AuditReport {
   id: string;
@@ -166,10 +167,14 @@ export default function Reports2Page() {
       });
 
       if (response.ok) {
+        toast.success("Report deleted");
         fetchReports();
+      } else {
+        toast.error("Failed to delete report");
       }
     } catch (error) {
       console.error('Error deleting audit record:', error);
+      toast.error("Failed to delete report");
       }
   }
 

@@ -3,7 +3,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { ShieldCheck, FileText, ArrowRight, Shield, Lock, Globe, Building2 } from "lucide-react";
 import Link from "next/link";
@@ -12,7 +11,6 @@ import { cn } from "@/lib/utils";
 
 interface FrameworkCardProps {
   framework: Framework;
-  onToggle?: (id: string, enabled: boolean) => void;
   onGenerateReport?: (frameworkId: string) => void;
 }
 
@@ -55,20 +53,15 @@ const getScoreColor = (score: number) => {
   return 'text-red-600';
 };
 
-export function FrameworkCard({ framework, onToggle, onGenerateReport }: FrameworkCardProps) {
-  const CategoryIcon = categoryIcons[framework.category];
+export function FrameworkCard({ framework, onGenerateReport }: FrameworkCardProps) {
+  const CategoryIcon = categoryIcons[framework.category as keyof typeof categoryIcons] ?? Shield;
   const statusColor = getStatusColor(framework.status);
   const scoreColor = getScoreColor(framework.complianceScore);
 
   return (
-    <Card className={cn(
-      "relative border-2 transition-all duration-200 hover:shadow-lg",
-      framework.enabled 
-        ? "border-palette-primary/30 hover:border-palette-primary/60" 
-        : "border-gray-200 hover:border-gray-300"
-    )}>
+    <Card className="relative border-2 border-palette-primary/30 hover:border-palette-primary/60 transition-all duration-200 hover:shadow-lg">
       <CardContent className="p-6">
-        {/* Header with Logo, Status, and Toggle */}
+        {/* Header with Logo and Status */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className={cn(
@@ -91,15 +84,9 @@ export function FrameworkCard({ framework, onToggle, onGenerateReport }: Framewo
               <p className="text-xs text-slate-500">{framework.code}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge className={cn("text-xs", statusColor)}>
-              {getStatusLabel(framework.status)}
-            </Badge>
-            <Switch
-              checked={framework.enabled}
-              onCheckedChange={(checked) => onToggle?.(framework.id, checked)}
-            />
-          </div>
+          <Badge className={cn("text-xs", statusColor)}>
+            {getStatusLabel(framework.status)}
+          </Badge>
         </div>
 
         {/* Description */}
