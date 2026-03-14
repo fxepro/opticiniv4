@@ -1,5 +1,5 @@
 [build]
-  base    = "adoptoday-next"
+  base    = "studio"
   command = "npm run build"
   # Publish directory: leave unset – @netlify/plugin-nextjs handles deployment
 
