@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter, Montserrat, Lato, Source_Sans_3, Archivo } from "next/font/google"
+import { Inter, Montserrat, Lato, Source_Sans_3, Archivo, Sora } from "next/font/google"
 import "./globals.css"
 import { Navigation } from "@/components/navigation"
 import { ConditionalNavigation } from "@/components/conditional-navigation"
@@ -149,6 +149,14 @@ const archivo = Archivo({
   preload: true
 })
 
+const sora = Sora({ 
+  subsets: ["latin"],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-sora',
+  display: 'swap',
+  preload: true
+})
+
 export const metadata: Metadata = {
   title: "Opticini - Performance, Metrics & Compliance Platform",
   description: "Measure performance, metrics, compliance, and more. Professional platform for comprehensive analysis, monitoring, and actionable insights.",
@@ -185,7 +193,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#8b5cf6" />
         <script dangerouslySetInnerHTML={{ __html: paletteHydrationScript }} />
       </head>
-      <body className={`${montserrat.className} ${inter.variable} ${lato.variable} ${sourceSans3.variable} ${archivo.variable}`}>
+      <body className={`${sora.variable} ${montserrat.className} ${inter.variable} ${lato.variable} ${sourceSans3.variable} ${archivo.variable}`}>
         <LanguageProvider />
         <I18nProvider>
         <PostHogProviderWrapper>
@@ -197,7 +205,7 @@ export default function RootLayout({
               {/* Fallback: Original navigation (commented out for now) */}
               {/* <Navigation /> */}
               
-              <main className="min-h-screen bg-background">{children}</main>
+              <main className="min-h-screen" style={{ background: "var(--rd-bg-page)" }}>{children}</main>
               <ConditionalFooter />
               <ToasterProvider />
             </PaletteProvider>

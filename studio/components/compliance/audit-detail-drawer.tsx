@@ -10,7 +10,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Audit, AuditFinding, AuditRequirementRollup, AuditControlTest, AuditEvidenceItem, AuditStatusHistoryEntry } from "@/lib/data/audits";
+import { Audit, AuditFinding, AuditRequirementRollup, AuditEvidenceItem, AuditStatusHistoryEntry } from "@/lib/data/audits";
 import { AuditStatusBadge } from "./audit-status-badge";
 import {
   Search,
@@ -95,7 +95,6 @@ export function AuditDetailDrawer({ audit, open, onClose }: AuditDetailDrawerPro
   };
 
   const rollups = audit.requirementRollups ?? [];
-  const controlTests = audit.controlTests ?? [];
   const evidenceItems = audit.evidenceItems ?? [];
   const controlsInScope = audit.controlsInScope ?? audit.totalControls ?? 0;
   const controlsTested = audit.controlsTested ?? audit.controlsPassed + audit.controlsFailed + audit.controlsPartial;
@@ -359,53 +358,15 @@ export function AuditDetailDrawer({ audit, open, onClose }: AuditDetailDrawerPro
             )}
           </TabsContent>
 
-          {/* Tab 3: Controls */}
+          {/* Tab 3: Controls in scope (Control test cases = future implementation) */}
           <TabsContent value="controls" className="space-y-4 mt-4">
             <h3 className="font-semibold text-slate-800 flex items-center gap-2">
               <ListChecks className="h-4 w-4" />
-              Control testing
+              Controls in scope
             </h3>
             <p className="text-sm text-muted-foreground">
-              Control | Test plan | Samples | Result | Exceptions
+              {audit.totalControls ?? controlsInScope ?? 0} controls in scope for this audit.
             </p>
-            {controlTests.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-sm text-slate-600">No control test data</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  {audit.totalControls} controls in scope
-                </p>
-              </div>
-            ) : (
-              <div className="rounded-lg border overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/50 border-b">
-                    <tr>
-                      <th className="text-left p-3 font-medium">Control</th>
-                      <th className="text-left p-3 font-medium">Test plan</th>
-                      <th className="text-left p-3 font-medium">Samples</th>
-                      <th className="text-left p-3 font-medium">Result</th>
-                      <th className="text-left p-3 font-medium">Exceptions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {controlTests.map((c) => (
-                      <tr key={c.controlId} className="border-b last:border-0">
-                        <td className="p-3">
-                          <span className="font-mono text-xs">{c.controlId}</span>
-                          <span className="block text-sm">{c.controlName}</span>
-                        </td>
-                        <td className="p-3 text-sm">{c.testPlanName || "—"}</td>
-                        <td className="p-3">{c.sampleCount}</td>
-                        <td className={cn("p-3 font-medium", getResultColor(c.result))}>
-                          {c.result ?? "—"}
-                        </td>
-                        <td className="p-3">{c.exceptionsCount}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
           </TabsContent>
 
           {/* Tab 4: Evidence */}

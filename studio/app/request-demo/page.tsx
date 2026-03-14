@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
 import axios from "axios";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, Building, MessageSquare, CheckCircle, AlertCircle, LogIn } from "lucide-react";
+import { User, Mail, Building, MessageSquare, CheckCircle, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { PageHero } from "@/components/page-hero";
 
 // Use relative URL in production (browser), localhost in dev (SSR)
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
@@ -100,25 +99,25 @@ export default function RequestDemoPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3 p-4">
-        <Card className="w-full max-w-md shadow-lg">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "var(--rd-bg-page)", fontFamily: "var(--rd-font-body)" }}>
+        <Card className="w-full max-w-md shadow-lg rounded-[18px] border-[1.5px]" style={{ borderColor: "var(--rd-border-light)" }}>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="rounded-full bg-green-100 p-3">
-                <CheckCircle className="h-12 w-12 text-green-600" />
+              <div className="rounded-full p-3" style={{ background: "var(--rd-blue-100)" }}>
+                <CheckCircle className="h-12 w-12" style={{ color: "var(--rd-emerald-600)" }} />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold">Demo Request Submitted!</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl font-bold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>Demo Request Submitted!</CardTitle>
+            <CardDescription style={{ color: "var(--rd-text-secondary)" }}>
               Thank you for your interest. We'll review your request and get back to you soon.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-slate-50 p-4 rounded-lg">
-              <p className="text-sm text-slate-600 mb-2">
-                <strong>What happens next?</strong>
+            <div className="p-4 rounded-xl" style={{ background: "var(--rd-bg-subtle)" }}>
+              <p className="text-sm mb-2 font-semibold" style={{ color: "var(--rd-text-heading)" }}>
+                What happens next?
               </p>
-              <ul className="text-sm text-slate-600 space-y-1 list-disc list-inside">
+              <ul className="text-sm space-y-1 list-disc list-inside" style={{ color: "var(--rd-text-secondary)" }}>
                 <li>Our team will review your demo request</li>
                 <li>We'll contact you within 24-48 hours</li>
                 <li>You'll get access to a demo account with sample data</li>
@@ -148,79 +147,49 @@ export default function RequestDemoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3">
-      {/* Header */}
-      <div className="border-b border-slate-200 bg-white/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/">
-              <Image 
-                src="/opticini-dark.png" 
-                alt="Opticini Logo" 
-                width={160} 
-                height={40}
-                className="object-contain hover:opacity-90 transition-opacity duration-300"
-              />
-            </Link>
-            {!loggedIn && (
-              <Button variant="outline" asChild>
-                <Link href="/workspace/login">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Sign In
-                </Link>
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <Badge variant="outline" className="mb-4">
-            Request Demo Access
-          </Badge>
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
-            Experience Opticini with Demo Data
-          </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Get access to a demo account with pre-loaded sample data to explore all features and capabilities of Opticini.
-          </p>
-        </div>
-
+    <div className="min-h-screen" style={{ background: "var(--rd-bg-page)", fontFamily: "var(--rd-font-body)" }}>
+      <PageHero
+        badge="Request Demo"
+        title="Experience Opticini with Demo Data"
+        subtitle="Get access to a demo account with pre-loaded sample data to explore all features and capabilities of Opticini."
+      />
+      <div className="container mx-auto px-4 pt-16 pb-16 max-w-6xl">
         {/* Info Cards */}
-        <div className="grid md:grid-cols-3 gap-4 mb-12">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Building className="h-8 w-8 text-palette-primary mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Sample Data</h3>
-              <p className="text-sm text-slate-600">
-                Explore real monitoring data, reports, and analytics from sample websites
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <User className="h-8 w-8 text-palette-primary mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Full Access</h3>
-              <p className="text-sm text-slate-600">
-                Access all features including AI analysis, monitoring, and reporting tools
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <MessageSquare className="h-8 w-8 text-palette-primary mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Expert Support</h3>
-              <p className="text-sm text-slate-600">
-                Get guidance from our team to help you make the most of your demo
-              </p>
-            </CardContent>
-          </Card>
+        <div className="grid md:grid-cols-3 gap-6 mb-12 mt-12">
+          <div
+            className="rounded-[18px] border-[1.5px] p-6 text-center transition-colors hover:border-[#93c5fd]"
+            style={{ background: "var(--rd-bg-white)", borderColor: "var(--rd-border-light)" }}
+          >
+            <Building className="h-8 w-8 mx-auto mb-3" style={{ color: "var(--rd-blue-600)" }} />
+            <h3 className="font-semibold mb-2" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>Sample Data</h3>
+            <p className="text-sm" style={{ color: "var(--rd-text-secondary)" }}>
+              Explore real monitoring data, reports, and analytics from sample websites
+            </p>
+          </div>
+          <div
+            className="rounded-[18px] border-[1.5px] p-6 text-center transition-colors hover:border-[#93c5fd]"
+            style={{ background: "var(--rd-bg-white)", borderColor: "var(--rd-border-light)" }}
+          >
+            <User className="h-8 w-8 mx-auto mb-3" style={{ color: "var(--rd-blue-600)" }} />
+            <h3 className="font-semibold mb-2" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>Full Access</h3>
+            <p className="text-sm" style={{ color: "var(--rd-text-secondary)" }}>
+              Access all features including AI analysis, monitoring, and reporting tools
+            </p>
+          </div>
+          <div
+            className="rounded-[18px] border-[1.5px] p-6 text-center transition-colors hover:border-[#93c5fd]"
+            style={{ background: "var(--rd-bg-white)", borderColor: "var(--rd-border-light)" }}
+          >
+            <MessageSquare className="h-8 w-8 mx-auto mb-3" style={{ color: "var(--rd-blue-600)" }} />
+            <h3 className="font-semibold mb-2" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>Expert Support</h3>
+            <p className="text-sm" style={{ color: "var(--rd-text-secondary)" }}>
+              Get guidance from our team to help you make the most of your demo
+            </p>
+          </div>
         </div>
 
         {/* Demo Request Form */}
-        <Card className="shadow-lg">
+        <Card className="shadow-lg rounded-[18px] border-[1.5px]" style={{ borderColor: "var(--rd-border-light)" }}>
           <CardHeader>
             <CardTitle>Request Demo Account</CardTitle>
             <CardDescription>
@@ -233,7 +202,7 @@ export default function RequestDemoPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-center gap-2">
+                <div className="px-4 py-3 rounded-xl flex items-center gap-2" style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c" }}>
                   <AlertCircle className="h-5 w-5" />
                   {error}
                 </div>
@@ -358,7 +327,8 @@ export default function RequestDemoPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-palette-primary hover:bg-palette-primary-hover"
+                className="w-full"
+                style={{ background: "var(--rd-blue-600)", color: "white" }}
                 disabled={loading}
               >
                 {loading ? (

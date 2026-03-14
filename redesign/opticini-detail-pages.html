@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Opticini — 10 Insight Planes</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4f9;--white:#fff;--subtle:#e8eef6;--blue-wash:#eaf1fb;
+  --border:#d4dde9;--border-md:#c0cede;
+  --txt-h:#1a2b45;--txt-b:#374e68;--txt-s:#5d7a96;
+  --blue:#2563eb;--blue-d:#1d4ed8;--blue-l:#3b82f6;
+  --radius:12px;--radius-lg:18px;
+}
+body{font-family:'DM Sans',sans-serif;font-size:17px;line-height:1.65;color:var(--txt-b);background:var(--bg);}
+h1,h2,h3,h4{font-family:'Sora',sans-serif;color:var(--txt-h);line-height:1.25;}
+a{color:var(--blue);text-decoration:none;}
+
+/* ── TOP NAV ── */
+.topnav{background:#1a2b45;height:38px;display:flex;align-items:center;justify-content:center;gap:32px;font-size:12px;font-weight:500;letter-spacing:.04em;color:rgba(255,255,255,.6);}
+.topnav a{color:rgba(255,255,255,.7);transition:color .2s;}
+.topnav a:hover{color:#fff;}
+.topnav-status{display:flex;align-items:center;gap:6px;color:#4ade80;font-size:11px;}
+.topnav-status::before{content:'';width:6px;height:6px;background:#4ade80;border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* ── MAIN NAV ── */
+.mainnav{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(26,43,69,.06);}
+.mainnav-inner{max-width:1280px;margin:0 auto;padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Sora',sans-serif;font-weight:700;font-size:20px;color:var(--txt-h);}
+.logo span{color:var(--blue);}
+.nav-btns{display:flex;gap:10px;}
+.btn-nav{padding:8px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.btn-demo{background:var(--blue);color:#fff;border:2px solid var(--blue);}
+.btn-demo:hover{background:var(--blue-d);border-color:var(--blue-d);}
+.btn-back{background:transparent;color:var(--txt-h);border:2px solid var(--border-md);}
+.btn-back:hover{border-color:var(--blue);color:var(--blue);}
+
+/* ── PLANE TAB NAV ── */
+.plane-nav{background:#fff;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.plane-nav::-webkit-scrollbar{display:none;}
+.plane-nav-inner{max-width:1280px;margin:0 auto;padding:0 24px;display:flex;gap:0;}
+.tab{padding:14px 18px;font-size:13px;font-weight:600;font-family:'Sora',sans-serif;color:var(--txt-s);border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s;display:flex;align-items:center;gap:7px;}
+.tab:hover{color:var(--txt-h);}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.tab-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* ── PAGES ── */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ── HERO ── */
+.hero{position:relative;padding:80px 32px 72px;overflow:hidden;}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(37,99,235,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,.06) 1px,transparent 1px);background-size:40px 40px;}
+.hero-glow{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 60% 40%,rgba(37,99,235,.07),transparent);}
+.hero-inner{position:relative;max-width:860px;margin:0 auto;text-align:center;}
+.plane-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:100px;border:1.5px solid;font-size:12px;font-weight:700;font-family:'Sora',sans-serif;letter-spacing:.06em;text-transform:uppercase;margin-bottom:24px;}
+.badge-dot{width:7px;height:7px;border-radius:50%;}
+.hero h1{font-size:clamp(40px,6vw,72px);font-weight:800;margin-bottom:14px;letter-spacing:-.02em;}
+.hero-sub{font-size:clamp(18px,2.5vw,24px);font-weight:500;color:var(--txt-s);margin-bottom:20px;}
+.hero-tagline{display:inline-block;padding:10px 22px;border-radius:8px;border-left:3px solid;font-size:15px;font-style:italic;margin-bottom:36px;}
+.stats-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;}
+.stat-pill{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:12px 20px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:110px;box-shadow:0 2px 8px rgba(26,43,69,.05);}
+.stat-v{font-size:22px;font-weight:800;font-family:'Sora',sans-serif;}
+.stat-l{font-size:11px;color:var(--txt-s);font-weight:500;}
+
+/* ── POSITIONING ── */
+.positioning{padding:44px 32px;border-bottom:1px solid;}
+.positioning-inner{max-width:760px;margin:0 auto;text-align:center;}
+.pos-strong{font-size:19px;font-weight:700;font-family:'Sora',sans-serif;margin-bottom:12px;}
+.pos-body{font-size:16px;color:var(--txt-s);line-height:1.7;}
+
+/* ── SECTIONS ── */
+.section{padding:72px 32px;}
+.section-gray{background:var(--subtle);}
+.section-white{background:#fff;}
+.container{max-width:1180px;margin:0 auto;}
+.container-sm{max-width:820px;margin:0 auto;}
+.section-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:10px;}
+.section-title{font-size:clamp(24px,3vw,34px);font-weight:700;margin-bottom:40px;}
+.section-title.center,.section-label.center{text-align:center;}
+
+/* ── CARDS ── */
+.cards-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;}
+.cards-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;}
+.cards-5{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;}
+.card{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:28px;transition:all .25s;}
+.card:hover{border-color:#93c5fd;box-shadow:0 8px 28px rgba(37,99,235,.1);transform:translateY(-2px);}
+.card-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px;}
+.card-title{font-size:16px;font-weight:700;font-family:'Sora',sans-serif;color:var(--txt-h);margin-bottom:10px;}
+.card-sub{font-size:13px;color:var(--txt-s);margin-bottom:14px;line-height:1.5;}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.checklist li{display:flex;align-items:flex-start;gap:9px;font-size:14px;line-height:1.5;}
+.check{width:16px;height:16px;flex-shrink:0;margin-top:2px;stroke-width:2.5;}
+.mini-card{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:18px;text-align:center;transition:all .2s;}
+.mini-card:hover{border-color:#93c5fd;box-shadow:0 4px 16px rgba(37,99,235,.08);}
+.mini-card-title{font-size:14px;font-weight:700;font-family:'Sora',sans-serif;color:var(--txt-h);margin-bottom:4px;}
+.mini-card-sub{font-size:12px;color:var(--txt-s);}
+
+/* ── COMPARE TABLE ── */
+.compare{border:1.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:#fff;}
+.compare-head{display:grid;grid-template-columns:1fr 1fr;background:linear-gradient(135deg,#f0f6ff,var(--subtle));}
+.compare-head div{padding:14px 22px;font-size:13px;font-weight:700;font-family:'Sora',sans-serif;color:var(--txt-h);}
+.compare-row{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);}
+.compare-row:nth-child(even){background:var(--subtle);}
+.compare-cell{padding:13px 22px;font-size:14px;display:flex;align-items:center;gap:9px;}
+.cell-old{color:var(--txt-s);}
+.cell-old::before{content:'✗';color:#ef4444;font-weight:700;}
+.cell-new{color:var(--txt-h);font-weight:500;}
+.cell-new-check{width:15px;height:15px;flex-shrink:0;stroke-width:2.5;}
+
+/* ── OUTCOME ── */
+.outcome-block{border-radius:var(--radius-lg);padding:44px;text-align:center;border:1.5px solid;}
+.outcome-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;}
+.outcome-text{font-size:20px;font-weight:600;font-family:'Sora',sans-serif;color:var(--txt-h);line-height:1.4;max-width:600px;margin:0 auto;}
+
+/* ── CTA ── */
+.cta-section{padding:72px 32px;}
+.cta-inner{max-width:680px;margin:0 auto;text-align:center;}
+.cta-section h2{font-size:clamp(26px,4vw,40px);font-weight:800;color:#fff;margin-bottom:14px;}
+.cta-section p{font-size:17px;color:rgba(255,255,255,.85);margin-bottom:36px;}
+.cta-btns{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;}
+.cta-btn-white{padding:13px 30px;background:#fff;border-radius:9px;font-weight:700;font-size:15px;font-family:'Sora',sans-serif;cursor:pointer;transition:all .2s;border:2px solid #fff;}
+.cta-btn-outline{padding:13px 30px;background:transparent;border:2px solid rgba(255,255,255,.5);border-radius:9px;color:#fff;font-weight:700;font-size:15px;font-family:'Sora',sans-serif;cursor:pointer;transition:all .2s;}
+.cta-btn-outline:hover{background:rgba(255,255,255,.12);border-color:#fff;}
+
+/* ── HOW IT WORKS STEPS ── */
+.steps{display:flex;flex-direction:column;gap:0;}
+.step{display:flex;gap:24px;padding:28px 0;border-bottom:1px solid var(--border);}
+.step:last-child{border-bottom:none;}
+.step-num{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;font-family:'Sora',sans-serif;flex-shrink:0;margin-top:2px;}
+.step-content h4{font-size:16px;font-weight:700;margin-bottom:6px;}
+.step-content p{font-size:14px;color:var(--txt-s);line-height:1.6;}
+
+/* ── METRICS GRID ── */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+.metric-chip{background:#fff;border:1.5px solid var(--border);border-radius:9px;padding:14px 18px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:var(--txt-h);}
+.metric-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .hero{padding:56px 20px 48px;}
+  .section{padding:48px 20px;}
+  .mainnav-inner{padding:0 20px;}
+  .cards-3,.cards-2{grid-template-columns:1fr;}
+  .cards-5{grid-template-columns:repeat(2,1fr);}
+  .compare-head,.compare-row{grid-template-columns:1fr;}
+  .compare-head div:first-child,.compare-cell.cell-old{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="topnav">
+  <span class="topnav-status">All systems operational</span>
+  <a href="#">Platform Status</a>
+  <a href="#">Documentation</a>
+  <a href="#">Contact Sales</a>
+</div>
+
+<!-- MAIN NAV -->
+<nav class="mainnav">
+  <div class="mainnav-inner">
+    <div class="logo">optic<span>ini</span></div>
+    <div class="nav-btns">
+      <a href="opticini-home-preview.html"><button class="btn-nav btn-back">← Back to Home</button></a>
+      <button class="btn-nav btn-demo">Request Demo</button>
+    </div>
+  </div>
+</nav>
+
+<!-- PLANE TAB NAV -->
+<nav class="plane-nav">
+  <div class="plane-nav-inner">
+    <div class="tab active" onclick="showPage('discovery',this)"><span class="tab-dot" style="background:#2563eb"></span>Discovery</div>
+    <div class="tab" onclick="showPage('health',this)"><span class="tab-dot" style="background:#10b981"></span>Health</div>
+    <div class="tab" onclick="showPage('performance',this)"><span class="tab-dot" style="background:#f59e0b"></span>Performance</div>
+    <div class="tab" onclick="showPage('security',this)"><span class="tab-dot" style="background:#ef4444"></span>Security</div>
+    <div class="tab" onclick="showPage('configuration',this)"><span class="tab-dot" style="background:#14b8a6"></span>Configuration</div>
+    <div class="tab" onclick="showPage('compliance',this)"><span class="tab-dot" style="background:#6366f1"></span>Compliance</div>
+    <div class="tab" onclick="showPage('evidence',this)"><span class="tab-dot" style="background:#8b5cf6"></span>Evidence</div>
+    <div class="tab" onclick="showPage('change',this)"><span class="tab-dot" style="background:#f97316"></span>Change</div>
+    <div class="tab" onclick="showPage('cost',this)"><span class="tab-dot" style="background:#0ea5e9"></span>Cost</div>
+    <div class="tab" onclick="showPage('risk',this)"><span class="tab-dot" style="background:#dc2626"></span>Risk</div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PLANE 1: DISCOVERY                        -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page active" id="page-discovery">
+  <div class="hero" style="background:linear-gradient(160deg,#eff6ff 0%,#fff 55%,#eef2ff 100%)">
+    <div class="hero-grid"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-inner">
+      <div class="plane-badge" style="border-color:#bfdbfe;background:#eff6ff;color:#1e40af"><span class="badge-dot" style="background:#2563eb"></span>Insight Plane 01</div>
+      <h1>Discovery</h1>
+      <p class="hero-sub">Know everything that exists</p>
+      <div class="hero-tagline" style="border-color:#bfdbfe;background:#eff6ff;color:#1e40af">You can't manage, secure, or comply with what you can't see.</div>
+      <div class="stats-row">
+        <div class="stat-pill"><span class="stat-v" style="color:#2563eb">100%</span><span class="stat-l">asset coverage</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#2563eb">Real-time</span><span class="stat-l">continuous discovery</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#2563eb">7+</span><span class="stat-l">asset types</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#2563eb">0</span><span class="stat-l">spreadsheets</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="positioning" style="background:linear-gradient(135deg,#eff6ff,#fff);border-color:#bfdbfe">
+    <div class="positioning-inner">
+      <p class="pos-strong" style="color:#1e40af">You can't manage, secure, or comply with what you can't see.</p>
+      <p class="pos-body">Opticini Discovery provides a single, authoritative view of every asset across your local, hybrid, and cloud environments — automatically and continuously.</p>
+    </div>
+  </div>
+
+  <section class="section section-white">
+    <div class="container">
+      <p class="section-label">What Discovery Does</p>
+      <h2 class="section-title">From physical servers to APIs — one living inventory</h2>
+      <div class="cards-3">
+        <div class="card">
+          <div class="card-icon" style="background:#eff6ff">🖥️</div>
+          <p class="card-title">Infrastructure Assets</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Physical servers &amp; VMs</li>
+            <li><svg class="check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Cloud instances (AWS, Azure, GCP)</li>
+            <li><svg class="check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Containers &amp; Kubernetes clusters</li>
+            <li><svg class="check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Storage &amp; databases</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#eff6ff">🌐</div>
+          <p class="card-title">Network &amp; Identity</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Network devices &amp; firewalls</li>
+            <li><svg class="check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>APIs &amp; service endpoints</li>
+            <li><svg class="check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Identity systems &amp; IAM</li>
+            <li><svg class="check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>DNS &amp; certificates</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#eff6ff">🔗</div>
+          <p class="card-title">Relationships &amp; Context</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Asset dependency mapping</li>
+            <li><svg class="check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Owner &amp; team attribution</li>
+            <li><svg class="check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Environment tagging (prod/dev/staging)</li>
+            <li><svg class="check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Real-time change tracking</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-gray">
+    <div class="container-sm">
+      <p class="section-label center">Why Discovery Matters</p>
+      <h2 class="section-title center">From blind spots to complete visibility</h2>
+      <div class="compare">
+        <div class="compare-head"><div>Without Discovery</div><div>With Opticini Discovery</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Unknown assets everywhere</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Complete live inventory</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Spreadsheet-based tracking</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Auto-updated asset graph</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Shadow IT blindness</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Unauthorized assets surfaced instantly</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Stale CMDB data</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#2563eb" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Continuous, accurate CMDB replacement</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-white">
+    <div class="container-sm">
+      <div class="outcome-block" style="border-color:#bfdbfe;background:linear-gradient(135deg,#eff6ff,#fff)">
+        <p class="outcome-label" style="color:#2563eb">Outcome</p>
+        <p class="outcome-text">A single, living inventory of everything in your infrastructure — automatically maintained, always accurate.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section" style="background:linear-gradient(160deg,#1e3a8a,#2563eb,#3b82f6)">
+    <div class="cta-inner">
+      <h2>See everything. Know everything.</h2>
+      <p>Continuous asset discovery across your entire infrastructure — no manual effort required.</p>
+      <div class="cta-btns">
+        <button class="cta-btn-white" style="color:#1e3a8a">Request a Demo</button>
+        <button class="cta-btn-outline">See integrations →</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PLANE 2: HEALTH                           -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-health">
+  <div class="hero" style="background:linear-gradient(160deg,#f0fdf4 0%,#fff 55%,#ecfdf5 100%)">
+    <div class="hero-grid" style="background-image:linear-gradient(rgba(16,185,129,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(16,185,129,.06) 1px,transparent 1px);background-size:40px 40px;"></div>
+    <div class="hero-glow" style="background:radial-gradient(ellipse 70% 60% at 60% 40%,rgba(16,185,129,.08),transparent)"></div>
+    <div class="hero-inner">
+      <div class="plane-badge" style="border-color:#a7f3d0;background:#f0fdf4;color:#065f46"><span class="badge-dot" style="background:#10b981"></span>Insight Plane 02</div>
+      <h1>Health</h1>
+      <p class="hero-sub">Availability is the foundation of trust</p>
+      <div class="hero-tagline" style="border-color:#a7f3d0;background:#f0fdf4;color:#065f46">Availability is the foundation of trust. You need to know before your users do.</div>
+      <div class="stats-row">
+        <div class="stat-pill"><span class="stat-v" style="color:#10b981">99.9%</span><span class="stat-l">SLA visibility</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#10b981">&lt;30s</span><span class="stat-l">alert latency</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#10b981">Real-time</span><span class="stat-l">health scoring</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#10b981">Proactive</span><span class="stat-l">failure detection</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="positioning" style="background:linear-gradient(135deg,#f0fdf4,#fff);border-color:#a7f3d0">
+    <div class="positioning-inner">
+      <p class="pos-strong" style="color:#065f46">Availability is the foundation of trust. You need to know before your users do.</p>
+      <p class="pos-body">Opticini Health gives you continuous visibility into the operational health of every system — with intelligent alerting, dependency-aware status, and SLA tracking built in.</p>
+    </div>
+  </div>
+
+  <section class="section section-white">
+    <div class="container">
+      <p class="section-label">What Health Does</p>
+      <h2 class="section-title">Know what's degrading before it becomes an outage</h2>
+      <div class="cards-3">
+        <div class="card">
+          <div class="card-icon" style="background:#f0fdf4">💓</div>
+          <p class="card-title">Continuous Monitoring</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Real-time availability checks</li>
+            <li><svg class="check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Service health scoring</li>
+            <li><svg class="check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Uptime &amp; SLA tracking</li>
+            <li><svg class="check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Historical trends &amp; patterns</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#f0fdf4">🔗</div>
+          <p class="card-title">Dependency-Aware Status</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Service dependency mapping</li>
+            <li><svg class="check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Downstream impact analysis</li>
+            <li><svg class="check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Single point of failure detection</li>
+            <li><svg class="check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Blast radius estimation</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#f0fdf4">🔔</div>
+          <p class="card-title">Intelligent Alerting</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Context-aware alert routing</li>
+            <li><svg class="check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Noise reduction &amp; deduplication</li>
+            <li><svg class="check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Escalation policies</li>
+            <li><svg class="check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Slack, PagerDuty, email integrations</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-gray">
+    <div class="container-sm">
+      <p class="section-label center">Why Health Matters</p>
+      <h2 class="section-title center">From reactive firefighting to proactive awareness</h2>
+      <div class="compare">
+        <div class="compare-head"><div>Without Health Monitoring</div><div>With Opticini Health</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Users report outages first</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Proactive detection before impact</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Alert storms &amp; noise</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Intelligent, deduplicated alerts</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Unknown dependencies</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Full dependency context</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Missed SLA commitments</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Continuous SLA tracking</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-white">
+    <div class="container-sm">
+      <div class="outcome-block" style="border-color:#a7f3d0;background:linear-gradient(135deg,#f0fdf4,#fff)">
+        <p class="outcome-label" style="color:#10b981">Outcome</p>
+        <p class="outcome-text">Always-on visibility into what's working, what's degrading, and what's about to fail — before users notice.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section" style="background:linear-gradient(160deg,#065f46,#059669,#10b981)">
+    <div class="cta-inner">
+      <h2>Know before your users do</h2>
+      <p>Continuous health monitoring across every system, service, and dependency.</p>
+      <div class="cta-btns">
+        <button class="cta-btn-white" style="color:#065f46">Request a Demo</button>
+        <button class="cta-btn-outline">See integrations →</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PLANE 3: PERFORMANCE                      -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-performance">
+  <div class="hero" style="background:linear-gradient(160deg,#fffbeb 0%,#fff 55%,#fef3c7 100%)">
+    <div class="hero-grid" style="background-image:linear-gradient(rgba(245,158,11,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(245,158,11,.06) 1px,transparent 1px);background-size:40px 40px;"></div>
+    <div class="hero-glow" style="background:radial-gradient(ellipse 70% 60% at 60% 40%,rgba(245,158,11,.08),transparent)"></div>
+    <div class="hero-inner">
+      <div class="plane-badge" style="border-color:#fde68a;background:#fffbeb;color:#78350f"><span class="badge-dot" style="background:#f59e0b"></span>Insight Plane 03</div>
+      <h1>Performance</h1>
+      <p class="hero-sub">Performance issues erode trust long before they cause outages</p>
+      <div class="hero-tagline" style="border-color:#fde68a;background:#fffbeb;color:#78350f">Slow is the new down. Performance issues erode trust long before they cause outages.</div>
+      <div class="stats-row">
+        <div class="stat-pill"><span class="stat-v" style="color:#f59e0b">P99</span><span class="stat-l">latency tracking</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#f59e0b">Real-time</span><span class="stat-l">resource metrics</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#f59e0b">Auto</span><span class="stat-l">baseline learning</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#f59e0b">Full</span><span class="stat-l">stack visibility</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="positioning" style="background:linear-gradient(135deg,#fffbeb,#fff);border-color:#fde68a">
+    <div class="positioning-inner">
+      <p class="pos-strong" style="color:#78350f">Performance issues erode trust long before they cause outages.</p>
+      <p class="pos-body">Opticini Performance gives you deep visibility into how infrastructure, services, and workloads are consuming resources — with anomaly detection that finds problems before users feel them.</p>
+    </div>
+  </div>
+
+  <section class="section section-white">
+    <div class="container">
+      <p class="section-label">What Performance Does</p>
+      <h2 class="section-title">From isolated metrics to contextual performance intelligence</h2>
+      <div class="cards-3">
+        <div class="card">
+          <div class="card-icon" style="background:#fffbeb">⚡</div>
+          <p class="card-title">Resource Metrics</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>CPU, memory, disk, network I/O</li>
+            <li><svg class="check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Container &amp; pod resource usage</li>
+            <li><svg class="check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Database query performance</li>
+            <li><svg class="check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Network throughput &amp; latency</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#fffbeb">📈</div>
+          <p class="card-title">Anomaly Detection</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Dynamic baseline learning</li>
+            <li><svg class="check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Deviation &amp; spike detection</li>
+            <li><svg class="check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Seasonal &amp; trend awareness</li>
+            <li><svg class="check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Capacity forecasting</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#fffbeb">🔍</div>
+          <p class="card-title">Context &amp; Causality</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Correlated with change events</li>
+            <li><svg class="check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Root cause suggestions</li>
+            <li><svg class="check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Cost efficiency correlation</li>
+            <li><svg class="check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Right-sizing recommendations</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-gray">
+    <div class="container-sm">
+      <p class="section-label center">Why Performance Matters</p>
+      <h2 class="section-title center">From blind metrics to actionable insight</h2>
+      <div class="compare">
+        <div class="compare-head"><div>Without Performance Visibility</div><div>With Opticini Performance</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Reactive to slowdowns</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Proactive anomaly detection</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Siloed metric dashboards</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Unified full-stack view</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Overprovisioned waste</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Right-sizing recommendations</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Unknown capacity limits</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Predictive capacity forecasting</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-white">
+    <div class="container-sm">
+      <div class="outcome-block" style="border-color:#fde68a;background:linear-gradient(135deg,#fffbeb,#fff)">
+        <p class="outcome-label" style="color:#f59e0b">Outcome</p>
+        <p class="outcome-text">Infrastructure that performs at its best — with anomalies detected early, resources right-sized, and capacity planned ahead.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section" style="background:linear-gradient(160deg,#78350f,#d97706,#f59e0b)">
+    <div class="cta-inner">
+      <h2>Find performance problems before users do</h2>
+      <p>Continuous resource monitoring with intelligent anomaly detection across your full stack.</p>
+      <div class="cta-btns">
+        <button class="cta-btn-white" style="color:#78350f">Request a Demo</button>
+        <button class="cta-btn-outline">See integrations →</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PLANE 4: SECURITY                         -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-security">
+  <div class="hero" style="background:linear-gradient(160deg,#fef2f2 0%,#fff 55%,#fef2f2 100%)">
+    <div class="hero-grid" style="background-image:linear-gradient(rgba(239,68,68,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(239,68,68,.05) 1px,transparent 1px);background-size:40px 40px;"></div>
+    <div class="hero-glow" style="background:radial-gradient(ellipse 70% 60% at 60% 40%,rgba(239,68,68,.07),transparent)"></div>
+    <div class="hero-inner">
+      <div class="plane-badge" style="border-color:#fecaca;background:#fef2f2;color:#7f1d1d"><span class="badge-dot" style="background:#ef4444"></span>Insight Plane 04</div>
+      <h1>Security</h1>
+      <p class="hero-sub">See risk before attackers do</p>
+      <div class="hero-tagline" style="border-color:#fecaca;background:#fef2f2;color:#7f1d1d">Most breaches don't start with zero-days. They start with what you already have — misconfigured, exposed, or overlooked.</div>
+      <div class="stats-row">
+        <div class="stat-pill"><span class="stat-v" style="color:#ef4444">Continuous</span><span class="stat-l">posture assessment</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#ef4444">Real-time</span><span class="stat-l">exposure detection</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#ef4444">Zero</span><span class="stat-l">point-in-time scans</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#ef4444">Full</span><span class="stat-l">attack surface view</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="positioning" style="background:linear-gradient(135deg,#fef2f2,#fff);border-color:#fecaca">
+    <div class="positioning-inner">
+      <p class="pos-strong" style="color:#7f1d1d">Most breaches don't start with zero-days. They start with what you already have — misconfigured, exposed, or overlooked.</p>
+      <p class="pos-body">Opticini Security provides continuous insight into your infrastructure's exposure, misconfigurations, and vulnerabilities — so your team can act before attackers find what you haven't.</p>
+    </div>
+  </div>
+
+  <section class="section section-white">
+    <div class="container">
+      <p class="section-label">What Security Does</p>
+      <h2 class="section-title">Continuous posture — not point-in-time scans</h2>
+      <div class="cards-3">
+        <div class="card">
+          <div class="card-icon" style="background:#fef2f2">🔍</div>
+          <p class="card-title">Exposure Detection</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Open ports &amp; exposed services</li>
+            <li><svg class="check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Public-facing assets inventory</li>
+            <li><svg class="check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>TLS &amp; certificate health</li>
+            <li><svg class="check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Cloud misconfiguration detection</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#fef2f2">🛡️</div>
+          <p class="card-title">Vulnerability &amp; Posture</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>CVE correlation to live assets</li>
+            <li><svg class="check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Software &amp; package risk mapping</li>
+            <li><svg class="check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Patch status tracking</li>
+            <li><svg class="check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>CIS benchmark scoring</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#fef2f2">🔑</div>
+          <p class="card-title">Identity &amp; Access Risk</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Excessive permissions &amp; privilege sprawl</li>
+            <li><svg class="check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Unused credentials &amp; access</li>
+            <li><svg class="check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Service account risks</li>
+            <li><svg class="check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>MFA &amp; auth gap detection</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-gray">
+    <div class="container-sm">
+      <p class="section-label center">Why Security Matters</p>
+      <h2 class="section-title center">From point-in-time scans to continuous posture</h2>
+      <div class="compare">
+        <div class="compare-head"><div>Traditional Security Scans</div><div>With Opticini Security</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Quarterly or annual scans</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Continuous posture monitoring</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Unknown attack surface</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Full attack surface mapped</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Uncontextualized CVE lists</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>CVEs correlated to live assets</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Access sprawl undetected</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Identity risks surfaced continuously</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-white">
+    <div class="container-sm">
+      <div class="outcome-block" style="border-color:#fecaca;background:linear-gradient(135deg,#fef2f2,#fff)">
+        <p class="outcome-label" style="color:#ef4444">Outcome</p>
+        <p class="outcome-text">A continuously updated view of your security posture — so you find and fix exposure before attackers do.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section" style="background:linear-gradient(160deg,#7f1d1d,#dc2626,#ef4444)">
+    <div class="cta-inner">
+      <h2>See risk before attackers do</h2>
+      <p>Continuous security posture monitoring — from exposure to identity to misconfiguration.</p>
+      <div class="cta-btns">
+        <button class="cta-btn-white" style="color:#7f1d1d">Request a Demo</button>
+        <button class="cta-btn-outline">See integrations →</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PLANE 5: CONFIGURATION                    -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-configuration">
+  <div class="hero" style="background:linear-gradient(160deg,#f0fdf4 0%,#fff 55%,#ecfdf5 100%)">
+    <div class="hero-grid" style="background-image:linear-gradient(rgba(20,184,166,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(20,184,166,.07) 1px,transparent 1px);background-size:40px 40px;"></div>
+    <div class="hero-glow" style="background:radial-gradient(ellipse 70% 60% at 60% 40%,rgba(20,184,166,.08),transparent)"></div>
+    <div class="hero-inner">
+      <div class="plane-badge" style="border-color:#99f6e4;background:#f0fdf4;color:#134e4a"><span class="badge-dot" style="background:#14b8a6"></span>Insight Plane 05</div>
+      <h1>Configuration</h1>
+      <p class="hero-sub">Prevent drift. Enforce what "good" looks like.</p>
+      <div class="hero-tagline" style="border-color:#99f6e4;background:#f0fdf4;color:#134e4a">Configuration drift is one of the leading causes of outages, security gaps, and audit failures.</div>
+      <div class="stats-row">
+        <div class="stat-pill"><span class="stat-v" style="color:#14b8a6">Continuous</span><span class="stat-l">baseline comparison</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#14b8a6">Real-time</span><span class="stat-l">drift detection</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#14b8a6">Policy</span><span class="stat-l">enforcement</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#14b8a6">0</span><span class="stat-l">manual audits</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="positioning" style="background:linear-gradient(135deg,#f0fdf4,#fff);border-color:#99f6e4">
+    <div class="positioning-inner">
+      <p class="pos-strong" style="color:#134e4a">Configuration drift is one of the leading causes of outages, security gaps, and audit failures.</p>
+      <p class="pos-body">Opticini Configuration gives you continuous visibility into how systems are configured — and alerts you when they drift from approved baselines. Living configuration intelligence that evolves with your environment.</p>
+    </div>
+  </div>
+
+  <section class="section section-white">
+    <div class="container">
+      <p class="section-label">What Configuration Does</p>
+      <h2 class="section-title">Know when something changes — and whether it should have</h2>
+      <div class="cards-2">
+        <div class="card">
+          <div class="card-icon" style="background:#f0fdf4">🖥️</div>
+          <p class="card-title">System &amp; Infrastructure Configuration</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>OS and system settings</li>
+            <li><svg class="check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Installed packages and services</li>
+            <li><svg class="check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Firewall and network rules</li>
+            <li><svg class="check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Storage and backup settings</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#f0fdf4">☁️</div>
+          <p class="card-title">Cloud &amp; Platform Configuration</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Cloud resource configurations (AWS, Azure, GCP)</li>
+            <li><svg class="check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>IAM policies and role assignments</li>
+            <li><svg class="check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Kubernetes manifests and policies</li>
+            <li><svg class="check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Managed service settings</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-gray">
+    <div class="container">
+      <p class="section-label center">How It Works</p>
+      <h2 class="section-title center">Baseline, detect, enforce</h2>
+      <div class="cards-2">
+        <div class="card">
+          <p class="card-title">Baseline &amp; Drift Detection</p>
+          <p class="card-sub">Opticini captures known-good baselines, continuously compares live configurations, and flags deviations in real time.</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Policy-defined baselines</li>
+            <li><svg class="check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>CIS-aligned standards</li>
+            <li><svg class="check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Custom per-team or per-workload</li>
+          </ul>
+        </div>
+        <div class="card">
+          <p class="card-title">Configuration With Context</p>
+          <p class="card-sub">Every change is enriched with who made it, when, related deployments, and its security &amp; compliance impact.</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Change author &amp; timestamp</li>
+            <li><svg class="check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Related incidents &amp; deployments</li>
+            <li><svg class="check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Security &amp; compliance impact score</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-white">
+    <div class="container-sm">
+      <p class="section-label center">Why Configuration Matters</p>
+      <h2 class="section-title center">From silent decay to controlled change</h2>
+      <div class="compare">
+        <div class="compare-head"><div>Without Configuration Control</div><div>With Opticini Configuration</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Silent misconfigurations</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Immediate visibility &amp; alerts</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Untracked changes</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Full accountability with context</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Repeated incidents</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Stable, enforced baselines</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Audit surprises</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#14b8a6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Continuous compliance</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-gray">
+    <div class="container-sm">
+      <div class="outcome-block" style="border-color:#99f6e4;background:linear-gradient(135deg,#f0fdf4,#fff)">
+        <p class="outcome-label" style="color:#14b8a6">Outcome</p>
+        <p class="outcome-text">Stable, secure, and compliant systems — with full visibility into how they're configured and who changed what.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section" style="background:linear-gradient(160deg,#134e4a,#0d9488,#14b8a6)">
+    <div class="cta-inner">
+      <h2>Stop drift before it becomes a crisis</h2>
+      <p>Continuous configuration monitoring — so your infrastructure stays exactly as intended.</p>
+      <div class="cta-btns">
+        <button class="cta-btn-white" style="color:#134e4a">Request a Demo</button>
+        <button class="cta-btn-outline">See integrations →</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PLANE 6: COMPLIANCE                       -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-compliance">
+  <div class="hero" style="background:linear-gradient(160deg,#eef2ff 0%,#fff 55%,#e0e7ff 100%)">
+    <div class="hero-grid" style="background-image:linear-gradient(rgba(99,102,241,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.07) 1px,transparent 1px);background-size:40px 40px;"></div>
+    <div class="hero-glow" style="background:radial-gradient(ellipse 70% 60% at 60% 40%,rgba(99,102,241,.08),transparent)"></div>
+    <div class="hero-inner">
+      <div class="plane-badge" style="border-color:#c7d2fe;background:#eef2ff;color:#312e81"><span class="badge-dot" style="background:#6366f1"></span>Insight Plane 06</div>
+      <h1>Compliance</h1>
+      <p class="hero-sub">Compliance shouldn't be a once-a-year panic</p>
+      <div class="hero-tagline" style="border-color:#c7d2fe;background:#eef2ff;color:#312e81">Compliance shouldn't be a once-a-year scramble. It should be a continuous state you're always in.</div>
+      <div class="stats-row">
+        <div class="stat-pill"><span class="stat-v" style="color:#6366f1">7+</span><span class="stat-l">frameworks supported</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#6366f1">24/7</span><span class="stat-l">control monitoring</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#6366f1">0</span><span class="stat-l">manual screenshots</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#6366f1">100%</span><span class="stat-l">automated evidence</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="positioning" style="background:linear-gradient(135deg,#eef2ff,#fff);border-color:#c7d2fe">
+    <div class="positioning-inner">
+      <p class="pos-strong" style="color:#312e81">Compliance shouldn't be a once-a-year scramble. It should be a continuous state you're always in.</p>
+      <p class="pos-body">Opticini Compliance delivers continuous compliance visibility across your infrastructure — mapped to the frameworks that matter, with automated evidence collection and real-time control monitoring.</p>
+    </div>
+  </div>
+
+  <section class="section section-white">
+    <div class="container">
+      <p class="section-label">Frameworks &amp; Controls</p>
+      <h2 class="section-title">Stay continuously audit-ready across every standard</h2>
+      <div class="cards-3">
+        <div class="card">
+          <div class="card-icon" style="background:#eef2ff">📜</div>
+          <p class="card-title">Supported Frameworks</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>SOC 2 Type I &amp; II</li>
+            <li><svg class="check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>ISO 27001</li>
+            <li><svg class="check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>HIPAA</li>
+            <li><svg class="check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>PCI-DSS</li>
+            <li><svg class="check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>CIS Benchmarks &amp; NIST</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#eef2ff">⚙️</div>
+          <p class="card-title">Continuous Control Monitoring</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Real-time control status</li>
+            <li><svg class="check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Control failure alerts</li>
+            <li><svg class="check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Gap identification &amp; prioritization</li>
+            <li><svg class="check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Remediation guidance</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#eef2ff">🤝</div>
+          <p class="card-title">Shared Responsibility Modeling</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Cloud provider responsibilities mapped</li>
+            <li><svg class="check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Your obligations clearly defined</li>
+            <li><svg class="check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Vendor compliance tracking</li>
+            <li><svg class="check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Third-party risk integration</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-gray">
+    <div class="container-sm">
+      <p class="section-label center">Why Compliance Matters</p>
+      <h2 class="section-title center">From once-a-year panic to continuous readiness</h2>
+      <div class="compare">
+        <div class="compare-head"><div>Traditional Compliance Approach</div><div>With Opticini Compliance</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Annual audit scrambles</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Always audit-ready</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Manual evidence collection</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Automated evidence, always fresh</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Surprise control failures</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Real-time failure alerts</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Spreadsheet chaos</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Structured, framework-mapped status</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-white">
+    <div class="container-sm">
+      <div class="outcome-block" style="border-color:#c7d2fe;background:linear-gradient(135deg,#eef2ff,#fff)">
+        <p class="outcome-label" style="color:#6366f1">Outcome</p>
+        <p class="outcome-text">Continuous compliance across SOC 2, ISO 27001, HIPAA, PCI, and more — without the annual sprint.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section" style="background:linear-gradient(160deg,#312e81,#4f46e5,#6366f1)">
+    <div class="cta-inner">
+      <h2>Make compliance continuous, not cyclical</h2>
+      <p>Real-time control monitoring across every framework you need to satisfy.</p>
+      <div class="cta-btns">
+        <button class="cta-btn-white" style="color:#312e81">Request a Demo</button>
+        <button class="cta-btn-outline">See frameworks →</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PLANE 7: EVIDENCE                         -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-evidence">
+  <div class="hero" style="background:linear-gradient(160deg,#faf5ff 0%,#fff 55%,#f3e8ff 100%)">
+    <div class="hero-grid" style="background-image:linear-gradient(rgba(139,92,246,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,.07) 1px,transparent 1px);background-size:40px 40px;"></div>
+    <div class="hero-glow" style="background:radial-gradient(ellipse 70% 60% at 60% 40%,rgba(139,92,246,.08),transparent)"></div>
+    <div class="hero-inner">
+      <div class="plane-badge" style="border-color:#ddd6fe;background:#faf5ff;color:#4c1d95"><span class="badge-dot" style="background:#8b5cf6"></span>Insight Plane 07</div>
+      <h1>Evidence</h1>
+      <p class="hero-sub">Prove compliance — automatically</p>
+      <div class="hero-tagline" style="border-color:#ddd6fe;background:#faf5ff;color:#4c1d95">Audits fail when proof is missing, outdated, or incomplete. Eliminate the scramble.</div>
+      <div class="stats-row">
+        <div class="stat-pill"><span class="stat-v" style="color:#8b5cf6">Auto</span><span class="stat-l">collected evidence</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#8b5cf6">Always</span><span class="stat-l">fresh &amp; current</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#8b5cf6">0</span><span class="stat-l">manual screenshots</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#8b5cf6">Auditor</span><span class="stat-l">ready exports</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="positioning" style="background:linear-gradient(135deg,#faf5ff,#fff);border-color:#ddd6fe">
+    <div class="positioning-inner">
+      <p class="pos-strong" style="color:#4c1d95">Audits fail when proof is missing, outdated, or incomplete.</p>
+      <p class="pos-body">Opticini Evidence automates the collection, organization, and maintenance of audit-ready evidence — so proof is always current and available, not just when an audit starts.</p>
+    </div>
+  </div>
+
+  <section class="section section-white">
+    <div class="container">
+      <p class="section-label">What Evidence Does</p>
+      <h2 class="section-title">Automated proof — always current, always structured</h2>
+      <div class="cards-2">
+        <div class="card">
+          <div class="card-icon" style="background:#faf5ff">⚡</div>
+          <p class="card-title">Automated Evidence Sources</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#8b5cf6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Infrastructure &amp; system configurations</li>
+            <li><svg class="check" style="color:#8b5cf6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Cloud service settings &amp; snapshots</li>
+            <li><svg class="check" style="color:#8b5cf6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Security &amp; access controls</li>
+            <li><svg class="check" style="color:#8b5cf6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Logging, monitoring &amp; backup status</li>
+            <li><svg class="check" style="color:#8b5cf6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Vulnerability &amp; posture reports</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#faf5ff">📋</div>
+          <p class="card-title">Manual &amp; Attested Evidence</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#8b5cf6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Policy documents</li>
+            <li><svg class="check" style="color:#8b5cf6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Employee &amp; vendor attestations</li>
+            <li><svg class="check" style="color:#8b5cf6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Exception approvals &amp; sign-offs</li>
+            <li><svg class="check" style="color:#8b5cf6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>External audit artifacts</li>
+            <li><svg class="check" style="color:#8b5cf6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Versioned change history</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-gray">
+    <div class="container-sm">
+      <p class="section-label center">Why Evidence Matters</p>
+      <h2 class="section-title center">From screenshot chaos to structured proof</h2>
+      <div class="compare">
+        <div class="compare-head"><div>Traditional Evidence Collection</div><div>With Opticini Evidence</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Manual screenshots &amp; exports</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#8b5cf6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Automated, continuous collection</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Stale or missing evidence</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#8b5cf6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Freshness-tracked, always current</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Audit prep takes weeks</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#8b5cf6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Evidence ready in minutes</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Spreadsheet chaos</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#8b5cf6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Structured, auditor-ready packages</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-white">
+    <div class="container-sm">
+      <div class="outcome-block" style="border-color:#ddd6fe;background:linear-gradient(135deg,#faf5ff,#fff)">
+        <p class="outcome-label" style="color:#8b5cf6">Outcome</p>
+        <p class="outcome-text">Audit-ready evidence, continuously maintained — without manual effort, screenshots, or spreadsheets.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section" style="background:linear-gradient(160deg,#4c1d95,#7c3aed,#8b5cf6)">
+    <div class="cta-inner">
+      <h2>Never scramble for evidence again</h2>
+      <p>Continuous, automated audit proof — mapped to every control, always current.</p>
+      <div class="cta-btns">
+        <button class="cta-btn-white" style="color:#4c1d95">Request a Demo</button>
+        <button class="cta-btn-outline">See frameworks →</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PLANE 8: CHANGE                           -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-change">
+  <div class="hero" style="background:linear-gradient(160deg,#fff7ed 0%,#fff 55%,#ffedd5 100%)">
+    <div class="hero-grid" style="background-image:linear-gradient(rgba(249,115,22,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(249,115,22,.07) 1px,transparent 1px);background-size:40px 40px;"></div>
+    <div class="hero-glow" style="background:radial-gradient(ellipse 70% 60% at 60% 40%,rgba(249,115,22,.08),transparent)"></div>
+    <div class="hero-inner">
+      <div class="plane-badge" style="border-color:#fed7aa;background:#fff7ed;color:#7c2d12"><span class="badge-dot" style="background:#f97316"></span>Insight Plane 08</div>
+      <h1>Change</h1>
+      <p class="hero-sub">Know what changed — and why it matters</p>
+      <div class="hero-tagline" style="border-color:#fed7aa;background:#fff7ed;color:#7c2d12">Every outage, breach, or compliance failure starts with a change.</div>
+      <div class="stats-row">
+        <div class="stat-pill"><span class="stat-v" style="color:#f97316">Real-time</span><span class="stat-l">change detection</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#f97316">Full</span><span class="stat-l">change timeline</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#f97316">Correlated</span><span class="stat-l">to incidents</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#f97316">Faster</span><span class="stat-l">root cause analysis</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="positioning" style="background:linear-gradient(135deg,#fff7ed,#fff);border-color:#fed7aa">
+    <div class="positioning-inner">
+      <p class="pos-strong" style="color:#7c2d12">Every outage, breach, or compliance failure starts with a change.</p>
+      <p class="pos-body">Opticini Change gives you complete visibility into infrastructure, configuration, and deployment changes — so teams understand impact before issues escalate.</p>
+    </div>
+  </div>
+
+  <section class="section section-white">
+    <div class="container">
+      <p class="section-label">What Change Tracks</p>
+      <h2 class="section-title">From scattered logs to a single correlated change history</h2>
+      <div class="cards-2">
+        <div class="card">
+          <div class="card-icon" style="background:#fff7ed">🖥️</div>
+          <p class="card-title">Infrastructure &amp; Configuration Changes</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#f97316" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>System &amp; OS changes</li>
+            <li><svg class="check" style="color:#f97316" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Configuration updates</li>
+            <li><svg class="check" style="color:#f97316" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Network &amp; firewall rule changes</li>
+            <li><svg class="check" style="color:#f97316" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Cloud resource modifications</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#fff7ed">🚀</div>
+          <p class="card-title">Platform &amp; Application Changes</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#f97316" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Deployments &amp; releases</li>
+            <li><svg class="check" style="color:#f97316" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Infrastructure-as-code updates</li>
+            <li><svg class="check" style="color:#f97316" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>CI/CD pipeline executions</li>
+            <li><svg class="check" style="color:#f97316" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Version &amp; schema changes</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-gray">
+    <div class="container">
+      <p class="section-label center">Change With Context</p>
+      <h2 class="section-title center">Every change enriched with what matters</h2>
+      <div class="cards-3">
+        <div class="card">
+          <div class="card-icon" style="background:#fff7ed">👤</div>
+          <p class="card-title">Author &amp; Source</p>
+          <p class="card-sub">Every change shows who made it and from where — human, automated, or pipeline-driven.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#fff7ed">🎯</div>
+          <p class="card-title">Impact &amp; Blast Radius</p>
+          <p class="card-sub">Affected assets, related incidents, and the estimated scope of impact — before you dig into logs.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#fff7ed">📋</div>
+          <p class="card-title">Compliance Impact</p>
+          <p class="card-sub">Security and compliance implications of each change, mapped to relevant frameworks and controls.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-white">
+    <div class="container-sm">
+      <p class="section-label center">Why Change Matters</p>
+      <h2 class="section-title center">From unknown root causes to clear accountability</h2>
+      <div class="compare">
+        <div class="compare-head"><div>Without Change Visibility</div><div>With Opticini Change</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Unknown root causes</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#f97316" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Clear change accountability</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Slow incident resolution</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#f97316" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Faster root cause analysis</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Hidden risky changes</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#f97316" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Early risk detection per change</div></div>
+        <div class="compare-row"><div class="compare-cell cell-old">Audit change-control gaps</div><div class="compare-cell cell-new"><svg class="cell-new-check" style="color:#f97316" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Verified change control history</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-gray">
+    <div class="container-sm">
+      <div class="outcome-block" style="border-color:#fed7aa;background:linear-gradient(135deg,#fff7ed,#fff)">
+        <p class="outcome-label" style="color:#f97316">Outcome</p>
+        <p class="outcome-text">Clear accountability, faster incident resolution, and safer changes — everywhere, for every team.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section" style="background:linear-gradient(160deg,#7c2d12,#ea580c,#f97316)">
+    <div class="cta-inner">
+      <h2>Bring clarity to change</h2>
+      <p>Stop guessing what changed. Start knowing — with full context and compliance impact.</p>
+      <div class="cta-btns">
+        <button class="cta-btn-white" style="color:#7c2d12">Request a Demo</button>
+        <button class="cta-btn-outline">Explore change tracking →</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PLANE 9: COST                             -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-cost">
+  <div class="hero" style="background:linear-gradient(160deg,#f0f9ff 0%,#fff 55%,#e0f2fe 100%)">
+    <div class="hero-grid" style="background-image:linear-gradient(rgba(14,165,233,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(14,165,233,.07) 1px,transparent 1px);background-size:40px 40px;"></div>
+    <div class="hero-glow" style="background:radial-gradient(ellipse 70% 60% at 60% 40%,rgba(14,165,233,.08),transparent)"></div>
+    <div class="hero-inner">
+      <div class="plane-badge" style="border-color:#bae6fd;background:#f0f9ff;color:#0c4a6e"><span class="badge-dot" style="background:#0ea5e9"></span>Insight Plane 09</div>
+      <h1>Cost</h1>
+      <p class="hero-sub">Visibility before optimization</p>
+      <div class="hero-tagline" style="border-color:#bae6fd;background:#f0f9ff;color:#0c4a6e">FinOps-grade visibility, built natively into infrastructure monitoring — not bolted on later.</div>
+      <div class="stats-row">
+        <div class="stat-pill"><span class="stat-v" style="color:#0ea5e9">Real-time</span><span class="stat-l">cost tracking</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#0ea5e9">Cloud +</span><span class="stat-l">on-prem unified</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#0ea5e9">Per team</span><span class="stat-l">cost attribution</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#0ea5e9">Waste</span><span class="stat-l">detection built in</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="positioning" style="background:linear-gradient(135deg,#f0f9ff,#fff);border-color:#bae6fd">
+    <div class="positioning-inner">
+      <p class="pos-strong" style="color:#0c4a6e">Opticini Cost provides real-time and historical insight into infrastructure spending across local, hybrid, and cloud environments.</p>
+      <p class="pos-body">It connects usage, configuration, and performance data to actual cost impact — so finance, IT, and engineering make decisions from the same source of truth. This is FinOps-grade visibility, built natively into infrastructure monitoring.</p>
+    </div>
+  </div>
+
+  <section class="section section-white">
+    <div class="container">
+      <p class="section-label">Core Capabilities</p>
+      <h2 class="section-title">From spend to waste to optimization — in one place</h2>
+      <div class="cards-3">
+        <div class="card">
+          <div class="card-icon" style="background:#f0f9ff">🗺️</div>
+          <p class="card-title">Unified Cost Discovery</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>On-prem infrastructure cost modeling</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Cloud cost ingestion (AWS, Azure, GCP)</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Hybrid environment normalization</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Environment-based segmentation (prod/dev)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#f0f9ff">🎯</div>
+          <p class="card-title">Usage-Based Attribution</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>CPU, memory, disk, network cost mapping</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Application-level cost attribution</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Team, project &amp; business-unit allocation</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Service &amp; workload tagging</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#f0f9ff">🗑️</div>
+          <p class="card-title">Waste &amp; Optimization Detection</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Idle &amp; underutilized resources</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Overprovisioned compute &amp; storage</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Zombie services &amp; orphaned assets</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Redundant environments &amp; unused snapshots</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#f0f9ff">⚡</div>
+          <p class="card-title">Change-to-Cost Correlation</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Cost impact of deployments &amp; config changes</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Spike detection tied to scaling events</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Drift-driven cost increases</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Rollback cost validation</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#f0f9ff">📊</div>
+          <p class="card-title">Forecasting &amp; Budget Guardrails</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Trend-based cost forecasting</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Budget thresholds &amp; alerts</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Anomaly detection for unexpected spend</li>
+            <li><svg class="check" style="color:#0ea5e9" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>What-if analysis for scaling decisions</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-gray">
+    <div class="container-sm">
+      <p class="section-label center">Who It's For</p>
+      <h2 class="section-title center">One cost view — shared across every stakeholder</h2>
+      <div class="cards-2">
+        <div class="card"><p class="card-title">Finance &amp; FinOps</p><p class="card-sub">Budget control, forecasting, and accountability across teams.</p></div>
+        <div class="card"><p class="card-title">Platform &amp; Infrastructure</p><p class="card-sub">Right-sizing, waste elimination, and resource optimization.</p></div>
+        <div class="card"><p class="card-title">Engineering Leadership</p><p class="card-sub">Cost-aware architecture decisions tied to real usage data.</p></div>
+        <div class="card"><p class="card-title">Executives</p><p class="card-sub">ROI visibility and infrastructure efficiency at the business level.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-white">
+    <div class="container-sm">
+      <div class="outcome-block" style="border-color:#bae6fd;background:linear-gradient(135deg,#f0f9ff,#fff)">
+        <p class="outcome-label" style="color:#0ea5e9">Outcome</p>
+        <p class="outcome-text">Infrastructure spend that's intentional, visible, and defensible — with measurable savings tied to real actions.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section" style="background:linear-gradient(160deg,#0c4a6e,#0284c7,#0ea5e9)">
+    <div class="cta-inner">
+      <h2>Turn usage into financial clarity</h2>
+      <p>See where every dollar goes — and connect spend to performance, change, and risk.</p>
+      <div class="cta-btns">
+        <button class="cta-btn-white" style="color:#0c4a6e">Request a Demo</button>
+        <button class="cta-btn-outline">Explore cost intelligence →</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PLANE 10: RISK                            -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-risk">
+  <div class="hero" style="background:linear-gradient(160deg,#fff1f2 0%,#fff 55%,#ffe4e6 100%)">
+    <div class="hero-grid" style="background-image:linear-gradient(rgba(220,38,38,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(220,38,38,.06) 1px,transparent 1px);background-size:40px 40px;"></div>
+    <div class="hero-glow" style="background:radial-gradient(ellipse 70% 60% at 60% 40%,rgba(220,38,38,.08),transparent)"></div>
+    <div class="hero-inner">
+      <div class="plane-badge" style="border-color:#fecdd3;background:#fff1f2;color:#7f1d1d"><span class="badge-dot" style="background:#dc2626"></span>Insight Plane 10</div>
+      <h1>Risk</h1>
+      <p class="hero-sub">Continuous awareness of what could break, expose, or cost you</p>
+      <div class="hero-tagline" style="border-color:#fecdd3;background:#fff1f2;color:#7f1d1d">Not all alerts are equal. Risk synthesizes everything to show you what actually matters — and what to fix first.</div>
+      <div class="stats-row">
+        <div class="stat-pill"><span class="stat-v" style="color:#dc2626">Unified</span><span class="stat-l">risk scoring</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#dc2626">Business</span><span class="stat-l">impact mapping</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#dc2626">Executive</span><span class="stat-l">risk views</span></div>
+        <div class="stat-pill"><span class="stat-v" style="color:#dc2626">Synthesis</span><span class="stat-l">across all 9 planes</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="positioning" style="background:linear-gradient(135deg,#fff1f2,#fff);border-color:#fecdd3">
+    <div class="positioning-inner">
+      <p class="pos-strong" style="color:#7f1d1d">Opticini Risk provides a unified, real-time view of operational, security, compliance, and financial risk across your entire infrastructure.</p>
+      <p class="pos-body">Instead of siloed alerts and static assessments, Risk continuously evaluates how configuration, change, health, performance, and cost interact to create exposure. This is living risk intelligence for modern infrastructure.</p>
+    </div>
+  </div>
+
+  <section class="section section-white">
+    <div class="container">
+      <p class="section-label">Core Capabilities</p>
+      <h2 class="section-title">Six dimensions of risk — unified in one view</h2>
+      <div class="cards-3">
+        <div class="card">
+          <div class="card-icon" style="background:#fff1f2">📊</div>
+          <p class="card-title">Unified Risk Scoring</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Asset-level risk scores</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Environment-based aggregation</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Business impact weighting</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Normalized across on-prem, cloud, hybrid</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#fff1f2">⚙️</div>
+          <p class="card-title">Operational Risk Detection</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Health degradation trends</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Capacity exhaustion risk</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Single points of failure</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>SLA &amp; uptime risk modeling</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#fff1f2">🔒</div>
+          <p class="card-title">Security Risk Visibility</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Exposure from misconfigurations</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Unpatched or vulnerable components</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Excessive permissions &amp; access sprawl</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Public exposure risk</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#fff1f2">📋</div>
+          <p class="card-title">Compliance &amp; Policy Risk</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Drift from compliance baselines</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Evidence gaps &amp; audit readiness risk</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Policy violations over time</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Control degradation tracking</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#fff1f2">🔄</div>
+          <p class="card-title">Change-Induced Risk</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Risk from deployments &amp; config changes</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>High-risk changes without rollback paths</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Change velocity vs incident probability</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Risk reduction after remediation</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:#fff1f2">💸</div>
+          <p class="card-title">Financial &amp; Cost Risk</p>
+          <ul class="checklist">
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Runaway spend risk detection</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Budget threshold breach likelihood</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Cost exposure tied to performance issues</li>
+            <li><svg class="check" style="color:#dc2626" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>Waste accumulation risk over time</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-gray">
+    <div class="container">
+      <p class="section-label center">The Synthesis Layer</p>
+      <h2 class="section-title center">Risk draws from every other insight plane</h2>
+      <div class="cards-5">
+        <div class="mini-card"><p class="mini-card-title">Discovery</p><p class="mini-card-sub">what exists</p></div>
+        <div class="mini-card"><p class="mini-card-title">Health</p><p class="mini-card-sub">what's degrading</p></div>
+        <div class="mini-card"><p class="mini-card-title">Performance</p><p class="mini-card-sub">what's stressed</p></div>
+        <div class="mini-card"><p class="mini-card-title">Security</p><p class="mini-card-sub">what's exposed</p></div>
+        <div class="mini-card"><p class="mini-card-title">Configuration</p><p class="mini-card-sub">what's misaligned</p></div>
+        <div class="mini-card"><p class="mini-card-title">Compliance</p><p class="mini-card-sub">what's drifting</p></div>
+        <div class="mini-card"><p class="mini-card-title">Evidence</p><p class="mini-card-sub">what's unproven</p></div>
+        <div class="mini-card"><p class="mini-card-title">Change</p><p class="mini-card-sub">what was introduced</p></div>
+        <div class="mini-card"><p class="mini-card-title">Cost</p><p class="mini-card-sub">what could escalate</p></div>
+        <div class="mini-card" style="background:linear-gradient(135deg,#fff1f2,#fff);border-color:#fecdd3"><p class="mini-card-title" style="color:#dc2626">Risk</p><p class="mini-card-sub" style="color:#dc2626">actionable insight</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-white">
+    <div class="container-sm">
+      <div class="outcome-block" style="border-color:#fecdd3;background:linear-gradient(135deg,#fff1f2,#fff)">
+        <p class="outcome-label" style="color:#dc2626">Outcome</p>
+        <p class="outcome-text">Fewer outages, earlier detection of systemic weaknesses, clearer prioritization of remediation — and no more audit surprises.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section" style="background:linear-gradient(160deg,#7f1d1d,#b91c1c,#dc2626)">
+    <div class="cta-inner">
+      <h2>See risk before it becomes an incident</h2>
+      <p>Unified risk intelligence across all 10 insight planes — prioritized by business impact.</p>
+      <div class="cta-btns">
+        <button class="cta-btn-white" style="color:#7f1d1d">Request a Demo</button>
+        <button class="cta-btn-outline">Explore risk intelligence →</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+function showPage(id, tabEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  tabEl.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+</script>
+</body>
+</html>

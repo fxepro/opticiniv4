@@ -1,0 +1,19 @@
+# Replacement pages: TSX files to create from opticini-detail-pages.html
+# Each replaces: opticiniv3/studio/app/features/{name}/page.tsx
+
+\page-health.tsx
+\page-home.tsx
+\page-login.tsx
+\page-performance.tsx
+\page-security.tsx
+\top-navigation.tsx
+\conditional-footer.tsx
+\layout.tsx
+\main-navigation.tsx
+\page-blog.tsx
+\page-compliance.tsx
+\page-discovery.tsx
+\page-evidence.tsx
+\page-change.tsx
+\page-cost.tsx
+\page-risk.tsx

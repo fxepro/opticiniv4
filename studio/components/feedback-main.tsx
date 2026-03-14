@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Star, Send, Heart, ThumbsUp, AlertTriangle } from "lucide-react";
-import { SimpleHeroSection } from "@/components/simple-hero-section";
+import { PageHero } from "@/components/page-hero";
+import { PageLayout } from "@/components/page-layout";
 
 // Use relative URL in production (browser), localhost in dev (SSR)
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
@@ -94,7 +94,7 @@ export default function FeedbackMain() {
         <button
           key={index}
           type="button"
-          className="focus:outline-none focus:ring-2 focus:ring-palette-primary focus:ring-offset-2 rounded-full p-1"
+          className="focus:outline-none focus:ring-2 focus:ring-[var(--rd-blue-600)] focus:ring-offset-2 rounded-full p-1"
           onClick={() => setRating(starNumber)}
           onMouseEnter={() => setHoveredRating(starNumber)}
           onMouseLeave={() => setHoveredRating(0)}
@@ -102,8 +102,8 @@ export default function FeedbackMain() {
             <Star
               className={`h-12 w-12 transition-all duration-200 ${
                 isFilled
-                  ? "text-palette-accent-1 fill-current"
-                  : "text-gray-300 hover:text-palette-accent-2"
+                  ? "text-[var(--rd-blue-600)] fill-current"
+                  : "text-gray-300 hover:text-[var(--rd-blue-400)]"
               }`}
             />
         </button>
@@ -122,35 +122,33 @@ export default function FeedbackMain() {
   };
 
   return (
-    <div className="min-h-screen">
-      <SimpleHeroSection
+    <PageLayout>
+      <PageHero
+        badge="We value your input"
         title="Share Your Feedback"
         subtitle="Help us improve Opticini by sharing your thoughts, suggestions, and experiences"
-        gradientFrom="from-palette-primary"
-        gradientVia="via-palette-primary"
-        gradientTo="to-palette-secondary"
       />
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-16 max-w-7xl">
-        <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
-          <CardHeader className="text-center pb-8 pt-12">
-            <CardTitle className="text-3xl font-bold text-gray-900 mb-4">
+      <div className="container mx-auto px-4 pt-16 pb-16 max-w-3xl">
+        <div className="mt-12 bg-white border-[1.5px] rounded-[18px] shadow-lg overflow-hidden" style={{ borderColor: "var(--rd-border-light)" }}>
+          <div className="text-center pb-8 pt-12 px-6">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>
               How was your experience?
-            </CardTitle>
-            <CardDescription className="text-lg text-gray-600">
+            </h2>
+            <p className="text-lg" style={{ color: "var(--rd-text-secondary)" }}>
               Your feedback helps us make Opticini better for everyone
-            </CardDescription>
-          </CardHeader>
+            </p>
+          </div>
 
-          <CardContent>
+          <div className="px-6 pb-12">
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Star Rating */}
               <div className="text-center">
                 <div className="flex justify-center items-center space-x-2 mb-4">
                   {renderStars()}
                 </div>
-                <p className="text-xl font-semibold text-gray-700">
+                <p className="text-xl font-semibold" style={{ color: "var(--rd-text-secondary)" }}>
                   {getRatingText()}
                 </p>
               </div>
@@ -163,7 +161,7 @@ export default function FeedbackMain() {
                     <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
                       <ThumbsUp className="h-5 w-5 text-green-600" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>
                       What did we do great?
                     </h3>
                   </div>
@@ -171,7 +169,7 @@ export default function FeedbackMain() {
                     placeholder="Tell us what you loved about Opticini. What features worked well? What exceeded your expectations?"
                     value={greatWork}
                     onChange={(e) => setGreatWork(e.target.value)}
-                    className="min-h-[100px] resize-none border-gray-200 focus:border-palette-accent-1 focus:ring-palette-primary"
+                    className="min-h-[100px] resize-none rounded-lg border-[1.5px] focus:border-[var(--rd-blue-600)] focus:ring-[var(--rd-blue-600)]"
                   />
                 </div>
 
@@ -181,7 +179,7 @@ export default function FeedbackMain() {
                     <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                       <Heart className="h-5 w-5 text-blue-600" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>
                       What could be better?
                     </h3>
                   </div>
@@ -189,7 +187,7 @@ export default function FeedbackMain() {
                     placeholder="Share suggestions for improvement. What features need work? What would make your experience smoother?"
                     value={couldBeBetter}
                     onChange={(e) => setCouldBeBetter(e.target.value)}
-                    className="min-h-[100px] resize-none border-gray-200 focus:border-palette-accent-1 focus:ring-palette-primary"
+                    className="min-h-[100px] resize-none rounded-lg border-[1.5px] focus:border-[var(--rd-blue-600)] focus:ring-[var(--rd-blue-600)]"
                   />
                 </div>
 
@@ -199,7 +197,7 @@ export default function FeedbackMain() {
                     <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
                       <AlertTriangle className="h-5 w-5 text-red-600" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>
                       What should we remove and relish?
                     </h3>
                   </div>
@@ -207,7 +205,7 @@ export default function FeedbackMain() {
                     placeholder="What features are frustrating or unnecessary? What should we completely remove or redesign?"
                     value={removeAndRelish}
                     onChange={(e) => setRemoveAndRelish(e.target.value)}
-                    className="min-h-[100px] resize-none border-gray-200 focus:border-palette-accent-1 focus:ring-palette-primary"
+                    className="min-h-[100px] resize-none rounded-lg border-[1.5px] focus:border-[var(--rd-blue-600)] focus:ring-[var(--rd-blue-600)]"
                   />
                 </div>
               </div>
@@ -217,7 +215,8 @@ export default function FeedbackMain() {
                 <Button
                   type="submit"
                   disabled={isSubmitting || rating === 0}
-                  className="bg-gradient-to-r from-palette-primary to-palette-primary-hover hover:from-palette-primary-hover hover:to-palette-secondary text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: "var(--rd-blue-600)", color: "#fff" }}
                 >
                   {isSubmitting ? (
                     <>
@@ -233,9 +232,9 @@ export default function FeedbackMain() {
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

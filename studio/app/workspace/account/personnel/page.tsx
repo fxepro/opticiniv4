@@ -28,6 +28,7 @@ interface PersonnelRow {
   email: string;
   job_title: string;
   employment_status: string;
+  user_type: string;
   department: string;
   external_hr_id: string;
   hire_date: string | null;
@@ -38,9 +39,13 @@ interface PersonnelRow {
 
 const EMPLOYMENT_STATUS_OPTIONS = [
   { value: "active", label: "Active" },
-  { value: "contractor", label: "Contractor" },
   { value: "leave", label: "On Leave" },
   { value: "terminated", label: "Terminated" },
+];
+
+const USER_TYPE_OPTIONS = [
+  { value: "internal", label: "Internal" },
+  { value: "external", label: "External" },
 ];
 
 const ROLE_OPTIONS = [
@@ -96,7 +101,6 @@ async function apiRequest(method: string, url: string, data?: object | FormData)
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     active: "bg-green-100 text-green-800 border-green-200",
-    contractor: "bg-blue-100 text-blue-800 border-blue-200",
     leave: "bg-yellow-100 text-yellow-800 border-yellow-200",
     terminated: "bg-red-100 text-red-800 border-red-200",
   };
@@ -110,20 +114,28 @@ function StatusBadge({ status }: { status: string }) {
 // ---------------------------------------------------------------------------
 // Add / Edit Drawer
 // ---------------------------------------------------------------------------
+interface DepartmentOption {
+  id: string;
+  name: string;
+  code: string;
+}
+
 interface PersonnelDrawerProps {
   open: boolean;
   person: PersonnelRow | null;
+  departments: DepartmentOption[];
   onClose: () => void;
   onSaved: () => void;
 }
 
-function PersonnelDrawer({ open, person, onClose, onSaved }: PersonnelDrawerProps) {
+function PersonnelDrawer({ open, person, departments, onClose, onSaved }: PersonnelDrawerProps) {
   const isEdit = !!person;
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [employmentStatus, setEmploymentStatus] = useState("active");
+  const [userType, setUserType] = useState("internal");
   const [department, setDepartment] = useState("");
   const [hireDate, setHireDate] = useState("");
   const [externalHrId, setExternalHrId] = useState("");
@@ -138,6 +150,7 @@ function PersonnelDrawer({ open, person, onClose, onSaved }: PersonnelDrawerProp
       setEmail(person?.email ?? "");
       setJobTitle(person?.job_title ?? "");
       setEmploymentStatus(person?.employment_status ?? "active");
+      setUserType(person?.user_type ?? "internal");
       setDepartment(person?.department ?? "");
       setHireDate(person?.hire_date?.slice(0, 10) ?? "");
       setExternalHrId(person?.external_hr_id ?? "");
@@ -149,19 +162,29 @@ function PersonnelDrawer({ open, person, onClose, onSaved }: PersonnelDrawerProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!email.trim()) { setError("Email is required."); return; }
-    if (!firstName.trim() && !lastName.trim()) { setError("At least a first or last name is required."); return; }
+
+    // Identity fields only sent on create
+    if (!isEdit) {
+      if (!email.trim()) { setError("Email is required."); return; }
+      if (!firstName.trim() && !lastName.trim()) { setError("At least a first or last name is required."); return; }
+    }
 
     const payload: Record<string, any> = {
-      first_name: firstName.trim(),
-      last_name: lastName.trim(),
-      email: email.trim(),
       job_title: jobTitle.trim(),
       employment_status: employmentStatus,
+      user_type: userType,
       department: department.trim(),
       hire_date: hireDate || null,
       external_hr_id: externalHrId.trim(),
     };
+
+    // Identity fields only on create — immutable after that
+    if (!isEdit) {
+      payload.first_name = firstName.trim();
+      payload.last_name = lastName.trim();
+      payload.email = email.trim();
+    }
+
     if (role) payload.role = role;
 
     try {
@@ -204,20 +227,30 @@ function PersonnelDrawer({ open, person, onClose, onSaved }: PersonnelDrawerProp
             {error && (
               <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div>
             )}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">First name</Label>
-                <Input value={firstName} onChange={e => setFirstName(e.target.value)} className="h-9" />
+            {isEdit ? (
+              <div className="rounded-md border bg-muted/40 px-3 py-2 space-y-0.5">
+                <p className="text-sm font-medium">{firstName} {lastName}</p>
+                <p className="text-xs text-muted-foreground">{email}</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">Identity fields are set by CSV/LDAP and cannot be edited here.</p>
               </div>
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Last name</Label>
-                <Input value={lastName} onChange={e => setLastName(e.target.value)} className="h-9" />
-              </div>
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">Email *</Label>
-              <Input type="email" value={email} onChange={e => setEmail(e.target.value)} className="h-9" />
-            </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">First name</Label>
+                    <Input value={firstName} onChange={e => setFirstName(e.target.value)} className="h-9" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Last name</Label>
+                    <Input value={lastName} onChange={e => setLastName(e.target.value)} className="h-9" />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">Email *</Label>
+                  <Input type="email" value={email} onChange={e => setEmail(e.target.value)} className="h-9" />
+                </div>
+              </>
+            )}
             <div>
               <Label className="text-xs text-muted-foreground mb-1 block">Job title</Label>
               <Input value={jobTitle} onChange={e => setJobTitle(e.target.value)} className="h-9" />
@@ -235,9 +268,32 @@ function PersonnelDrawer({ open, person, onClose, onSaved }: PersonnelDrawerProp
                 </Select>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Department</Label>
-                <Input value={department} onChange={e => setDepartment(e.target.value)} className="h-9" placeholder="e.g. Engineering" />
+                <Label className="text-xs text-muted-foreground mb-1 block">Type</Label>
+                <Select value={userType} onValueChange={setUserType}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {USER_TYPE_OPTIONS.map(o => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Department</Label>
+              {departments.length > 0 ? (
+                <Select value={department || "__none__"} onValueChange={v => setDepartment(v === "__none__" ? "" : v)}>
+                  <SelectTrigger className="h-9"><SelectValue placeholder="Select department" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">— none —</SelectItem>
+                    {departments.map(d => (
+                      <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input value={department} onChange={e => setDepartment(e.target.value)} className="h-9" placeholder="No departments yet — sync from Org page" />
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -480,6 +536,7 @@ function CsvImportPanel({ onImported }: { onImported: () => void }) {
 // ---------------------------------------------------------------------------
 export default function PersonnelPage() {
   const [people, setPeople] = useState<PersonnelRow[]>([]);
+  const [departments, setDepartments] = useState<{ id: string; name: string; code: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -496,8 +553,12 @@ export default function PersonnelPage() {
     try {
       setLoading(true);
       const base = API_BASE.replace(/\/$/, "");
-      const peopleData = await apiRequest("GET", `${base}/api/account/personnel/`);
+      const [peopleData, deptData] = await Promise.all([
+        apiRequest("GET", `${base}/api/account/personnel/`),
+        apiRequest("GET", `${base}/api/account/departments/`),
+      ]);
       setPeople(Array.isArray(peopleData) ? peopleData : []);
+      setDepartments(Array.isArray(deptData) ? deptData : []);
     } catch (err: any) {
       toast.error("Failed to load people");
     } finally {
@@ -737,6 +798,7 @@ export default function PersonnelPage() {
       <PersonnelDrawer
         open={drawerOpen}
         person={editingPerson}
+        departments={departments}
         onClose={() => setDrawerOpen(false)}
         onSaved={fetchData}
       />

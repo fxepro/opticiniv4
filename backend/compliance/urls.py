@@ -9,6 +9,7 @@ from compliance.views.frameworks import (
     framework_detail,
     frameworks_catalog,
     set_framework_org_enabled,
+    framework_versions_with_stats,
 )
 from compliance.views.controls import ComplianceControlViewSet, compliance_chat
 from compliance.views.evidence import ComplianceEvidenceViewSet
@@ -55,6 +56,7 @@ urlpatterns = [
     path("api/compliance/frameworks/<uuid:framework_id>/detail/", framework_detail, name="framework_detail"),
     path("api/compliance/frameworks/<uuid:framework_id>/update/", update_framework, name="update_framework"),
     path("api/compliance/frameworks/catalog/", frameworks_catalog, name="frameworks_catalog"),
+    path("api/compliance/frameworks/versions-stats/", framework_versions_with_stats, name="framework_versions_with_stats"),
     path("api/compliance/frameworks/<uuid:framework_id>/org-enabled/", set_framework_org_enabled, name="set_framework_org_enabled"),
     path("api/compliance/chat/", compliance_chat, name="compliance_chat"),
     path("api/compliance/assertions/", assertions_list, name="assertions_list"),

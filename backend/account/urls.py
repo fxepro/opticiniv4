@@ -22,6 +22,7 @@ urlpatterns = [
     path("api/account/users/bulk-upload/", views.org_user_bulk_upload),
     path("api/account/users/<int:user_id>/", views.org_user_detail),
     path("api/account/departments/", views.org_department_list),
+    path("api/account/departments/sync/", views.org_department_sync),
     path("api/account/teams/", views.org_team_list),
     path("api/account/teams/<uuid:team_id>/", views.org_team_detail),
     path("api/account/personnel/", views.personnel_list),

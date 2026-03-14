@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { 
+import {
   FileText,
   Activity,
   AlertTriangle,
@@ -13,12 +13,9 @@ import {
   Loader2,
   AlertCircle,
   Package,
-  Search
+  Search,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-// Removed EmailVerificationBanner banner
 
 interface AuditReport {
   id: string;
@@ -164,93 +161,137 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-palette-primary" />
-        <span className="ml-2 text-slate-600">{t('common.loading')}</span>
+      <div className="flex items-center justify-center py-12" style={{ color: "var(--rd-text-secondary)" }}>
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: "var(--rd-blue-600)" }} />
+        <span className="ml-2">{t("common.loading")}</span>
       </div>
     );
   }
 
+  const statCard = (
+    label: string,
+    value: string | number,
+    icon: React.ReactNode,
+    iconBgStyle: React.CSSProperties,
+    valueColor?: string
+  ) => (
+    <div
+      className="rounded-[18px] border-[1.5px] p-6 transition-colors hover:border-[#93c5fd]"
+      style={{
+        background: "var(--rd-bg-white)",
+        borderColor: "var(--rd-border-light)",
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium" style={{ color: "var(--rd-text-secondary)" }}>
+            {label}
+          </p>
+          <p className="text-3xl font-bold" style={{ color: valueColor ?? "var(--rd-text-heading)" }}>
+            {value}
+          </p>
+        </div>
+        <div className="p-3 rounded-xl" style={iconBgStyle}>{icon}</div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8" style={{ fontFamily: "var(--rd-font-body)" }}>
+      {/* Hero */}
+      <section
+        className="relative py-10 px-6 rounded-[18px] overflow-hidden"
+        style={{
+          background: "linear-gradient(160deg, var(--rd-bg-blue-wash) 0%, var(--rd-bg-white) 55%, var(--rd-blue-50) 100%)",
+        }}
+      >
+        <div className="relative z-10">
+          <div
+            className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border mb-4"
+            style={{
+              borderColor: "var(--rd-blue-200)",
+              background: "var(--rd-blue-50)",
+              color: "var(--rd-blue-600)",
+              fontSize: "12px",
+              fontWeight: 700,
+              letterSpacing: ".09em",
+              textTransform: "uppercase",
+            }}
+          >
+            <span className="w-[6px] h-[6px] rounded-full bg-[var(--rd-blue-500)] animate-pulse" />
+            Dashboard
+          </div>
+          <h1
+            className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2"
+            style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}
+          >
+            Workspace Overview
+          </h1>
+          <p className="text-base" style={{ color: "var(--rd-text-secondary)" }}>
+            Monitor audits, sites, and activity at a glance.
+          </p>
+        </div>
+      </section>
+
       {/* 4 Stat Containers */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-slate-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">{t('dashboard.reports')}</p>
-                <p className="text-3xl font-bold text-slate-800">{stats.totalAudits}</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <FileText className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">{t('monitoring.title')}</p>
-                <p className="text-3xl font-bold text-slate-800">{stats.monitoredSites}</p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Activity className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">{t('monitoring.alerts')}</p>
-                <p className="text-3xl font-bold text-orange-600">{stats.reportsWithErrors}</p>
-              </div>
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <AlertTriangle className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">{t('monitoring.siteName')}</p>
-                <p className="text-3xl font-bold text-purple-600">{stats.uniqueSites}</p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <BarChart3 className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {statCard(
+          t("dashboard.reports"),
+          stats.totalAudits,
+          <FileText className="h-6 w-6" style={{ color: "var(--rd-blue-600)" }} />,
+          { background: "var(--rd-blue-100)" }
+        )}
+        {statCard(
+          t("monitoring.title"),
+          stats.monitoredSites,
+          <Activity className="h-6 w-6" style={{ color: "var(--rd-emerald-600)" }} />,
+          { background: "var(--rd-bg-subtle)" }
+        )}
+        {statCard(
+          t("monitoring.alerts"),
+          stats.reportsWithErrors,
+          <AlertTriangle className="h-6 w-6" style={{ color: "var(--rd-amber-500)" }} />,
+          { background: "var(--rd-bg-subtle)" },
+          "var(--rd-amber-500)"
+        )}
+        {statCard(
+          t("monitoring.siteName"),
+          stats.uniqueSites,
+          <BarChart3 className="h-6 w-6" style={{ color: "#7c3aed" }} />,
+          { background: "var(--rd-bg-subtle)" },
+          "#7c3aed"
+        )}
       </div>
 
       {/* Alerts Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-orange-600" />
-            {t('monitoring.alerts')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div
+        className="rounded-[18px] border-[1.5px] overflow-hidden transition-colors hover:border-[#93c5fd]"
+        style={{
+          background: "var(--rd-bg-white)",
+          borderColor: "var(--rd-border-light)",
+        }}
+      >
+        <div className="px-6 py-4 border-b" style={{ borderColor: "var(--rd-border-light)" }}>
+          <h2 className="flex items-center gap-2 font-semibold text-lg" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
+            <AlertTriangle className="h-5 w-5" style={{ color: "var(--rd-amber-500)" }} />
+            {t("monitoring.alerts")}
+          </h2>
+        </div>
+        <div className="p-6">
           {alerts.length === 0 ? (
-            <div className="text-center py-8 text-slate-600">
-              <CheckCircle className="h-12 w-12 mx-auto mb-3 text-green-500" />
-              <p>{t('monitoring.noSites')}</p>
+            <div className="text-center py-8" style={{ color: "var(--rd-text-secondary)" }}>
+              <CheckCircle className="h-12 w-12 mx-auto mb-3" style={{ color: "var(--rd-emerald-500)" }} />
+              <p>{t("monitoring.noSites")}</p>
             </div>
           ) : (
             <div className="space-y-3">
               {alerts.map((alert, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                <div
+                  key={idx}
+                  className="flex items-start gap-3 p-3 rounded-xl"
+                  style={{ background: "#fef2f2", border: "1px solid #fecaca" }}
+                >
+                  <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0 text-red-600" />
                   <div className="flex-1">
                     <p className="font-medium text-red-800">{alert.title}</p>
                     <p className="text-sm text-red-600">{alert.description}</p>
@@ -272,152 +313,231 @@ export default function DashboardPage() {
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Quick Links Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('dashboard.quickActions')}</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div
+        className="rounded-[18px] border-[1.5px] overflow-hidden transition-colors hover:border-[#93c5fd]"
+        style={{
+          background: "var(--rd-bg-white)",
+          borderColor: "var(--rd-border-light)",
+        }}
+      >
+        <div className="px-6 py-4 border-b" style={{ borderColor: "var(--rd-border-light)" }}>
+          <h2 className="font-semibold text-lg" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
+            {t("dashboard.quickActions")}
+          </h2>
+        </div>
+        <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link href="/workspace/site-audit">
-              <div className="bg-gradient-to-r from-palette-primary to-palette-primary-hover text-white rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer">
+              <div
+                className="rounded-[14px] p-6 hover:shadow-lg transition-all cursor-pointer border-[1.5px] hover:border-[#93c5fd]"
+                style={{
+                  background: "linear-gradient(135deg, var(--rd-blue-600) 0%, var(--rd-blue-700) 100%)",
+                  borderColor: "var(--rd-blue-400)",
+                  color: "white",
+                }}
+              >
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-white/20 rounded-lg">
                     <FileText className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">{t('dashboard.siteAudit')}</h3>
-                    <p className="text-sm text-white/90">{t('dashboard.siteAuditDesc')}</p>
+                    <h3 className="font-semibold text-lg">{t("dashboard.siteAudit")}</h3>
+                    <p className="text-sm text-white/90">{t("dashboard.siteAuditDesc")}</p>
                   </div>
                 </div>
               </div>
             </Link>
 
             <Link href="/workspace/monitoring">
-              <div className="bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer">
+              <div
+                className="rounded-[14px] p-6 hover:shadow-lg transition-all cursor-pointer border-[1.5px] hover:border-[#93c5fd]"
+                style={{
+                  background: "linear-gradient(135deg, var(--rd-emerald-600) 0%, #047857 100%)",
+                  borderColor: "var(--rd-emerald-500)",
+                  color: "white",
+                }}
+              >
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-white/20 rounded-lg">
                     <Activity className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">{t('monitoring.title')}</h3>
-                    <p className="text-sm text-white/90">{t('dashboard.monitoringDesc')}</p>
+                    <h3 className="font-semibold text-lg">{t("monitoring.title")}</h3>
+                    <p className="text-sm text-white/90">{t("dashboard.monitoringDesc")}</p>
                   </div>
                 </div>
               </div>
             </Link>
 
             <Link href="/workspace/reports">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer">
+              <div
+                className="rounded-[14px] p-6 hover:shadow-lg transition-all cursor-pointer border-[1.5px] hover:border-[#93c5fd]"
+                style={{
+                  background: "linear-gradient(135deg, var(--rd-blue-600) 0%, var(--rd-blue-700) 100%)",
+                  borderColor: "var(--rd-blue-400)",
+                  color: "white",
+                }}
+              >
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-white/20 rounded-lg">
                     <BarChart3 className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">{t('dashboard.reports')}</h3>
-                    <p className="text-sm text-white/90">{t('dashboard.reportsDesc')}</p>
+                    <h3 className="font-semibold text-lg">{t("dashboard.reports")}</h3>
+                    <p className="text-sm text-white/90">{t("dashboard.reportsDesc")}</p>
                   </div>
                 </div>
               </div>
             </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Coming Soon Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('dashboard.comingSoon')}</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div
+        className="rounded-[18px] border-[1.5px] overflow-hidden transition-colors hover:border-[#93c5fd]"
+        style={{
+          background: "var(--rd-bg-white)",
+          borderColor: "var(--rd-border-light)",
+        }}
+      >
+        <div className="px-6 py-4 border-b" style={{ borderColor: "var(--rd-border-light)" }}>
+          <h2 className="font-semibold text-lg" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
+            {t("dashboard.comingSoon")}
+          </h2>
+        </div>
+        <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer opacity-75">
+            <div
+              className="rounded-[14px] p-6 transition-shadow cursor-pointer opacity-75 border-[1.5px]"
+              style={{
+                background: "linear-gradient(135deg, var(--rd-amber-500) 0%, #d97706 100%)",
+                borderColor: "var(--rd-border-light)",
+                color: "white",
+              }}
+            >
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-white/20 rounded-lg">
                   <Package className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">{t('dashboard.wordpressIntegration')}</h3>
-                  <p className="text-sm text-white/90">{t('dashboard.connectWordpress')}</p>
+                  <h3 className="font-semibold text-lg">{t("dashboard.wordpressIntegration")}</h3>
+                  <p className="text-sm text-white/90">{t("dashboard.connectWordpress")}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer opacity-75">
+            <div
+              className="rounded-[14px] p-6 transition-shadow cursor-pointer opacity-75 border-[1.5px]"
+              style={{
+                background: "linear-gradient(135deg, var(--rd-indigo-400) 0%, #6366f1 100%)",
+                borderColor: "var(--rd-border-light)",
+                color: "white",
+              }}
+            >
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-white/20 rounded-lg">
                   <Search className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">{t('dashboard.seoMonitoring')}</h3>
-                  <p className="text-sm text-white/90">{t('dashboard.trackRankings')}</p>
+                  <h3 className="font-semibold text-lg">{t("dashboard.seoMonitoring")}</h3>
+                  <p className="text-sm text-white/90">{t("dashboard.trackRankings")}</p>
                 </div>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Recent Activity Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-slate-600" />
-            {t('dashboard.recentActivity')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div
+        className="rounded-[18px] border-[1.5px] overflow-hidden transition-colors hover:border-[#93c5fd]"
+        style={{
+          background: "var(--rd-bg-white)",
+          borderColor: "var(--rd-border-light)",
+        }}
+      >
+        <div className="px-6 py-4 border-b" style={{ borderColor: "var(--rd-border-light)" }}>
+          <h2 className="flex items-center gap-2 font-semibold text-lg" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
+            <Clock className="h-5 w-5" style={{ color: "var(--rd-text-secondary)" }} />
+            {t("dashboard.recentActivity")}
+          </h2>
+        </div>
+        <div className="p-6">
           {recentActivity.length === 0 ? (
-            <div className="text-center py-8 text-slate-600">
-              <FileText className="h-12 w-12 mx-auto mb-3 text-slate-400" />
-              <p>{t('dashboard.noRecentActivity')}</p>
-              <p className="text-sm mt-1">{t('dashboard.runAudit')}</p>
+            <div className="text-center py-8" style={{ color: "var(--rd-text-secondary)" }}>
+              <FileText className="h-12 w-12 mx-auto mb-3" style={{ color: "var(--rd-text-muted)" }} />
+              <p>{t("dashboard.noRecentActivity")}</p>
+              <p className="text-sm mt-1">{t("dashboard.runAudit")}</p>
             </div>
           ) : (
             <div className="space-y-4">
               {recentActivity.map((report) => {
                 const successCount = report.audit_data?.successful?.length || 0;
                 const failedCount = report.audit_data?.failed?.length || 0;
-                
+
                 return (
-                  <div key={report.id} className="flex items-start space-x-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                    <div className={`w-2 h-2 rounded-full mt-2 ${
-                      failedCount > 0 ? 'bg-red-500' : successCount > 0 ? 'bg-green-500' : 'bg-slate-400'
-                    }`}></div>
-                    <div className="flex-1">
+                  <div
+                    key={report.id}
+                    className="flex items-start space-x-3 p-3 rounded-xl border-[1.5px]"
+                    style={{
+                      background: "var(--rd-bg-subtle)",
+                      borderColor: "var(--rd-border-light)",
+                    }}
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                        failedCount > 0 ? "bg-red-500" : successCount > 0 ? "bg-green-500" : "bg-slate-400"
+                      }`}
+                    />
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium text-slate-800">
-                            {t('dashboard.auditCompleted')}{' '}
+                          <p className="text-sm font-medium" style={{ color: "var(--rd-text-heading)" }}>
+                            {t("dashboard.auditCompleted")}{" "}
                             <a
                               href={`https://${report.url}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-palette-primary hover:underline"
+                              className="hover:underline"
+                              style={{ color: "var(--rd-blue-600)" }}
                             >
                               {report.url}
                             </a>
                           </p>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
                             {successCount > 0 && (
-                              <Badge className="bg-green-100 text-green-800">
+                              <Badge
+                                className="border-0"
+                                style={{
+                                  background: "var(--rd-blue-100)",
+                                  color: "var(--rd-blue-700)",
+                                }}
+                              >
                                 <CheckCircle className="h-3 w-3 mr-1" />
-                                {successCount} {t('dashboard.successful')}
+                                {successCount} {t("dashboard.successful")}
                               </Badge>
                             )}
                             {failedCount > 0 && (
-                              <Badge className="bg-red-100 text-red-800">
+                              <Badge
+                                className="border-0"
+                                style={{
+                                  background: "#fef2f2",
+                                  color: "#b91c1c",
+                                }}
+                              >
                                 <AlertCircle className="h-3 w-3 mr-1" />
-                                {failedCount} {t('dashboard.failed')}
+                                {failedCount} {t("dashboard.failed")}
                               </Badge>
                             )}
                           </div>
                         </div>
                       </div>
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-xs mt-1" style={{ color: "var(--rd-text-muted)" }}>
                         {new Date(report.created_at).toLocaleString()}
                       </p>
                     </div>
@@ -426,8 +546,8 @@ export default function DashboardPage() {
               })}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

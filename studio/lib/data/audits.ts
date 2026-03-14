@@ -35,12 +35,18 @@ export interface AuditRequirementRollup {
 }
 
 export interface AuditControlTest {
+  id?: string;
   controlId: string;
+  controlCode?: string;
   controlName: string;
   testPlanName?: string;
   sampleCount: number;
   result?: 'pass' | 'fail' | 'partial' | 'na';
   exceptionsCount: number;
+  samplingMethod?: string;
+  expectedSampleSize?: number | null;
+  populationDefinition?: string;
+  testProcedureSteps?: string;
 }
 
 export interface AuditEvidenceItem {

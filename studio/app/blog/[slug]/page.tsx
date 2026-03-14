@@ -137,10 +137,10 @@ export default function BlogPostPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--rd-bg-page)" }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-palette-primary mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading post...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--rd-blue-600)] mx-auto mb-4"></div>
+          <p style={{ color: "var(--rd-text-secondary)" }}>Loading post...</p>
         </div>
       </div>
     );
@@ -158,7 +158,7 @@ export default function BlogPostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3">
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "var(--rd-bg-page)", fontFamily: "var(--rd-font-body)" }}>
       <div className="container mx-auto px-4 py-12 max-w-7xl">
         {/* Back Button */}
         <Button variant="ghost" onClick={() => router.push('/blog')} className="mb-6">
@@ -169,7 +169,7 @@ export default function BlogPostPage() {
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Article */}
-          <article className="lg:col-span-3 bg-white rounded-lg shadow-lg p-6 md:p-10 overflow-hidden">
+          <article className="lg:col-span-3 bg-white border-[1.5px] rounded-[18px] p-6 md:p-10 overflow-hidden" style={{ borderColor: "var(--rd-border-light)" }}>
           {/* Category and Tags */}
           <div className="flex items-center gap-2 mb-4 flex-wrap">
             {post.category && (
@@ -268,7 +268,7 @@ export default function BlogPostPage() {
         {headings.length > 0 && (
           <aside className="lg:col-span-1">
             <div className="sticky top-24">
-              <Card className="p-6 bg-white rounded-lg shadow-lg overflow-hidden">
+              <div className="p-6 bg-white border-[1.5px] rounded-[18px] overflow-hidden" style={{ borderColor: "var(--rd-border-light)" }}>
                 <h3 className="text-h4-dynamic font-semibold mb-4">Table of Contents</h3>
                 <nav className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
                   {headings.map((heading) => (
@@ -297,7 +297,7 @@ export default function BlogPostPage() {
                     </a>
                   ))}
                 </nav>
-              </Card>
+              </div>
             </div>
           </aside>
         )}
@@ -309,8 +309,8 @@ export default function BlogPostPage() {
             <h2 className="text-h3-dynamic font-bold mb-6">Related Posts</h2>
             <div className="grid md:grid-cols-3 gap-6">
               {relatedPosts.map((relatedPost) => (
-                <Card key={relatedPost.id} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
+                <div key={relatedPost.id} className="bg-white border-[1.5px] rounded-[18px] overflow-hidden transition-all hover:border-[#93c5fd] hover:shadow-lg" style={{ borderColor: "var(--rd-border-light)" }}>
+                  <div className="p-6">
                     <Link href={`/blog/${relatedPost.slug}`}>
                       {relatedPost.featured_image_url && (
                         <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden">
@@ -322,17 +322,17 @@ export default function BlogPostPage() {
                           />
                         </div>
                       )}
-                      <h3 className="text-h4-dynamic font-semibold mb-2 hover:text-palette-primary">
+                      <h3 className="text-lg font-semibold mb-2 hover:text-[var(--rd-blue-600)] transition-colors" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>
                         {relatedPost.title}
                       </h3>
                       {relatedPost.excerpt && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
+                        <p className="text-sm line-clamp-2" style={{ color: "var(--rd-text-secondary)" }}>
                           {relatedPost.excerpt}
                         </p>
                       )}
                     </Link>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -390,13 +390,13 @@ export default function BlogPostPage() {
           margin: 2em 0;
         }
         .blog-content a {
-          color: var(--palette-primary);
+          color: var(--rd-blue-600);
           text-decoration: underline;
           word-wrap: break-word;
           overflow-wrap: break-word;
         }
         .blog-content blockquote {
-          border-left: 4px solid var(--palette-primary);
+          border-left: 4px solid var(--rd-blue-600);
           padding-left: 1em;
           margin: 2em 0;
           font-style: italic;

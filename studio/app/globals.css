@@ -8,6 +8,36 @@
    CSS VARIABLES - LIGHT & DARK THEMES
    ============================================ */
 
+/* === REDESIGN (v4) - Mellow blue palette === */
+:root {
+  --rd-blue-50: #eff6ff;
+  --rd-blue-100: #dbeafe;
+  --rd-blue-200: #bfdbfe;
+  --rd-blue-300: #93c5fd;
+  --rd-blue-400: #60a5fa;
+  --rd-blue-500: #3b82f6;
+  --rd-blue-600: #2563eb;
+  --rd-blue-700: #1d4ed8;
+  --rd-indigo-400: #818cf8;
+  --rd-emerald-500: #10b981;
+  --rd-emerald-600: #059669;
+  --rd-amber-500: #f59e0b;
+  --rd-bg-page: #f0f4f9;
+  --rd-bg-white: #ffffff;
+  --rd-bg-subtle: #e8eef6;
+  --rd-bg-blue-wash: #eaf1fb;
+  --rd-border-light: #d4dde9;
+  --rd-border-medium: #c0cede;
+  --rd-border-blue: #b8d0f0;
+  --rd-text-heading: #1a2b45;
+  --rd-text-body: #374e68;
+  --rd-text-secondary: #5d7a96;
+  --rd-text-muted: #8aa0b8;
+  --rd-text-faint: #b0c2d4;
+  --rd-font-heading: 'Sora', 'DM Sans', sans-serif;
+  --rd-font-body: 'DM Sans', sans-serif;
+}
+
 :root {
   /* === DYNAMIC PALETTE COLORS (Backend-controlled) === */
   --color-primary: #0086ad;
@@ -205,7 +235,7 @@
   html, body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: var(--font-body);
+    font-family: var(--rd-font-body);
     font-size: var(--font-size-base);
     line-height: var(--line-height-base);
     -webkit-font-smoothing: antialiased;
@@ -238,7 +268,7 @@
   
   /* Heading styles */
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-heading);
+    font-family: var(--rd-font-heading);
     font-weight: 700;
     letter-spacing: -0.025em;
     text-shadow: 0 0 0.5px rgba(0, 0, 0, 0.1);

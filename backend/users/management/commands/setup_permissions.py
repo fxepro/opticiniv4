@@ -205,6 +205,7 @@ class Command(BaseCommand):
                 'compliance.evidence.view',  # Compliance Evidence
                 'compliance.policies.view',  # Compliance Policies
                 'compliance.audits.view',  # Compliance Audits
+                'compliance.audit_hub.view',  # Audit Hub
                 'compliance.reports.view',  # Compliance Reports
                 'compliance.monitoring.view',  # Assertions, templates (generic, not org-scoped)
                 'evidence.view',  # Evidence
@@ -239,6 +240,7 @@ class Command(BaseCommand):
                 'compliance.evidence.create',  # Compliance Evidence
                 'compliance.policies.view',  # Compliance Policies
                 'compliance.audits.view',  # Compliance Audits
+                'compliance.audit_hub.view',  # Audit Hub
                 'compliance.reports.view',  # Compliance Reports
                 'compliance.reports.export',  # Compliance Reports
                 'compliance.tools.view',  # Compliance Tools
@@ -290,6 +292,7 @@ class Command(BaseCommand):
                 'compliance.policies.create',  # Compliance Policies
                 'compliance.policies.edit',  # Compliance Policies
                 'compliance.audits.view',  # Compliance Audits
+                'compliance.audit_hub.view',  # Audit Hub
                 'compliance.audits.create',  # Compliance Audits
                 'compliance.audits.edit',  # Compliance Audits
                 'compliance.reports.view',  # Compliance Reports
@@ -356,6 +359,7 @@ class Command(BaseCommand):
                 'compliance.policies.create',  # Compliance Policies
                 'compliance.policies.edit',  # Compliance Policies
                 'compliance.audits.view',  # Compliance Audits
+                'compliance.audit_hub.view',  # Audit Hub
                 'compliance.audits.create',  # Compliance Audits
                 'compliance.audits.edit',  # Compliance Audits
                 'compliance.reports.view',  # Compliance Reports
@@ -437,6 +441,7 @@ class Command(BaseCommand):
                 'compliance.policies.create',  # Compliance Policies
                 'compliance.policies.edit',  # Compliance Policies
                 'compliance.audits.view',  # Compliance Audits
+                'compliance.audit_hub.view',  # Audit Hub
                 'compliance.audits.create',  # Compliance Audits
                 'compliance.audits.edit',  # Compliance Audits
                 'compliance.reports.view',  # Compliance Reports
@@ -520,6 +525,7 @@ class Command(BaseCommand):
                 'compliance.policies.create',  # Compliance Policies
                 'compliance.policies.edit',  # Compliance Policies
                 'compliance.audits.view',  # Compliance Audits
+                'compliance.audit_hub.view',  # Audit Hub
                 'compliance.audits.create',  # Compliance Audits
                 'compliance.audits.edit',  # Compliance Audits
                 'compliance.reports.view',  # Compliance Reports
@@ -590,6 +596,7 @@ class Command(BaseCommand):
                 'compliance.evidence.view',  # Compliance Evidence
                 'compliance.policies.view',  # Compliance Policies
                 'compliance.audits.view',  # Compliance Audits
+                'compliance.audit_hub.view',  # Audit Hub
                 'compliance.reports.view',  # Compliance Reports
                 'compliance.reports.export',  # Compliance Reports
                 'compliance.tools.view',  # Compliance Tools

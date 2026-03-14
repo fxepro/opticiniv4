@@ -1,296 +1,254 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { 
-  Code, 
-  Mountain, 
-  Target, 
-  Heart, 
-  Lightbulb, 
-  Users, 
-  ArrowRight,
+import {
+  Target,
+  Heart,
+  Lightbulb,
   CheckCircle,
-  MessageSquare,
-  DollarSign,
-  Zap,
-  Globe,
-  BarChart3,
+  Search,
+  Activity,
   Shield,
-  Brain
+  FileCheck,
+  FolderOpen,
+  BarChart3,
 } from "lucide-react"
-import Link from "next/link"
-import { SimpleHeroSection } from "@/components/simple-hero-section"
+import { PageHero } from "@/components/page-hero"
+import { PageLayout } from "@/components/page-layout"
+
+const CAPABILITIES = [
+  {
+    icon: Search,
+    title: "Infrastructure Discovery",
+    desc: "Automatically identify and catalog infrastructure assets across environments so teams know exactly what systems exist and how they are connected.",
+  },
+  {
+    icon: Activity,
+    title: "Operational Health Monitoring",
+    desc: "Monitor system health, service availability, and infrastructure performance signals to detect issues early and maintain reliable operations.",
+  },
+  {
+    icon: Shield,
+    title: "Security & Risk Visibility",
+    desc: "Identify configuration risks, security signals, and infrastructure vulnerabilities before they become operational problems.",
+  },
+  {
+    icon: FileCheck,
+    title: "Compliance & Governance",
+    desc: "Track compliance frameworks, manage controls, and organize audit evidence to maintain continuous readiness for external audits.",
+  },
+  {
+    icon: FolderOpen,
+    title: "Evidence & Audit Management",
+    desc: "Centralize the documentation, records, and verification data required to demonstrate compliance during security reviews and audits.",
+  },
+  {
+    icon: BarChart3,
+    title: "Infrastructure Insight & Analytics",
+    desc: "Convert raw infrastructure data into meaningful insights that help teams understand system behavior, identify trends, and improve operational resilience.",
+  },
+]
+
+const VALUES = [
+  { title: "Clarity over complexity", desc: "Technology should simplify decisions, not create more confusion." },
+  { title: "Practical solutions", desc: "Every feature in Opticini is built around real operational challenges." },
+  { title: "Transparency", desc: "Clear metrics and honest insights are the foundation of strong systems." },
+  { title: "Continuous improvement", desc: "The platform evolves based on real-world feedback and changing infrastructure needs." },
+]
+
+const AUDIENCES = [
+  "infrastructure teams",
+  "DevOps engineers",
+  "security teams",
+  "compliance professionals",
+  "consultants and auditors",
+  "SaaS companies preparing for audits",
+]
 
 export function AboutMain() {
   return (
-    <div className="min-h-screen overflow-x-hidden">
-      <SimpleHeroSection
+    <PageLayout>
+      <PageHero
+        badge="About"
         title="About Opticini"
-        subtitle="Measure performance, metrics, compliance, and more. Created to ease the pain of finding and tracking critical metrics."
-        gradientFrom="from-palette-accent-2"
-        gradientVia="via-palette-accent-1"
-        gradientTo="to-palette-primary"
+        subtitle="Infrastructure insight, compliance intelligence, and operational clarity — all in one platform."
       />
 
       {/* Main Content */}
-      <div className="bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3">
-        <div className="container mx-auto px-4 py-16 max-w-7xl">
-          
+      <div style={{ background: "var(--rd-bg-page)", fontFamily: "var(--rd-font-body)" }}>
+        <div className="container mx-auto px-4 pt-16 pb-16 max-w-7xl">
+          {/* Intro */}
+          <section className="mb-16 mt-12">
+            <div className="max-w-3xl mx-auto text-center space-y-6">
+              <p className="text-xl leading-relaxed" style={{ color: "var(--rd-text-body)" }}>
+                Opticini was created to solve a problem that many technology teams face: understanding what is actually happening across their infrastructure, systems, and compliance environments.
+              </p>
+              <p className="text-lg leading-relaxed" style={{ color: "var(--rd-text-secondary)" }}>
+                Modern organizations rely on dozens of platforms, services, and monitoring tools. Critical metrics are scattered, compliance requirements are difficult to track, and operational insights are often buried inside complex dashboards.
+              </p>
+              <p className="text-xl font-medium leading-relaxed" style={{ color: "var(--rd-text-heading)" }}>
+                Opticini brings those signals together into one unified platform so teams can see what matters, understand risk, and operate with confidence.
+              </p>
+            </div>
+          </section>
+
           {/* The Story Section */}
           <div className="mb-16">
-            <Card className="border-palette-accent-2/50 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-slate-800 flex items-center gap-2 text-h1-dynamic">
-                  <Lightbulb className="h-8 w-8 text-palette-primary" />
+            <div className="rounded-[18px] border-[1.5px] shadow-lg overflow-hidden" style={{ background: "var(--rd-bg-white)", borderColor: "var(--rd-border-light)" }}>
+              <div className="px-6 py-4 border-b" style={{ borderColor: "var(--rd-border-light)" }}>
+                <h2 className="flex items-center gap-2 text-2xl font-bold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
+                  <Lightbulb className="h-8 w-8" style={{ color: "var(--rd-blue-600)" }} />
                   The Story Behind Opticini
-                </CardTitle>
-                <CardDescription className="text-slate-600 text-lg">
-                  A personal journey that became a solution for everyone
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="prose prose-lg max-w-none text-slate-700">
-                  <p className="text-h3-dynamic leading-relaxed mb-6">
-                    <strong>This is the tool that I built for myself and then made available to everyone.</strong>
+                </h2>
+                <p className="text-lg mt-1" style={{ color: "var(--rd-text-secondary)" }}>
+                  A personal challenge that became a platform for everyone.
+                </p>
+              </div>
+              <div className="p-6 space-y-6">
+                <div className="prose prose-lg max-w-none space-y-6" style={{ color: "var(--rd-text-body)" }}>
+                  <p className="leading-relaxed">
+                    As a technologist and entrepreneur working from the mountains of Colorado, I often found myself chasing information across different systems just to understand what was happening inside my own infrastructure.
                   </p>
-                  
-                  <p className="text-h4-dynamic leading-relaxed mb-6">
-                    As a solopreneur working from the beautiful mountains of Colorado, I found myself constantly 
-                    struggling with the same problem: <em>finding and chasing performance metrics</em> across 
-                    multiple tools and platforms. The pain was real - scattered data, confusing interfaces, 
-                    and expensive solutions that didn't quite fit my needs.
+                  <p className="leading-relaxed">
+                    Metrics lived in one tool. Security signals in another. Compliance data somewhere else entirely.
                   </p>
-                  
-                  <p className="text-h4-dynamic leading-relaxed mb-6">
-                    After finding the metrics, sometimes partial, sometimes complete, I didn't know what to do. 
-                    Then research again ensued, perusing one website page after another to find solutions. 
-                    Hours turned into days, days into weeks, as I dug through documentation, forums, and 
-                    countless articles. And then I figured it out myself.
+                  <p className="leading-relaxed">
+                    The process of collecting information was exhausting. And even when the data was found, it was rarely clear what to do next.
                   </p>
-                  
-                  <p className="text-h4-dynamic leading-relaxed mb-6">
-                    So I did what any developer would do - I built my own solution. Opticini started as a 
-                    personal project to measure performance, metrics, compliance, and consolidate all the 
-                    testing, monitoring, and analysis tools I needed into one simple, powerful platform.
+                  <p className="leading-relaxed">
+                    Hours turned into days researching solutions, comparing tools, reading documentation, and trying to piece together a complete picture of system health and operational risk.
                   </p>
-                  
-                  <p className="text-h4-dynamic leading-relaxed mb-6">
-                    <strong>If you have the time to figure it out yourself, do so.</strong> But if not, 
-                    let our service consultants help you sort it out. We understand the frustration of 
-                    knowing what's wrong but not knowing how to fix it - that's where our expertise comes in.
+                  <p className="leading-relaxed">
+                    Eventually I realized the real problem wasn't the lack of data.
                   </p>
-                  
-                  <p className="text-lg leading-relaxed">
-                    What began as a way to solve my own problems has evolved into something I'm proud to 
-                    share with fellow developers, marketers, and business owners who face the same challenges 
-                    I did. Every feature is built with real-world experience and genuine care for the user experience.
+                  <p className="leading-relaxed font-semibold">
+                    The problem was lack of clarity.
+                  </p>
+                  <p className="leading-relaxed">
+                    So I built the platform I wished existed.
+                  </p>
+                  <p className="leading-relaxed">
+                    Opticini began as a personal project to bring together performance insights, system monitoring, compliance signals, and infrastructure visibility into a single place where everything could be understood and acted upon.
+                  </p>
+                  <p className="leading-relaxed">
+                    What started as a tool for myself evolved into something much bigger — a platform designed to help organizations understand their systems, prepare for audits, and operate with greater confidence.
+                  </p>
+                  <p className="leading-relaxed">
+                    Today Opticini is built for developers, infrastructure teams, security professionals, consultants, and organizations that need clear visibility into their operational and compliance environments.
                   </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
           {/* Mission & Values */}
           <div className="grid md:grid-cols-2 gap-8 mb-16">
-            <Card className="border-palette-accent-2/50 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-slate-800 flex items-center gap-2">
-                  <Target className="h-6 w-6 text-palette-primary" />
+            <div className="rounded-[18px] border-[1.5px] shadow-lg overflow-hidden" style={{ background: "var(--rd-bg-white)", borderColor: "var(--rd-border-light)" }}>
+              <div className="px-6 py-4 border-b" style={{ borderColor: "var(--rd-border-light)" }}>
+                <h3 className="flex items-center gap-2 font-semibold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
+                  <Target className="h-6 w-6" style={{ color: "var(--rd-blue-600)" }} />
                   Our Mission
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-700 leading-relaxed">
-                  To simplify website performance optimization by providing comprehensive, 
-                  easy-to-use tools that give you the insights you need without the complexity 
-                  you don't. We believe that great performance should be accessible to everyone, 
-                  not just enterprise teams with big budgets.
+                </h3>
+              </div>
+              <div className="p-6 space-y-4">
+                <p className="leading-relaxed font-medium" style={{ color: "var(--rd-text-body)" }}>
+                  To simplify infrastructure intelligence and compliance readiness.
                 </p>
-              </CardContent>
-            </Card>
+                <p className="leading-relaxed text-sm" style={{ color: "var(--rd-text-secondary)" }}>
+                  We believe organizations should not need dozens of disconnected tools just to understand how their systems are performing or whether they are operating securely.
+                </p>
+                <p className="leading-relaxed text-sm" style={{ color: "var(--rd-text-secondary)" }}>
+                  Opticini exists to provide a clear operational picture of infrastructure health, risk posture, and compliance readiness in one accessible platform.
+                </p>
+                <p className="leading-relaxed text-sm" style={{ color: "var(--rd-text-secondary)" }}>
+                  Our goal is to make operational insight and governance available to organizations of every size.
+                </p>
+              </div>
+            </div>
 
-            <Card className="border-palette-accent-2/50 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-slate-800 flex items-center gap-2">
-                  <Heart className="h-6 w-6 text-palette-primary" />
+            <div className="rounded-[18px] border-[1.5px] shadow-lg overflow-hidden" style={{ background: "var(--rd-bg-white)", borderColor: "var(--rd-border-light)" }}>
+              <div className="px-6 py-4 border-b" style={{ borderColor: "var(--rd-border-light)" }}>
+                <h3 className="flex items-center gap-2 font-semibold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
+                  <Heart className="h-6 w-6" style={{ color: "var(--rd-blue-600)" }} />
                   Our Values
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 text-slate-700">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Simplicity over complexity</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Real solutions for real problems</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Transparent and honest communication</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Continuous improvement based on feedback</span>
-                  </li>
+                </h3>
+              </div>
+              <div className="p-6">
+                <ul className="space-y-4" style={{ color: "var(--rd-text-body)" }}>
+                  {VALUES.map((v) => (
+                    <li key={v.title} className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" style={{ color: "var(--rd-emerald-500)" }} />
+                      <div>
+                        <span className="font-medium" style={{ color: "var(--rd-text-heading)" }}>{v.title}</span>
+                        <p className="text-sm mt-0.5" style={{ color: "var(--rd-text-secondary)" }}>{v.desc}</p>
+                      </div>
+                    </li>
+                  ))}
                 </ul>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
-          {/* Current Features */}
+          {/* What Opticini Provides */}
           <div className="mb-16">
-            <Card className="border-palette-accent-2/50 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-slate-800 flex items-center gap-2 text-2xl">
-                  <Zap className="h-7 w-7 text-palette-primary" />
-                  What We Offer Today
-                </CardTitle>
-                <CardDescription className="text-slate-600 text-lg">
-                  The features that are currently available and ready to use
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+            <div className="rounded-[18px] border-[1.5px] shadow-lg overflow-hidden" style={{ background: "var(--rd-bg-white)", borderColor: "var(--rd-border-light)" }}>
+              <div className="px-6 py-4 border-b" style={{ borderColor: "var(--rd-border-light)" }}>
+                <h3 className="text-2xl font-semibold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
+                  What Opticini Provides
+                </h3>
+                <p className="text-lg mt-1" style={{ color: "var(--rd-text-secondary)" }}>
+                  Opticini brings together multiple operational and compliance capabilities into a unified platform.
+                </p>
+              </div>
+              <div className="p-6">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-palette-accent-3 flex items-center justify-center">
-                        <BarChart3 className="h-5 w-5 text-palette-primary" />
+                  {CAPABILITIES.map(({ icon: Icon, title, desc }) => (
+                    <div key={title} className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg flex items-center justify-center" style={{ background: "var(--rd-bg-subtle)" }}>
+                          <Icon className="h-5 w-5" style={{ color: "var(--rd-blue-600)" }} />
+                        </div>
+                        <h4 className="font-semibold" style={{ color: "var(--rd-text-heading)" }}>{title}</h4>
                       </div>
-                      <h4 className="font-semibold text-slate-800">Performance Testing</h4>
+                      <p className="text-sm leading-relaxed" style={{ color: "var(--rd-text-secondary)" }}>{desc}</p>
                     </div>
-                    <p className="text-sm text-slate-600">Real Google PageSpeed Insights integration with AI-powered recommendations</p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-palette-accent-3 flex items-center justify-center">
-                        <Globe className="h-5 w-5 text-palette-primary" />
-                      </div>
-                      <h4 className="font-semibold text-slate-800">Website Monitoring</h4>
-                    </div>
-                    <p className="text-sm text-slate-600">Uptime monitoring, response time tracking, and SSL certificate validation</p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-palette-accent-3 flex items-center justify-center">
-                        <Shield className="h-5 w-5 text-palette-primary" />
-                      </div>
-                      <h4 className="font-semibold text-slate-800">SSL & Domain Analysis</h4>
-                    </div>
-                    <p className="text-sm text-slate-600">Comprehensive SSL certificate and domain information checking</p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-palette-accent-3 flex items-center justify-center">
-                        <Brain className="h-5 w-5 text-palette-primary" />
-                      </div>
-                      <h4 className="font-semibold text-slate-800">AI Health Monitoring</h4>
-                    </div>
-                    <p className="text-sm text-slate-600">Monitor AI model performance, costs, and system health in real-time</p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-palette-accent-3 flex items-center justify-center">
-                        <Target className="h-5 w-5 text-palette-primary" />
-                      </div>
-                      <h4 className="font-semibold text-slate-800">Sitemap Generation</h4>
-                    </div>
-                    <p className="text-sm text-slate-600">Intelligent website crawling and XML sitemap generation</p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-palette-accent-3 flex items-center justify-center">
-                        <Users className="h-5 w-5 text-palette-primary" />
-                      </div>
-                      <h4 className="font-semibold text-slate-800">API Health Checker</h4>
-                    </div>
-                    <p className="text-sm text-slate-600">Automated API discovery and comprehensive endpoint testing</p>
-                  </div>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
-          {/* Call to Action */}
+          {/* Built for Modern Technology Teams */}
           <div className="mb-16">
-            <Card className="border-green-200/50 shadow-lg bg-green-50/50">
-              <CardHeader>
-                <CardTitle className="text-green-800 flex items-center gap-2 text-2xl">
-                  <DollarSign className="h-7 w-7" />
-                  Support the Journey
-                </CardTitle>
-                <CardDescription className="text-green-700 text-lg">
-                  Help us continue building and improving PageRodeo
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="prose prose-lg max-w-none text-green-800">
-                  <p className="text-xl leading-relaxed mb-4">
-                    <strong>For features to be implemented, please buy the services if it's currently useful.</strong>
-                  </p>
-                  
-                  <p className="text-h4-dynamic leading-relaxed mb-6">
-                    If not, provide feedback to make it better. Every purchase helps fund new features, 
-                    better infrastructure, and continued development. Your support directly enables:
-                  </p>
-                  
-                  <ul className="space-y-3 text-lg">
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-6 w-6 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>New feature development and improvements</span>
+            <div className="rounded-[18px] border-[1.5px] shadow-lg overflow-hidden" style={{ background: "var(--rd-bg-white)", borderColor: "var(--rd-border-light)" }}>
+              <div className="px-6 py-4 border-b" style={{ borderColor: "var(--rd-border-light)" }}>
+                <h3 className="text-2xl font-semibold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
+                  Built for Modern Technology Teams
+                </h3>
+                <p className="text-lg mt-1" style={{ color: "var(--rd-text-secondary)" }}>
+                  Opticini is designed for organizations that need clarity across complex technology environments.
+                </p>
+              </div>
+              <div className="p-6 space-y-6">
+                <p className="leading-relaxed" style={{ color: "var(--rd-text-body)" }}>
+                  This includes:
+                </p>
+                <ul className="grid sm:grid-cols-2 gap-3" style={{ color: "var(--rd-text-body)" }}>
+                  {AUDIENCES.map((audience) => (
+                    <li key={audience} className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 flex-shrink-0" style={{ color: "var(--rd-emerald-500)" }} />
+                      <span className="capitalize">{audience}</span>
                     </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-6 w-6 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>Better server infrastructure and reliability</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-6 w-6 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>Faster response times and enhanced performance</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-6 w-6 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>More comprehensive testing and quality assurance</span>
-                    </li>
-                  </ul>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <Button 
-                    asChild
-                    className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-green-500/25 transition-all duration-300"
-                  >
-                    <Link href="/upgrade">
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      Support Opticini
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Link>
-                  </Button>
-                  
-                  <Button 
-                    asChild
-                    variant="outline"
-                    className="border-green-300 text-green-700 hover:bg-green-50"
-                  >
-                    <Link href="/feedback">
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Provide Feedback
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  ))}
+                </ul>
+                <p className="leading-relaxed pt-2" style={{ color: "var(--rd-text-body)" }}>
+                  Whether you are preparing for your first compliance framework or operating across multiple infrastructure environments, Opticini provides the insight and structure needed to move forward with confidence.
+                </p>
+              </div>
+            </div>
           </div>
 
         </div>
       </div>
-    </div>
+    </PageLayout>
   )
 }

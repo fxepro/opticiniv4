@@ -24,17 +24,10 @@ interface UserRow {
   last_name: string;
   email: string;
   username: string;
-  title: string;
   role_id: string;
   status: UserStatus;
   mfa_enabled: boolean;
   api_access: boolean;
-}
-
-interface DepartmentRow {
-  id: string;
-  code: string;
-  name: string;
 }
 
 interface TeamRow {
@@ -42,8 +35,6 @@ interface TeamRow {
   name: string;
   description: string;
   team_type: string;
-  department_id: string | null;
-  department_name: string | null;
   active: boolean;
   member_ids: string[];
 }
@@ -92,7 +83,6 @@ export default function AccountUsersAccessPage() {
 
   const [teams, setTeams] = useState<TeamRow[]>([]);
   const [teamsLoading, setTeamsLoading] = useState(true);
-  const [departments, setDepartments] = useState<DepartmentRow[]>([]);
   const [teamDialogOpen, setTeamDialogOpen] = useState(false);
   const [teamEditingId, setTeamEditingId] = useState<string | null>(null);
   const [teamForm, setTeamForm] = useState<Partial<TeamRow>>({});
@@ -139,8 +129,6 @@ export default function AccountUsersAccessPage() {
             name: (t.name as string) ?? "",
             description: (t.description as string) ?? "",
             team_type: (t.team_type as string) ?? "custom",
-            department_id: t.department_id ? String(t.department_id) : null,
-            department_name: (t.department_name as string) ?? null,
             active: Boolean(t.active),
             member_ids: Array.isArray(t.member_ids) ? (t.member_ids as unknown[]).map(String) : [],
           }))
@@ -150,21 +138,6 @@ export default function AccountUsersAccessPage() {
       .finally(() => setTeamsLoading(false));
   }, [getAuthHeaders]);
 
-  const fetchDepartments = useCallback(() => {
-    fetch(`${API_BASE}/api/account/departments/`, { headers: getAuthHeaders() })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        setDepartments(
-          (Array.isArray(data) ? data : []).map((d: Record<string, unknown>) => ({
-            id: String(d.id),
-            code: (d.code as string) ?? "",
-            name: (d.name as string) ?? "",
-          }))
-        );
-      })
-      .catch(() => setDepartments([]));
-  }, [getAuthHeaders]);
-
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
@@ -172,10 +145,6 @@ export default function AccountUsersAccessPage() {
   useEffect(() => {
     fetchTeams();
   }, [fetchTeams]);
-
-  useEffect(() => {
-    fetchDepartments();
-  }, [fetchDepartments]);
 
   const downloadTemplate = () => {
     const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
@@ -334,11 +303,10 @@ export default function AccountUsersAccessPage() {
     setTeamForm({
       name: "",
       description: "",
-      department_id: null,
+      team_type: "custom",
       active: true,
       member_ids: [],
     });
-    fetchDepartments();
     setTeamDialogOpen(true);
   };
 
@@ -346,7 +314,6 @@ export default function AccountUsersAccessPage() {
     setTeamEditingId(team.id);
     setTeamMemberQuery("");
     setTeamForm(team);
-    fetchDepartments();
     setTeamDialogOpen(true);
   };
 
@@ -357,7 +324,6 @@ export default function AccountUsersAccessPage() {
         name: teamForm.name,
         description: teamForm.description ?? "",
         team_type: (teamForm.team_type ?? "custom") as string,
-        department_id: teamForm.department_id || null,
         active: teamForm.active ?? true,
         member_ids: (teamForm.member_ids ?? []) as string[],
       };
@@ -474,7 +440,6 @@ export default function AccountUsersAccessPage() {
                         <TableCell>{u.last_name || "—"}</TableCell>
                         <TableCell className="max-w-[200px] truncate" title={u.email}>{u.email}</TableCell>
                         <TableCell className="text-muted-foreground">{u.username || "—"}</TableCell>
-                        <TableCell>{u.title || "—"}</TableCell>
                         <TableCell><span className="capitalize inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-muted">{u.role_id}</span></TableCell>
                         <TableCell><span className={`capitalize text-xs ${u.status === "active" ? "text-green-600" : u.status === "invited" ? "text-amber-600" : "text-muted-foreground"}`}>{u.status}</span></TableCell>
                         <TableCell className="text-center">{u.mfa_enabled ? "✓" : "—"}</TableCell>
@@ -544,7 +509,7 @@ export default function AccountUsersAccessPage() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Description</TableHead>
-                    <TableHead>Department</TableHead>
+                    <TableHead>Type</TableHead>
                     <TableHead>Members</TableHead>
                     <TableHead>Active</TableHead>
                     <TableHead className="w-[120px]">Actions</TableHead>
@@ -555,7 +520,7 @@ export default function AccountUsersAccessPage() {
                     <TableRow key={t.id}>
                       <TableCell>{t.name}</TableCell>
                       <TableCell>{t.description}</TableCell>
-                      <TableCell>{t.department_name ?? t.team_type ?? "—"}</TableCell>
+                      <TableCell>{t.team_type ?? "—"}</TableCell>
                       <TableCell>{t.member_ids?.length ?? 0}</TableCell>
                       <TableCell>{t.active ? "Yes" : "No"}</TableCell>
                       <TableCell>
@@ -649,10 +614,6 @@ export default function AccountUsersAccessPage() {
                         <div className="space-y-1.5">
                           <Label htmlFor="username">Username (optional)</Label>
                           <Input id="username" value={form.username ?? ""} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} className="h-9" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label htmlFor="title">Title</Label>
-                          <Input id="title" value={form.title ?? ""} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="h-9" />
                         </div>
                       </div>
                     </div>
@@ -761,23 +722,21 @@ export default function AccountUsersAccessPage() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="team_department">Department</Label>
+                        <Label htmlFor="team_type">Type</Label>
                         <Select
-                          value={teamForm.department_id ?? "__none__"}
-                          onValueChange={(value) =>
-                            setTeamForm((f) => ({ ...f, department_id: value === "__none__" ? null : value }))
-                          }
+                          value={teamForm.team_type ?? "custom"}
+                          onValueChange={(v) => setTeamForm((f) => ({ ...f, team_type: v }))}
                         >
-                          <SelectTrigger id="team_department" className="h-9">
-                            <SelectValue placeholder="Select department (optional)" />
+                          <SelectTrigger id="team_type" className="h-9">
+                            <SelectValue placeholder="Team type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="__none__">None</SelectItem>
-                            {departments.map((d) => (
-                              <SelectItem key={d.id} value={d.id}>
-                                {d.name}{d.code ? ` (${d.code})` : ""}
-                              </SelectItem>
-                            ))}
+                            <SelectItem value="custom">Custom</SelectItem>
+                            <SelectItem value="engineering">Engineering</SelectItem>
+                            <SelectItem value="security">Security</SelectItem>
+                            <SelectItem value="compliance">Compliance</SelectItem>
+                            <SelectItem value="finance">Finance</SelectItem>
+                            <SelectItem value="ops">Ops</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

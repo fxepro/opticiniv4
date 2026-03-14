@@ -72,18 +72,19 @@ class ComplianceControlViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = (
-            ComplianceControl.objects.all()
-            .select_related("health", "evaluated_by", "created_by")
+            ComplianceControl.objects.using("compliance")
+            .select_related("health")
             .prefetch_related(
                 "framework_mappings",
                 "requirement_mappings__requirement",
                 "reviews",
+                "evidence_requirements",
             )
             .order_by("control_id")
         )
         fid = self.request.query_params.get("framework_id")
         if fid:
-            ids = ComplianceControlFrameworkMapping.objects.filter(framework_id=fid).values_list("control_id", flat=True)
+            ids = ComplianceControlFrameworkMapping.objects.using("compliance").filter(framework_id=fid).values_list("control_id", flat=True)
             qs = qs.filter(id__in=ids)
         if self.request.query_params.get("status"):
             qs = qs.filter(status=self.request.query_params.get("status"))
@@ -97,9 +98,9 @@ class ComplianceControlViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def evidence(self, request, pk=None):
         control = self.get_object()
-        mappings = ComplianceEvidenceControlMapping.objects.filter(control_id=control.id)
+        mappings = ComplianceEvidenceControlMapping.objects.using("compliance").filter(control_id=control.id)
         evidence_ids = [m.evidence_id for m in mappings]
-        evidence = ComplianceEvidence.objects.filter(id__in=evidence_ids)
+        evidence = ComplianceEvidence.objects.using("compliance").filter(id__in=evidence_ids)
         return Response(ComplianceEvidenceListSerializer(evidence, many=True).data)
 
     @action(detail=False, methods=["get"])
@@ -107,6 +108,6 @@ class ComplianceControlViewSet(viewsets.ModelViewSet):
         framework_id = request.query_params.get("framework_id")
         if not framework_id:
             return Response({"error": "framework_id parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
-        mappings = ComplianceControlFrameworkMapping.objects.filter(framework_id=framework_id)
+        mappings = ComplianceControlFrameworkMapping.objects.using("compliance").filter(framework_id=framework_id)
         controls = [m.control for m in mappings]
         return Response(ComplianceControlListSerializer(controls, many=True).data)

@@ -280,7 +280,7 @@ export default function RegisterPage() {
               {/* Demo Access Request */}
               <div className="space-y-2 p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <Label htmlFor="demoPlan" className="text-slate-700 font-medium">
-                  Request Demo Access (Optional)
+                  Request Demo (Optional)
                 </Label>
                 <p className="text-xs text-slate-500 mb-3">
                   Get instant access to a demo account with pre-loaded sample data. Demo credentials will be sent to your email.

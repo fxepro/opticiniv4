@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Building2, Pencil, X, Loader2, Globe, Coins, Plus, Trash2, RefreshCw, AlertCircle, Star } from "lucide-react";
+import { Building2, Pencil, X, Loader2, Globe, Coins, Plus, Trash2, RefreshCw, AlertCircle, Star, Users } from "lucide-react";
 import { toast } from "sonner";
 import { DRAWER_WIDTH_FULL, DRAWER_WIDTH_HALF } from "@/lib/drawer-sizes";
 
@@ -137,6 +137,8 @@ export default function AccountOrganizationPage() {
   const [orgCurrenciesLoading, setOrgCurrenciesLoading] = useState(false);
   const [timezones, setTimezones] = useState<{ id: string; name: string; label: string; utc_offset: number }[]>([]);
   const [states, setStates] = useState<{ id: string; code: string; name: string }[]>([]);
+  const [departments, setDepartments] = useState<{ id: string; code: string; name: string }[]>([]);
+  const [departmentsLoading, setDepartmentsLoading] = useState(false);
 
   const getAuthHeaders = useCallback((): HeadersInit => {
     const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
@@ -158,6 +160,22 @@ export default function AccountOrganizationPage() {
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Failed to load countries"))))
       .then((data: CountryOption[]) => setCountries(data))
       .catch(() => setCountries([]));
+  }, [getAuthHeaders]);
+
+  const fetchDepartments = useCallback(() => {
+    fetch(`${API_BASE}/api/account/departments/`, { headers: getAuthHeaders() })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setDepartments(data))
+      .catch(() => setDepartments([]));
+  }, [getAuthHeaders]);
+
+  const syncDepartments = useCallback(() => {
+    setDepartmentsLoading(true);
+    fetch(`${API_BASE}/api/account/departments/sync/`, { method: "POST", headers: getAuthHeaders() })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data) => { setDepartments(data); toast.success("Departments synced from People."); })
+      .catch(() => toast.error("Failed to sync departments."))
+      .finally(() => setDepartmentsLoading(false));
   }, [getAuthHeaders]);
 
   const fetchCurrencies = useCallback(() => {
@@ -230,7 +248,8 @@ export default function AccountOrganizationPage() {
     fetchCurrencies();
     fetchTimezones();
     fetchOrgCurrencies();
-  }, [fetchOrg, fetchRegions, fetchCountries, fetchCurrencies, fetchTimezones, fetchOrgCurrencies]);
+    fetchDepartments();
+  }, [fetchOrg, fetchRegions, fetchCountries, fetchCurrencies, fetchTimezones, fetchOrgCurrencies, fetchDepartments]);
 
   useEffect(() => {
     fetchStates(form.jurisdiction_country);
@@ -435,7 +454,7 @@ export default function AccountOrganizationPage() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
             Profile
@@ -447,6 +466,10 @@ export default function AccountOrganizationPage() {
           <TabsTrigger value="multi-currency" className="flex items-center gap-2">
             <Coins className="h-4 w-4" />
             Multi-currency
+          </TabsTrigger>
+          <TabsTrigger value="departments" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Departments
           </TabsTrigger>
         </TabsList>
 
@@ -806,6 +829,51 @@ export default function AccountOrganizationPage() {
                     : " · No primary set"}
                 </p>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="departments" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle className="text-base">Departments</CardTitle>
+                <CardDescription className="text-xs mt-0.5">
+                  Canonical department list derived from People records. Sync to populate from imported CSV/LDAP data.
+                </CardDescription>
+              </div>
+              <Button variant="outline" size="sm" onClick={syncDepartments} disabled={departmentsLoading} className="gap-1.5">
+                {departmentsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                Sync from People
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[40px] text-center text-muted-foreground">#</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Code</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {departments.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center text-muted-foreground py-8 text-sm">
+                        No departments yet. Import a CSV with a <span className="font-mono">department_name</span> column in People, then click <strong>Sync from People</strong>.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    departments.map((d, idx) => (
+                      <TableRow key={d.id}>
+                        <TableCell className="text-center text-muted-foreground text-xs">{idx + 1}</TableCell>
+                        <TableCell className="font-medium">{d.name}</TableCell>
+                        <TableCell className="text-muted-foreground font-mono text-xs">{d.code}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>

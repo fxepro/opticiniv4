@@ -192,14 +192,7 @@ class Team(models.Model):
         related_name="teams",
         db_column="organization_id",
     )
-    department = models.ForeignKey(
-        "Department",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="teams",
-        db_column="department_id",
-    )
+    # Teams are inter-departmental; no department FK
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, default="")
     team_type = models.CharField(max_length=32, choices=TEAM_TYPE_CHOICES, default=TEAM_CUSTOM)
@@ -389,8 +382,11 @@ class Personnel(models.Model):
     EMPLOYMENT_STATUS_CHOICES = [
         ("active", "Active"),
         ("terminated", "Terminated"),
-        ("contractor", "Contractor"),
         ("leave", "Leave"),
+    ]
+    USER_TYPE_CHOICES = [
+        ("internal", "Internal"),
+        ("external", "External"),
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization_id = models.UUIDField()
@@ -399,7 +395,8 @@ class Personnel(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     email = models.CharField(max_length=255)
-    employment_status = models.CharField(max_length=32, choices=EMPLOYMENT_STATUS_CHOICES)
+    employment_status = models.CharField(max_length=32, choices=EMPLOYMENT_STATUS_CHOICES, default="active")
+    user_type = models.CharField(max_length=16, choices=USER_TYPE_CHOICES, default="internal")
     job_title = models.CharField(max_length=255, blank=True)
     department = models.CharField(max_length=255, blank=True)
     department_id = models.UUIDField(null=True, blank=True)

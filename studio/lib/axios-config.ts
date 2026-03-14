@@ -40,9 +40,7 @@ function redirectToLogin() {
   const path = window.location.pathname;
   const isWorkspace = path.startsWith("/workspace");
   const loginPath = isWorkspace ? "/workspace/login" : "/login";
-  const msg = encodeURIComponent(
-    "Your session has expired. Please log in again."
-  );
+  const msg = encodeURIComponent("Session expired. Please log in again.");
   window.location.href = `${loginPath}?error=${msg}`;
 }
 

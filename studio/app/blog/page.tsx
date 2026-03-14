@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Calendar, User, Clock, ArrowRight } from 'lucide-react';
 import { fetchFeaturedPosts, fetchRecentPosts, fetchCategories, fetchTags, type BlogPost, type Category, type Tag } from '@/lib/api/blog';
 import { format } from 'date-fns';
-import { SimpleHeroSection } from '@/components/simple-hero-section';
+import { PageHero } from '@/components/page-hero';
+import { PageLayout } from '@/components/page-layout';
 
 export default function BlogPage() {
   const router = useRouter();
@@ -83,54 +83,54 @@ export default function BlogPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-palette-primary mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading blog posts...</p>
+      <PageLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--rd-blue-600)] mx-auto mb-4"></div>
+            <p style={{ color: "var(--rd-text-secondary)" }}>Loading blog posts...</p>
+          </div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3">
-      <SimpleHeroSection
+    <PageLayout>
+      <PageHero
+        badge="Resources"
         title="Blog"
         subtitle="Insights, tips, and updates about website performance, SEO, and digital marketing"
-        gradientFrom="from-palette-primary"
-        gradientVia="via-palette-primary"
-        gradientTo="to-palette-secondary"
       />
-      <div className="container mx-auto px-4 py-12 max-w-7xl">
-
+      <div className="container mx-auto px-4 pt-16 pb-16 max-w-7xl" style={{ background: "var(--rd-bg-page)" }}>
         {/* Search */}
-        <div className="max-w-2xl mx-auto mb-12">
+        <div className="max-w-2xl mx-auto mb-12 mt-12">
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5" style={{ color: "var(--rd-text-muted)" }} />
               <Input
                 placeholder="Search posts..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-10"
+                className="pl-10 border-[1.5px] rounded-lg"
+                style={{ borderColor: "var(--rd-border-light)" }}
               />
             </div>
-            <Button onClick={handleSearch}>Search</Button>
+            <Button onClick={handleSearch} className="rounded-lg font-semibold" style={{ background: "var(--rd-blue-600)", color: "#fff" }}>Search</Button>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className={`grid gap-8 ${(featuredPosts.length > 0 || recentPosts.length > 0) ? "lg:grid-cols-3" : "max-w-2xl mx-auto"}`}>
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className={`space-y-8 ${(featuredPosts.length > 0 || recentPosts.length > 0) ? "lg:col-span-2" : ""}`}>
             {/* Featured Posts */}
             {featuredPosts.length > 0 && (
               <div>
-                <h2 className="text-2xl font-bold mb-6">Featured Posts</h2>
+                <h2 className="text-2xl font-bold mb-6" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>Featured Posts</h2>
                 <div className="space-y-6">
                   {featuredPosts.map((post) => (
-                    <Card key={post.id} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-6">
+                    <div key={post.id} className="bg-white border-[1.5px] rounded-[18px] overflow-hidden transition-all hover:border-[#93c5fd] hover:shadow-lg">
+                      <div className="p-6" style={{ borderColor: "var(--rd-border-light)" }}>
                         <Link href={`/blog/${post.slug}`}>
                           <div className="flex gap-6">
                             {post.featured_image_url && (
@@ -146,19 +146,19 @@ export default function BlogPage() {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
                                 {post.category && (
-                                  <Badge variant="outline">{post.category.name}</Badge>
+                                  <Badge variant="outline" style={{ borderColor: "var(--rd-border-light)" }}>{post.category.name}</Badge>
                                 )}
-                                <Badge>Featured</Badge>
+                                <Badge style={{ background: "var(--rd-blue-600)", color: "#fff" }}>Featured</Badge>
                               </div>
-                              <h3 className="text-xl font-semibold mb-2 hover:text-palette-primary">
+                              <h3 className="text-xl font-semibold mb-2 hover:text-[var(--rd-blue-600)] transition-colors" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>
                                 {post.title}
                               </h3>
                               {post.excerpt && (
-                                <p className="text-muted-foreground mb-4 line-clamp-2">
+                                <p className="mb-4 line-clamp-2" style={{ color: "var(--rd-text-secondary)" }}>
                                   {post.excerpt}
                                 </p>
                               )}
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-4 text-sm" style={{ color: "var(--rd-text-muted)" }}>
                                 <span className="flex items-center gap-1">
                                   <User className="h-4 w-4" />
                                   {post.author.full_name || post.author.username}
@@ -177,8 +177,8 @@ export default function BlogPage() {
                             </div>
                           </div>
                         </Link>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -187,11 +187,11 @@ export default function BlogPage() {
             {/* Recent Posts */}
             {recentPosts.length > 0 && (
               <div>
-                <h2 className="text-2xl font-bold mb-6">Recent Posts</h2>
+                <h2 className="text-2xl font-bold mb-6" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>Recent Posts</h2>
                 <div className="space-y-6">
                   {recentPosts.map((post) => (
-                    <Card key={post.id} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-6">
+                    <div key={post.id} className="bg-white border-[1.5px] rounded-[18px] overflow-hidden transition-all hover:border-[#93c5fd] hover:shadow-lg" style={{ borderColor: "var(--rd-border-light)" }}>
+                      <div className="p-6">
                         <Link href={`/blog/${post.slug}`}>
                           <div className="flex gap-6">
                             {post.featured_image_url && (
@@ -207,18 +207,18 @@ export default function BlogPage() {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
                                 {post.category && (
-                                  <Badge variant="outline">{post.category.name}</Badge>
+                                  <Badge variant="outline" style={{ borderColor: "var(--rd-border-light)" }}>{post.category.name}</Badge>
                                 )}
                               </div>
-                              <h3 className="text-xl font-semibold mb-2 hover:text-palette-primary">
+                              <h3 className="text-xl font-semibold mb-2 hover:text-[var(--rd-blue-600)] transition-colors" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>
                                 {post.title}
                               </h3>
                               {post.excerpt && (
-                                <p className="text-muted-foreground mb-4 line-clamp-2">
+                                <p className="mb-4 line-clamp-2" style={{ color: "var(--rd-text-secondary)" }}>
                                   {post.excerpt}
                                 </p>
                               )}
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-4 text-sm" style={{ color: "var(--rd-text-muted)" }}>
                                 <span className="flex items-center gap-1">
                                   <User className="h-4 w-4" />
                                   {post.author.full_name || post.author.username}
@@ -237,69 +237,66 @@ export default function BlogPage() {
                             </div>
                           </div>
                         </Link>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
             )}
 
             {featuredPosts.length === 0 && recentPosts.length === 0 && (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <p className="text-muted-foreground">No blog posts available yet.</p>
-                </CardContent>
-              </Card>
+              <div className="bg-white border-[1.5px] rounded-[18px] py-16 px-6 text-center" style={{ borderColor: "var(--rd-border-light)" }}>
+                <p className="text-lg" style={{ color: "var(--rd-text-secondary)" }}>No blog posts available yet.</p>
+              </div>
             )}
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar - only show when there are posts */}
+          {(featuredPosts.length > 0 || recentPosts.length > 0) && (
           <div className="space-y-6">
             {/* Categories */}
             {categories.length > 0 && (
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold mb-4">Categories</h3>
-                  <div className="space-y-2">
-                    {categories.map((category) => (
-                      <Link
-                        key={category.id}
-                        href={`/blog?category=${category.slug}`}
-                        className="flex items-center justify-between p-2 rounded hover:bg-accent transition-colors"
-                      >
-                        <span>{category.name}</span>
-                        <Badge variant="secondary">{category.post_count}</Badge>
-                      </Link>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="bg-white border-[1.5px] rounded-[18px] p-6" style={{ borderColor: "var(--rd-border-light)" }}>
+                <h3 className="font-semibold mb-4" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>Categories</h3>
+                <div className="space-y-2">
+                  {categories.map((category) => (
+                    <Link
+                      key={category.id}
+                      href={`/blog?category=${category.slug}`}
+                      className="flex items-center justify-between p-2 rounded hover:bg-[var(--rd-bg-subtle)] transition-colors"
+                      style={{ color: "var(--rd-text-secondary)" }}
+                    >
+                      <span>{category.name}</span>
+                      <Badge variant="secondary">{category.post_count}</Badge>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             )}
 
             {/* Tags */}
             {tags.length > 0 && (
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold mb-4">Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag) => (
-                      <Link
-                        key={tag.id}
-                        href={`/blog?tag=${tag.slug}`}
-                        className="inline-block"
-                      >
-                        <Badge variant="outline" className="hover:bg-accent">
-                          {tag.name}
-                        </Badge>
-                      </Link>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="bg-white border-[1.5px] rounded-[18px] p-6" style={{ borderColor: "var(--rd-border-light)" }}>
+                <h3 className="font-semibold mb-4" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => (
+                    <Link
+                      key={tag.id}
+                      href={`/blog?tag=${tag.slug}`}
+                      className="inline-block"
+                    >
+                      <Badge variant="outline" className="hover:bg-[var(--rd-bg-subtle)]" style={{ borderColor: "var(--rd-border-light)" }}>
+                        {tag.name}
+                      </Badge>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
+          )}
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

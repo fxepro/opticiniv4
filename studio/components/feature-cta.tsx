@@ -25,17 +25,7 @@ export function FeatureCTA() {
                 className="bg-gradient-to-r from-palette-accent-1 to-palette-primary hover:from-palette-primary hover:to-palette-primary-hover text-white shadow-lg hover:shadow-purple-500/25 transition-all duration-300 px-8 py-6 text-lg"
               >
                 <Link href="/request-demo">
-                  Request Early Access
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                className="border-2 border-palette-primary text-palette-primary hover:bg-palette-accent-3 transition-all duration-300 px-8 py-6 text-lg"
-              >
-                <Link href="/request-demo">
-                  Book a Demo
+                  Request Demo
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>

@@ -3,6 +3,7 @@ import "@/lib/axios-config";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import axios from "axios";
+import { useTimedLogout } from "@/lib/use-timed-logout";
 import { UnifiedSidebar } from "@/components/unified-sidebar";
 import { MainSidebar } from "@/components/main-sidebar";
 import { UnifiedHeader } from "@/components/unified-header";
@@ -34,6 +35,8 @@ export default function WorkspaceLayout({
   const pathname = usePathname();
   const lastFetchPathRef = useRef<string | null>(null);
   const mainSidebarWidth = mainSidebarCollapsed ? 56 : 112;
+
+  useTimedLogout();
   const expandedSidebarWidth = 256;
   const collapsedSidebarWidth = 80;
 
@@ -250,10 +253,16 @@ export default function WorkspaceLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "linear-gradient(to bottom right, var(--rd-bg-blue-wash), var(--rd-bg-white), var(--rd-blue-50))" }}
+      >
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-palette-primary mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading workspace...</p>
+          <div
+            className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4"
+            style={{ borderColor: "var(--rd-blue-600)" }}
+          />
+          <p style={{ color: "var(--rd-text-secondary)" }}>Loading workspace...</p>
         </div>
       </div>
     );
@@ -266,7 +275,10 @@ export default function WorkspaceLayout({
 
   return (
     <PermissionProvider user={user} permissions={user?.permissions || []}>
-      <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80 flex flex-col">
+      <div
+        className="min-h-screen flex flex-col"
+        style={{ background: "linear-gradient(to bottom right, var(--rd-bg-blue-wash), var(--rd-bg-page))" }}
+      >
         <UnifiedHeader
           user={user}
           sidebarCollapsed={sidebarCollapsed}

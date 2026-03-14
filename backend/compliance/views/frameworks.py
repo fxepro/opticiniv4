@@ -312,3 +312,110 @@ def set_framework_org_enabled(request, framework_id):
             {"error": "organization_frameworks table missing or schema issue. Run: python manage.py migrate compliance --database=compliance"},
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, HasFeaturePermission("compliance.frameworks.view")])
+def framework_versions_with_stats(request):
+    """
+    Return all framework versions grouped by framework, with per-version stats:
+    requirements count, mapped controls count, primary coverage %,
+    policies available, assertions available.
+    Used by Audit Hub Step 2 to power the framework card preview.
+    """
+    from compliance.models.frameworks import FrameworkVersion
+    from compliance.models.requirements import Requirement
+    from compliance.models import ControlRequirementMapping
+    try:
+        from compliance.models.policies import PolicyTemplate
+        policy_model = PolicyTemplate
+    except Exception:
+        policy_model = None
+    try:
+        from compliance.models.monitoring import AssertionTemplate
+        assertion_model = AssertionTemplate
+    except Exception:
+        assertion_model = None
+
+    versions = (
+        FrameworkVersion.objects
+        .using("compliance")
+        .select_related("framework")
+        .order_by("framework__name", "version_name")
+    )
+
+    result = {}
+    for v in versions:
+        fid = str(v.framework_id)
+        if fid not in result:
+            result[fid] = {
+                "framework_id": fid,
+                "framework_name": v.framework.name,
+                "framework_code": v.framework.code or "",
+                "versions": [],
+            }
+
+        req_count = Requirement.objects.using("compliance").filter(framework_version_id=v.id).count()
+
+        mapped_control_ids = set(
+            ControlRequirementMapping.objects
+            .using("compliance")
+            .filter(requirement__framework_version_id=v.id)
+            .values_list("control_id", flat=True)
+            .distinct()
+        )
+        mapped_controls = len(mapped_control_ids)
+
+        req_ids_covered = set(
+            ControlRequirementMapping.objects
+            .using("compliance")
+            .filter(requirement__framework_version_id=v.id, primary_control_flag=True)
+            .values_list("requirement_id", flat=True)
+            .distinct()
+        )
+        primary_coverage_pct = round(100 * len(req_ids_covered) / req_count, 1) if req_count else 0
+
+        policy_count = 0
+        if policy_model:
+            try:
+                policy_count = policy_model.objects.using("compliance").filter(framework_id=v.framework_id).count()
+            except Exception:
+                pass
+
+        assertion_count = 0
+        if assertion_model:
+            try:
+                assertion_count = assertion_model.objects.using("compliance").filter(framework_id=v.framework_id).count()
+            except Exception:
+                pass
+
+        # Requirement groups — unique prefix before the first dot/dash in req code
+        req_codes = list(
+            Requirement.objects.using("compliance")
+            .filter(framework_version_id=v.id)
+            .values_list("code", flat=True)
+        )
+        groups: dict[str, int] = {}
+        for code in req_codes:
+            # e.g. "CC1.1" -> "CC1", "A1" -> "A1", "PR.AC-1" -> "PR.AC"
+            import re
+            m = re.match(r'^([A-Za-z]+[\d]*)', code)
+            grp = m.group(1) if m else code[:4]
+            groups[grp] = groups.get(grp, 0) + 1
+
+        result[fid]["versions"].append({
+            "version_id": str(v.id),
+            "version_name": v.version_name,
+            "version_code": v.framework_version_code_id or "",
+            "effective_date": v.effective_date.isoformat() if v.effective_date else None,
+            "requirements": req_count,
+            "mapped_controls": mapped_controls,
+            "primary_coverage_pct": primary_coverage_pct,
+            "policies_available": policy_count,
+            "assertions_available": assertion_count,
+            "requirement_groups": [
+                {"code": k, "count": c} for k, c in sorted(groups.items())
+            ],
+        })
+
+    return Response(list(result.values()), status=status.HTTP_200_OK)

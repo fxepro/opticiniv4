@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from users.permission_classes import HasFeaturePermission
+from users.permission_classes import HasFeaturePermission, HasAnyFeaturePermission
 
 
 def _get_organization_id(request):
@@ -108,13 +108,17 @@ def overview(request):
 
 
 @api_view(["GET", "PATCH"])
-@permission_classes([IsAuthenticated, HasFeaturePermission("account.overview.view")])
+@permission_classes([IsAuthenticated, HasAnyFeaturePermission("account.overview.view", "compliance.audit_hub.view")])
 def organization(request):
     """
-    Get or update current organization. Requires account.overview.view (Executive).
+    Get or update current organization. Requires account.overview.view or compliance.audit_hub.view.
+    Returns 200 with organization=null when no org assigned (avoids 404 for frontend).
     """
     org_id = _get_organization_id(request)
     if not org_id:
+        if request.method == "GET":
+            # Return 200 with empty shape so frontend avoids 404; org page can show "No org assigned"
+            return Response({"org_id": None, "name": None, "error": "No organization assigned. Set profile.organization_id."})
         return Response(
             {"error": "No organization assigned. Set profile.organization_id."},
             status=status.HTTP_404_NOT_FOUND,
@@ -123,6 +127,8 @@ def organization(request):
     from platform_org.models import Organization
     org = Organization.objects.using("org").filter(id=org_id).first()
     if not org:
+        if request.method == "GET":
+            return Response({"org_id": None, "name": None, "error": "Organization not found."})
         return Response({"error": "Organization not found."}, status=status.HTTP_404_NOT_FOUND)
 
     def _org_to_dict(o):
@@ -276,7 +282,7 @@ def connector_list(request):
             credentials_ref=credentials_ref,
             status="active",
         )
-        connector.save(using="core")
+        connector.save(using="org")
         valid_modules = [m[0] for m in OrgConnectorModuleScope.MODULE_CHOICES]
         for mod in modules:
             if mod in valid_modules:
@@ -335,7 +341,7 @@ def connector_detail(request, connector_id):
             connector.credentials_ref = (request.data["credentials_ref"] or "").strip()
         if "status" in request.data:
             connector.status = (request.data["status"] or "").strip()
-        connector.save(using="core")
+        connector.save(using="org")
         modules = request.data.get("modules")
         if modules is not None:
             OrgConnectorModuleScope.objects.using("org").filter(org_connector_id=connector.id).delete()
@@ -471,13 +477,17 @@ def _org_region_to_json(region):
 
 
 @api_view(["GET", "POST"])
-@permission_classes([IsAuthenticated, HasFeaturePermission("account.overview.view")])
+@permission_classes([IsAuthenticated])
 def organization_region_list(request):
     """
-    List (GET) or create (POST) organization regions for current org. Multi-region compliance (EU vs US).
+    List (GET) or create (POST) organization regions for current org.
+    GET is open to any authenticated org member (needed by audit hub and other compliance pages).
+    POST requires account.overview.view (Executive).
     """
     org_id = _get_organization_id(request)
     if not org_id:
+        if request.method == "GET":
+            return Response([])
         return Response(
             {"error": "No organization assigned."},
             status=status.HTTP_404_NOT_FOUND,
@@ -494,6 +504,10 @@ def organization_region_list(request):
         return Response([_org_region_to_json(r) for r in regions])
 
     if request.method == "POST":
+        # POST requires elevated permission
+        from users.permissions import HasFeaturePermission as _HFP
+        if not _HFP("account.overview.view")().has_permission(request, None):
+            return Response({"error": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
         country_id = request.data.get("country_id")
         if not country_id:
             return Response({"error": "country_id is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -658,9 +672,6 @@ def _user_to_org_json(user):
     elif profile:
         group = _get_user_role_group(user)
         role = (group.name.lower() if group else profile.role) or "viewer"
-    title = ""
-    if profile and isinstance(profile.user_settings, dict):
-        title = profile.user_settings.get("title", "") or ""
     status = "active" if (user.is_active and (not profile or profile.is_active)) else "deactivated"
     if profile and not getattr(profile, "email_verified", True):
         status = "invited"
@@ -670,7 +681,6 @@ def _user_to_org_json(user):
         "last_name": user.last_name or "",
         "email": user.email or "",
         "username": user.username or "",
-        "title": title,
         "role_id": role,
         "status": status,
         "mfa_enabled": getattr(profile, "two_factor_enabled", False) if profile else False,
@@ -710,7 +720,6 @@ def org_user_list(request):
         first_name = (request.data.get("first_name") or "").strip()
         last_name = (request.data.get("last_name") or "").strip()
         role = (request.data.get("role_id") or request.data.get("role") or "viewer").lower()
-        title = (request.data.get("title") or "").strip()
         password = request.data.get("password") or get_random_string(length=12)
         org_uuid = uuid_module.UUID(str(org_id))
         user = User.objects.create_user(
@@ -725,7 +734,7 @@ def org_user_list(request):
             role=role,
             is_active=True,
             organization_id=org_uuid,
-            user_settings={"title": title, "api_access": bool(request.data.get("api_access", False))},
+            user_settings={"api_access": bool(request.data.get("api_access", False))},
         )
         return Response(_user_to_org_json(user), status=status.HTTP_201_CREATED)
 
@@ -766,10 +775,6 @@ def org_user_detail(request, user_id):
                 user.email = email
         if "username" in request.data:
             user.username = (request.data.get("username") or "").strip() or user.username
-        if "title" in request.data:
-            settings = dict(profile.user_settings or {})
-            settings["title"] = (request.data.get("title") or "").strip()
-            profile.user_settings = settings
         if "role_id" in request.data or "role" in request.data:
             role = (request.data.get("role_id") or request.data.get("role") or profile.role).lower()
             from users.role_sync import set_user_role_by_name
@@ -805,10 +810,10 @@ def org_user_bulk_template(request):
     wb = Workbook()
     ws = wb.active
     ws.title = "Users"
-    headers = ["email", "first_name", "last_name", "username", "title", "role"]
+    headers = ["email", "first_name", "last_name", "username", "role"]
     ws.append(headers)
-    ws.append(["jane.doe@example.com", "Jane", "Doe", "jane", "Analyst", "analyst"])
-    ws.append(["john.smith@example.com", "John", "Smith", "", "Manager", "manager"])
+    ws.append(["jane.doe@example.com", "Jane", "Doe", "jane", "analyst"])
+    ws.append(["john.smith@example.com", "John", "Smith", "", "manager"])
     for cell in ws[1]:
         cell.font = Font(bold=True)
         cell.alignment = Alignment(horizontal="center")
@@ -834,8 +839,7 @@ def org_user_bulk_template(request):
     inst.append(["first_name", "Optional"])
     inst.append(["last_name", "Optional"])
     inst.append(["username", "Optional. Auto-generated from email if blank."])
-    inst.append(["title", "Optional job title"])
-    inst.append(["role", "viewer, analyst, manager, director, executive, or admin"])
+    inst.append(["role", "viewer, analyst, manager, director, executive, auditor, agency, or admin"])
     inst.column_dimensions["A"].width = 50
     inst.column_dimensions["B"].width = 40
 
@@ -860,10 +864,10 @@ def org_user_bulk_template_csv(request):
 
     buffer = StringIO()
     writer = csv.writer(buffer)
-    headers = ["email", "first_name", "last_name", "username", "title", "role"]
+    headers = ["email", "first_name", "last_name", "username", "role"]
     writer.writerow(headers)
-    writer.writerow(["jane.doe@example.com", "Jane", "Doe", "jane", "Analyst", "analyst"])
-    writer.writerow(["john.smith@example.com", "John", "Smith", "", "Manager", "manager"])
+    writer.writerow(["jane.doe@example.com", "Jane", "Doe", "jane", "analyst"])
+    writer.writerow(["john.smith@example.com", "John", "Smith", "", "manager"])
     response = HttpResponse(buffer.getvalue(), content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="users_bulk_template.csv"'
     return response
@@ -964,7 +968,7 @@ def _org_user_bulk_upload_impl(request):
     header_row = [str(c).strip().lower() if c else "" for c in rows[0]]
     col_map = {}
     for i, h in enumerate(header_row):
-        if h in ("email", "first_name", "last_name", "username", "title", "role"):
+        if h in ("email", "first_name", "last_name", "username", "role"):
             col_map[h] = i
 
     if "email" not in col_map:
@@ -987,7 +991,6 @@ def _org_user_bulk_upload_impl(request):
         first_name = (row[col_map.get("first_name", -1)] or "").strip() if "first_name" in col_map else ""
         last_name = (row[col_map.get("last_name", -1)] or "").strip() if "last_name" in col_map else ""
         username = (row[col_map.get("username", -1)] or "").strip() if "username" in col_map else ""
-        title = (row[col_map.get("title", -1)] or "").strip() if "title" in col_map else ""
         role = (row[col_map.get("role", -1)] or "viewer").strip().lower() if "role" in col_map else "viewer"
 
         if User.objects.filter(email__iexact=email).exists():
@@ -1014,7 +1017,7 @@ def _org_user_bulk_upload_impl(request):
                 role=role,
                 is_active=True,
                 organization_id=org_uuid,
-                user_settings={"title": title, "api_access": False},
+                user_settings={"api_access": False},
             )
             set_user_role_by_name(user, role)
             created.append({"email": email, "username": user.username})
@@ -1039,14 +1042,71 @@ def _org_user_bulk_upload_impl(request):
 # --- Org-scoped departments (Users & Access) ---
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated, HasFeaturePermission("account.overview.view")])
+@permission_classes([IsAuthenticated, HasAnyFeaturePermission("account.overview.view", "compliance.audit_hub.view")])
 def org_department_list(request):
-    """List departments for current org. Used for team type dropdown."""
+    """List departments for current org. Used for team type dropdown, Personnel drawer, and Audit Hub."""
     from platform_org.models import Department
 
     org_id = _get_organization_id(request)
     if not org_id:
+        return Response([])
+
+    depts = (
+        Department.objects.using("org")
+        .filter(organization_id=org_id)
+        .order_by("name")
+        .values("id", "department_code", "name")
+    )
+    return Response([
+        {"id": str(d["id"]), "code": d["department_code"] or "", "name": d["name"]}
+        for d in depts
+    ])
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated, HasFeaturePermission("account.overview.view")])
+def org_department_sync(request):
+    """
+    Sync unique Personnel.department text values into org.departments.
+    Creates a canonical Department entry for every unique non-empty department
+    name found in Personnel records. Idempotent — safe to call repeatedly.
+    Returns the full canonical department list after sync.
+    """
+    from platform_org.models import Department, Personnel
+    import uuid as _uuid
+
+    org_id = _get_organization_id(request)
+    if not org_id:
         return Response({"error": "No organization assigned."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Collect unique non-empty department names from Personnel
+    unique_names = (
+        Personnel.objects.using("org")
+        .filter(organization_id=org_id)
+        .exclude(department="")
+        .values_list("department", flat=True)
+        .distinct()
+    )
+
+    # Existing canonical names (case-insensitive check)
+    existing = {
+        d.name.lower(): d
+        for d in Department.objects.using("org").filter(organization_id=org_id)
+    }
+
+    for name in unique_names:
+        name = name.strip()
+        if not name:
+            continue
+        if name.lower() not in existing:
+            dept = Department(
+                id=_uuid.uuid4(),
+                organization_id=org_id,
+                name=name,
+                department_code=name[:10].upper().replace(" ", "_"),
+            )
+            dept.save(using="org")
+            existing[name.lower()] = dept
 
     depts = (
         Department.objects.using("org")
@@ -1063,65 +1123,91 @@ def org_department_list(request):
 # --- Org-scoped teams (Users & Access) ---
 
 def _team_to_json(team):
-    """Serialize team for API."""
-    member_ids = list(
-        team.members.values_list("user_id", flat=True)
-    )
-    dept = getattr(team, "department", None)
+    """Serialize team for API. Teams are inter-departmental; no department tracking."""
+    try:
+        member_ids = list(team.members.values_list("user_id", flat=True))
+    except Exception:
+        member_ids = []
     return {
         "id": str(team.id),
-        "name": team.name,
-        "description": team.description or "",
-        "team_type": team.team_type,
-        "department_id": str(team.department_id) if team.department_id else None,
-        "department_name": dept.name if dept else None,
-        "active": team.active,
+        "name": getattr(team, "name", "") or "",
+        "description": getattr(team, "description", "") or "",
+        "team_type": getattr(team, "team_type", "custom") or "custom",
+        "active": getattr(team, "active", True),
         "member_ids": [str(uid) for uid in member_ids],
     }
 
 
 @api_view(["GET", "POST"])
-@permission_classes([IsAuthenticated, HasFeaturePermission("account.overview.view")])
+@permission_classes([IsAuthenticated])
 def org_team_list(request):
-    """List (GET) or create (POST) teams for current org."""
+    """List (GET) or create (POST) teams for current org. GET open to any authenticated user (audit hub)."""
     from platform_org.models import Team, TeamMember
 
     org_id = _get_organization_id(request)
     if not org_id:
+        if request.method == "GET":
+            return Response([])
         return Response({"error": "No organization assigned."}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == "GET":
-        teams = (
-            Team.objects.using("org")
-            .filter(organization_id=org_id)
-            .select_related("department")
-            .prefetch_related("members")
-            .order_by("name")
-        )
-        return Response([_team_to_json(t) for t in teams])
+        import logging
+        log = logging.getLogger(__name__)
+        try:
+            teams = (
+                Team.objects.using("org")
+                .filter(organization_id=org_id)
+                .prefetch_related("members")
+                .order_by("name")
+            )
+            return Response([_team_to_json(t) for t in teams])
+        except Exception as e:
+            # Fallback when description/team_type/active columns don't exist (migration 0016 not run)
+            try:
+                teams_data = list(
+                    Team.objects.using("org")
+                    .filter(organization_id=org_id)
+                    .order_by("name")
+                    .values("id", "name")
+                )
+                team_ids = [t["id"] for t in teams_data]
+                members = list(
+                    TeamMember.objects.using("org")
+                    .filter(team_id__in=team_ids)
+                    .values_list("team_id", "user_id")
+                )
+                members_by_team = {}
+                for tid, uid in members:
+                    members_by_team.setdefault(tid, []).append(str(uid))
+                results = [
+                    {
+                        "id": str(t["id"]),
+                        "name": t["name"] or "",
+                        "description": "",
+                        "team_type": "custom",
+                        "active": True,
+                        "member_ids": members_by_team.get(t["id"], []),
+                    }
+                    for t in teams_data
+                ]
+                return Response(results)
+            except Exception as fallback_err:
+                log.exception("org_team_list fallback failed: %s", fallback_err)
+            log.exception("org_team_list GET failed: %s", e)
+            return Response([])  # Graceful fallback so Audit Hub can continue
 
     if request.method == "POST":
+        if not HasFeaturePermission("account.overview.view")().has_permission(request, None):
+            return Response({"error": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
         name = (request.data.get("name") or "").strip()
         if not name:
             return Response({"error": "name is required."}, status=status.HTTP_400_BAD_REQUEST)
-        dept_id_raw = request.data.get("department_id")
-        dept_id = None
-        if dept_id_raw:
-            try:
-                from platform_org.models import Department
-                dept = Department.objects.using("org").filter(
-                    id=dept_id_raw, organization_id=org_id
-                ).first()
-                dept_id = dept.id if dept else None
-            except (ValueError, TypeError):
-                pass
 
         team = Team.objects.using("org").create(
             organization_id=org_id,
             name=name,
             description=(request.data.get("description") or "").strip(),
             team_type=(request.data.get("team_type") or "custom").lower(),
-            department_id=dept_id,
             active=bool(request.data.get("active", True)),
         )
         member_ids = request.data.get("member_ids") or []
@@ -1135,7 +1221,6 @@ def org_team_list(request):
                 pass
         team = (
             Team.objects.using("org")
-            .select_related("department")
             .prefetch_related("members")
             .get(id=team.id)
         )
@@ -1155,7 +1240,6 @@ def org_team_detail(request, team_id):
     team = (
         Team.objects.using("org")
         .filter(id=team_id, organization_id=org_id)
-        .select_related("department")
         .prefetch_related("members")
         .first()
     )
@@ -1172,19 +1256,6 @@ def org_team_detail(request, team_id):
             team.description = (request.data.get("description") or "").strip()
         if "team_type" in request.data:
             team.team_type = (request.data.get("team_type") or "custom").lower()
-        if "department_id" in request.data:
-            dept_id_raw = request.data.get("department_id")
-            dept_id = None
-            if dept_id_raw:
-                try:
-                    from platform_org.models import Department
-                    dept = Department.objects.using("org").filter(
-                        id=dept_id_raw, organization_id=org_id
-                    ).first()
-                    dept_id = dept.id if dept else None
-                except (ValueError, TypeError):
-                    pass
-            team.department_id = dept_id
         if "active" in request.data:
             team.active = bool(request.data.get("active"))
         if "member_ids" in request.data:
@@ -1197,7 +1268,6 @@ def org_team_detail(request, team_id):
         team.save(using="org")
         team = (
             Team.objects.using("org")
-            .select_related("department")
             .prefetch_related("members")
             .get(id=team.id)
         )
@@ -1228,6 +1298,7 @@ def _personnel_to_json(p, departments=None):
         "email": p.email,
         "job_title": p.job_title or "",
         "employment_status": p.employment_status,
+        "user_type": p.user_type if hasattr(p, "user_type") else "internal",
         "department": p.department or "",
         "external_hr_id": p.external_hr_id or "",
         "hire_date": p.hire_date.isoformat() if p.hire_date else None,
@@ -1239,28 +1310,19 @@ def _personnel_to_json(p, departments=None):
 
 
 @api_view(["GET", "POST"])
-@permission_classes([IsAuthenticated, HasFeaturePermission("account.overview.view")])
+@permission_classes([IsAuthenticated, HasAnyFeaturePermission("account.overview.view", "compliance.audit_hub.view")])
 def personnel_list(request):
-    """List all personnel for the org, or create a new personnel record."""
+    """List all personnel for the org, or create a new personnel record. Audit Hub needs GET for team assignment."""
     from platform_org.models import Personnel, Department
 
     org_id = _get_organization_id(request)
     if not org_id:
+        if request.method == "GET":
+            return Response([])
         return Response({"error": "No organization assigned."}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == "GET":
-        from django.contrib.auth.models import User as AuthUser
-        qs = list(Personnel.objects.using("org").filter(organization_id=org_id).order_by("last_name", "first_name"))
-        # Auto-reconcile: link any unlinked personnel to existing auth.User by email
-        unlinked = [p for p in qs if not p.user_id and p.email]
-        if unlinked:
-            emails = [p.email.lower() for p in unlinked]
-            matched_users = {u.email.lower(): u for u in AuthUser.objects.filter(email__in=emails)}
-            for p in unlinked:
-                match = matched_users.get(p.email.lower())
-                if match:
-                    p.user_id = match.id
-                    p.save(using="org")
+        qs = Personnel.objects.using("org").filter(organization_id=org_id).order_by("last_name", "first_name")
         return Response([_personnel_to_json(p) for p in qs])
 
     if request.method == "POST":
@@ -1288,6 +1350,7 @@ def personnel_list(request):
             email=email,
             job_title=(request.data.get("job_title") or "").strip(),
             employment_status=(request.data.get("employment_status") or "active"),
+            user_type=(request.data.get("user_type") or "internal"),
             external_hr_id=(request.data.get("external_hr_id") or "").strip(),
             department=(request.data.get("department") or "").strip(),
             hire_date=hire_date,
@@ -1314,22 +1377,30 @@ def personnel_detail(request, personnel_id):
         return Response(_personnel_to_json(p))
 
     if request.method == "PATCH":
-        if "first_name" in request.data:
-            p.first_name = (request.data.get("first_name") or "").strip()
-        if "last_name" in request.data:
-            p.last_name = (request.data.get("last_name") or "").strip()
-        if "email" in request.data:
-            email = (request.data.get("email") or "").strip()
-            if email and email.lower() != p.email.lower():
-                if Personnel.objects.using("org").filter(organization_id=org_id, email__iexact=email).exclude(id=p.id).exists():
-                    return Response({"error": "Email already in use."}, status=status.HTTP_400_BAD_REQUEST)
-                p.email = email
+        # first_name, last_name, email are identity fields — set by CSV/LDAP only, not editable here
         if "job_title" in request.data:
             p.job_title = (request.data.get("job_title") or "").strip()
         if "employment_status" in request.data:
             p.employment_status = (request.data.get("employment_status") or "active")
+            # Sync login access: inactive/terminated = deactivate auth.User
+            if p.user_id:
+                try:
+                    from django.contrib.auth.models import User as AuthUser
+                    from users.models import UserProfile
+                    auth_user = AuthUser.objects.get(id=p.user_id)
+                    is_active = p.employment_status == "active"
+                    auth_user.is_active = is_active
+                    auth_user.save()
+                    profile = getattr(auth_user, "profile", None)
+                    if profile:
+                        profile.is_active = is_active
+                        profile.save()
+                except Exception:
+                    pass
         if "external_hr_id" in request.data:
             p.external_hr_id = (request.data.get("external_hr_id") or "").strip()
+        if "user_type" in request.data:
+            p.user_type = request.data.get("user_type") or "internal"
         if "department" in request.data:
             p.department = (request.data.get("department") or "").strip()
         if "hire_date" in request.data:
@@ -1426,7 +1497,7 @@ def personnel_grant_access(request, personnel_id):
         role=role,
         is_active=True,
         organization_id=org_uuid,
-        user_settings={"title": p.job_title or "", "api_access": False},
+        user_settings={"api_access": False},
     )
     set_user_role_by_name(user, role)
 
@@ -1534,7 +1605,7 @@ def personnel_csv_import(request):
         employment_status = _get("employment_status") or "active"
         external_hr_id = _get("external_hr_id")
         hire_date_raw = _get("hire_date")
-        department = _get("department")
+        department = _get("department") or _get("department_name")
 
         hire_date = None
         if hire_date_raw:

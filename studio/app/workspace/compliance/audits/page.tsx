@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,14 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, Table2, Grid3x3, Plus, Download, RefreshCw } from "lucide-react";
+import { Search, Filter, Table2, Grid3x3, Plus, Download, RefreshCw, ClipboardList } from "lucide-react";
 import { Audit, AuditStatus, AuditType, AuditFinding, AuditAuditor, AuditFrameworkVersion, AuditStatusHistoryEntry } from "@/lib/data/audits";
 import { AuditsTable } from "@/components/compliance/audits-table";
 import { AuditCard } from "@/components/compliance/audit-card";
 import { AuditDetailDrawer } from "@/components/compliance/audit-detail-drawer";
 import { AuditCreateDrawer, type AuditFormData } from "@/components/compliance/audit-create-drawer";
 import axios from "axios";
+import Link from "next/link";
 import { toast } from "sonner";
+
+import { getApiBaseUrl } from "@/lib/api-config";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== "undefined" ? "" : "http://localhost:8000");
 
@@ -65,6 +69,22 @@ function mapApiAuditToAudit(a: any): Audit {
   const findings = Array.isArray(a.findings) ? a.findings.map(mapApiFindingToFinding) : [];
   const auditors = Array.isArray(a.auditors) ? a.auditors.map(mapApiAuditorToAuditor) : [];
   const statusHistory = Array.isArray(a.status_history) ? a.status_history : [];
+  const controlTests = Array.isArray(a.control_test_plans)
+    ? a.control_test_plans.map((p: any) => ({
+        id: p.id,
+        controlId: p.control_id ?? p.controlId ?? "",
+        controlCode: p.control_code ?? p.controlCode ?? "",
+        controlName: p.control_name ?? p.controlName ?? "",
+        testPlanName: p.test_name ?? p.testPlanName ?? "",
+        sampleCount: p.sample_count ?? p.sampleCount ?? 0,
+        result: p.result,
+        exceptionsCount: p.exceptions_count ?? p.exceptionsCount ?? 0,
+        samplingMethod: p.sampling_method ?? p.samplingMethod ?? "",
+        expectedSampleSize: p.expected_sample_size ?? p.expectedSampleSize ?? null,
+        populationDefinition: p.population_definition ?? p.populationDefinition ?? "",
+        testProcedureSteps: p.test_procedure_steps ?? p.testProcedureSteps ?? "",
+      }))
+    : [];
   return {
     id: a.id,
     auditId: a.audit_id ?? a.id,
@@ -97,6 +117,7 @@ function mapApiAuditToAudit(a: any): Audit {
     lowFindings: a.low_findings ?? 0,
     auditors,
     leadAuditor,
+    controlTests,
     ownerName: a.owner,
     notes: a.notes,
     summary: a.summary,
@@ -109,6 +130,9 @@ function mapApiAuditToAudit(a: any): Audit {
 }
 
 export default function ComplianceAuditsPage() {
+  const searchParams = useSearchParams();
+  const createdId = searchParams.get("created");
+
   const [audits, setAudits] = useState<Audit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -162,10 +186,11 @@ export default function ComplianceAuditsPage() {
       setError(null);
       const token = localStorage.getItem("access_token");
       if (!token) {
+        setError("Please log in to view audits");
         setLoading(false);
         return;
       }
-      const baseUrl = API_BASE?.replace(/\/$/, "") || "";
+      const baseUrl = (typeof window !== "undefined" ? getApiBaseUrl() : API_BASE)?.replace(/\/$/, "") || "";
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (typeFilter !== "all") params.set("type", typeFilter);
@@ -173,7 +198,28 @@ export default function ComplianceAuditsPage() {
       const response = await makeAuthenticatedRequest(url);
       const raw = response.data?.results ?? response.data;
       const list = Array.isArray(raw) ? raw : [];
-      setAudits(list.map(mapApiAuditToAudit));
+      if (process.env.NODE_ENV === "development" && list.length === 0 && response.data) {
+        console.warn("[Audits] API returned non-array or empty:", typeof raw, Object.keys(response.data || {}));
+      }
+      let auditsToSet = list.map(mapApiAuditToAudit);
+      // If redirected with ?created=id and list doesn't include it, fetch and prepend (avoids race with empty list)
+      if (createdId && !auditsToSet.some((a) => String(a.id) === String(createdId))) {
+        try {
+          const detailRes = await makeAuthenticatedRequest(`${baseUrl}/api/compliance/audits/${createdId}/`);
+          auditsToSet = [mapApiAuditToAudit(detailRes.data), ...auditsToSet];
+        } catch {
+          // ignore
+        }
+      }
+      setAudits(auditsToSet);
+      if (createdId && typeof window !== "undefined") {
+        const found = auditsToSet.find((a) => String(a.id) === String(createdId));
+        if (found) {
+          setSelectedAudit(found);
+          setDrawerOpen(true);
+        }
+        window.history.replaceState({}, "", "/workspace/compliance/audits");
+      }
     } catch (err: any) {
       console.error("Error fetching audits:", err);
       setError(err.message ?? "Failed to load audits");
@@ -185,7 +231,7 @@ export default function ComplianceAuditsPage() {
 
   useEffect(() => {
     fetchAudits();
-  }, [statusFilter, typeFilter]);
+  }, [statusFilter, typeFilter, createdId]);
 
   // Get unique frameworks from audits
   const allFrameworks = useMemo(() => {
@@ -229,7 +275,7 @@ export default function ComplianceAuditsPage() {
 
       return true;
     });
-  }, [searchQuery, statusFilter, typeFilter, frameworkFilter]);
+  }, [audits, searchQuery, statusFilter, typeFilter, frameworkFilter]);
 
   // Calculate statistics (8 cards: engagements, test plans, instances, samples, exceptions, controls tested, requirements tested, evidence)
   const stats = useMemo(() => {
@@ -328,13 +374,19 @@ export default function ComplianceAuditsPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Link href="/workspace/compliance/audit-hub">
+            <Button className="bg-palette-primary text-white hover:bg-palette-primary/90">
+              <ClipboardList className="h-4 w-4 mr-2" />
+              Audit Hub
+            </Button>
+          </Link>
           <Button
             variant="outline"
             className="border-palette-primary text-palette-primary"
             onClick={handleCreateAudit}
           >
             <Plus className="h-4 w-4 mr-2" />
-            Create Audit
+            Quick Create
           </Button>
           <Button
             variant="outline"
@@ -351,6 +403,15 @@ export default function ComplianceAuditsPage() {
           </Button>
         </div>
       </div>
+
+      {error && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {error}
+          <Button variant="link" size="sm" className="ml-2 h-auto p-0" onClick={() => { setError(null); fetchAudits(); }}>
+            Retry
+          </Button>
+        </div>
+      )}
 
       {/* Summary Statistics — 8 cards: Audit engagements, status, workflow metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">

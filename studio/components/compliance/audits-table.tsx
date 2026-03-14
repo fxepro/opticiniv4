@@ -211,19 +211,106 @@ export function AuditsTable({
                                 <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Tested</th>
                                 <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Passed</th>
                                 <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Failed</th>
+                                <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Partial</th>
                                 <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Not evaluated</th>
+                                <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Total samples</th>
+                                <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Exceptions</th>
                               </tr>
                             </thead>
                             <tbody>
                               <tr className="border-b">
-                                <td className="py-1.5 px-2">{audit.controlsInScope ?? audit.totalControls}</td>
-                                <td className="py-1.5 px-2">{audit.controlsPassed + audit.controlsFailed + audit.controlsPartial}</td>
-                                <td className="py-1.5 px-2 text-green-600">{audit.controlsPassed}</td>
-                                <td className="py-1.5 px-2 text-red-600">{audit.controlsFailed}</td>
-                                <td className="py-1.5 px-2 text-slate-500">{audit.controlsNotEvaluated}</td>
+                                {(() => {
+                                  const plans = audit.controlTests ?? [];
+                                  const fromPlans = plans.length > 0;
+                                  const inScope = fromPlans ? plans.length : (audit.controlsInScope ?? audit.totalControls ?? 0);
+                                  const passed = fromPlans ? plans.filter((p) => p.result === "pass").length : (audit.controlsPassed ?? 0);
+                                  const failed = fromPlans ? plans.filter((p) => p.result === "fail").length : (audit.controlsFailed ?? 0);
+                                  const partial = fromPlans ? plans.filter((p) => p.result === "partial").length : (audit.controlsPartial ?? 0);
+                                  const notEval = fromPlans ? plans.filter((p) => !p.result || p.result === "na").length : (audit.controlsNotEvaluated ?? 0);
+                                  const tested = passed + failed + partial;
+                                  const totalSamples = fromPlans ? plans.reduce((s, p) => s + (p.sampleCount ?? 0), 0) : null;
+                                  const totalExceptions = fromPlans ? plans.reduce((s, p) => s + (p.exceptionsCount ?? 0), 0) : null;
+                                  return (
+                                    <>
+                                      <td className="py-1.5 px-2">{inScope}</td>
+                                      <td className="py-1.5 px-2">{tested}</td>
+                                      <td className="py-1.5 px-2 text-green-600">{passed}</td>
+                                      <td className="py-1.5 px-2 text-red-600">{failed}</td>
+                                      <td className="py-1.5 px-2 text-amber-600">{partial}</td>
+                                      <td className="py-1.5 px-2 text-slate-500">{notEval}</td>
+                                      <td className="py-1.5 px-2">{totalSamples != null ? totalSamples : "—"}</td>
+                                      <td className="py-1.5 px-2">{totalExceptions != null ? totalExceptions : "—"}</td>
+                                    </>
+                                  );
+                                })()}
                               </tr>
                             </tbody>
                           </table>
+                        </div>
+                        <div className="rounded-lg border bg-muted/30 p-4">
+                          <h4 className="mb-3 text-sm font-semibold text-muted-foreground">Control test plans</h4>
+                          {(audit.controlTests?.length ?? 0) > 0 ? (
+                            <>
+                              <table className="w-full text-xs mb-4">
+                                <thead>
+                                  <tr className="border-b">
+                                    <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Control #</th>
+                                    <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Test plan</th>
+                                    <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Samples</th>
+                                    <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Result</th>
+                                    <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Exceptions</th>
+                                    <th className="text-left py-1.5 px-2 font-medium text-muted-foreground">Method</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {audit.controlTests!.map((t, idx) => (
+                                    <tr key={t.id ?? t.controlId ?? idx} className="border-b">
+                                      <td className="py-1.5 px-2">
+                                        <span className="font-mono text-[11px] font-medium">{t.controlCode || t.controlId || "—"}</span>
+                                        {t.controlName && <span className="block text-slate-600">{t.controlName}</span>}
+                                      </td>
+                                      <td className="py-1.5 px-2">{t.testPlanName || "—"}</td>
+                                      <td className="py-1.5 px-2">{t.sampleCount ?? 0}</td>
+                                      <td className="py-1.5 px-2">
+                                        <span className={
+                                          t.result === "pass" ? "text-green-600 font-medium" :
+                                          t.result === "fail" ? "text-red-600 font-medium" :
+                                          t.result === "partial" ? "text-amber-600 font-medium" : "text-slate-500"
+                                        }>
+                                          {t.result || "—"}
+                                        </span>
+                                      </td>
+                                      <td className="py-1.5 px-2">{t.exceptionsCount ?? 0}</td>
+                                      <td className="py-1.5 px-2">{t.samplingMethod || (t.expectedSampleSize != null ? `n=${t.expectedSampleSize}` : "—")}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                              {audit.controlTests!.filter((t) => t.populationDefinition || t.testProcedureSteps).length > 0 && (
+                                <div className="space-y-3 pt-2 border-t">
+                                  {audit.controlTests!.filter((t) => t.populationDefinition || t.testProcedureSteps).map((t, idx) => (
+                                    <div key={t.id ?? `${t.controlId}-${idx}`} className="rounded border bg-white p-2 text-xs">
+                                      <span className="font-medium text-muted-foreground">{t.controlName || t.controlId || "Control"}</span>
+                                      {t.populationDefinition && (
+                                        <div className="mt-1">
+                                          <span className="text-muted-foreground">Population: </span>
+                                          <span className="text-slate-600">{t.populationDefinition}</span>
+                                        </div>
+                                      )}
+                                      {t.testProcedureSteps && (
+                                        <div className="mt-1">
+                                          <span className="text-muted-foreground">Procedure: </span>
+                                          <span className="text-slate-600 whitespace-pre-wrap">{t.testProcedureSteps}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <p className="text-xs text-slate-500 py-2">No control test plans yet</p>
+                          )}
                         </div>
                         {(audit.requirementsInScope != null || audit.requirementsTested != null) && (
                           <div className="text-sm text-slate-600">

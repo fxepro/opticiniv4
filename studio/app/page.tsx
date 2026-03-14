@@ -1,558 +1,266 @@
 "use client";
-import React, { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { 
-  Search, Zap, Shield, Settings, FileCheck, FolderOpen, GitBranch, 
-  DollarSign, AlertTriangle, ArrowRight, CheckCircle, Server, Cloud, Network,
-  Lock, Play, Heart, Code, Layers, Container
-} from "lucide-react"
+
+import React from "react";
+import Link from "next/link";
+import { ArrowRight, Play, Check } from "lucide-react";
+
+const PLANES = [
+  { emoji: "🔍", title: "Discovery", tagline: "Know everything that exists", href: "/features/discovery" },
+  { emoji: "💓", title: "Health", tagline: "Know what's up — and what's about to go down", href: "/features/health" },
+  { emoji: "⚡", title: "Performance", tagline: "Measure what matters to users and teams", href: "/features/performance" },
+  { emoji: "🔐", title: "Security", tagline: "See risk before attackers do", href: "/features/security" },
+  { emoji: "⚙️", title: "Configuration", tagline: "Prevent silent configuration decay", href: "/features/configuration" },
+  { emoji: "📋", title: "Compliance", tagline: "Always audit-ready, never scrambling", href: "/features/compliance" },
+  { emoji: "📂", title: "Evidence", tagline: "No screenshots. No spreadsheets.", href: "/features/evidence" },
+  { emoji: "🔄", title: "Change", tagline: "Every incident starts with a change", href: "/features/change" },
+  { emoji: "💰", title: "Cost", tagline: "Visibility before optimization", href: "/features/cost" },
+  { emoji: "⚠️", title: "Risk", tagline: "Not all alerts are equal", href: "/features/risk" },
+];
+
+const AUDIENCES = [
+  { emoji: "📊", role: "IT Operations & SRE", focus: "Real-time infrastructure health, uptime, and performance visibility across your entire stack." },
+  { emoji: "🛡️", role: "Security Teams", focus: "Continuous exposure monitoring, misconfiguration detection, and attack surface reduction." },
+  { emoji: "📋", role: "GRC & Compliance", focus: "Always-on control monitoring, automated evidence collection, and audit-ready reporting." },
+  { emoji: "💵", role: "FinOps & Finance", focus: "Cloud cost attribution, waste identification, and infrastructure spend optimization." },
+  { emoji: "🏢", role: "Executives", focus: "Real risk posture, operational readiness, and business-context insight — not dashboard noise." },
+];
+
+const COMPARISON = [
+  { old: "Siloed tools", new: "Unified insight platform" },
+  { old: "Reactive alerts", new: "Continuous monitoring" },
+  { old: "Point-in-time audits", new: "Always audit-ready" },
+  { old: "Data overload", new: "Prioritized risk scores" },
+  { old: "Manual evidence collection", new: "Automated proof" },
+  { old: "Audit panic", new: "Compliance confidence" },
+];
+
+const INFRA = [
+  { emoji: "🖥️", label: "On-Premise" },
+  { emoji: "☁️", label: "Cloud (AWS / GCP / Azure)" },
+  { emoji: "🔀", label: "Hybrid" },
+  { emoji: "📦", label: "Containers & K8s" },
+  { emoji: "🔌", label: "APIs & Services" },
+  { emoji: "🔑", label: "Identity Systems" },
+  { emoji: "🌐", label: "Networks" },
+];
+
+const TRUST_SIGNALS = ["SOC 2 Ready", "ISO 27001", "HIPAA", "PCI DSS", "Agent-based or agentless"];
 
 export default function HomePage() {
-  const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const insightPlanes = [
-    {
-      icon: Search,
-      title: "Discovery",
-      emoji: "🔍",
-      description: "Automatically discover and inventory all infrastructure assets.",
-      tagline: "You can't secure or manage what you don't know exists.",
-      items: ["Servers, VMs, containers", "Cloud resources", "Databases, APIs, identity systems"]
-    },
-    {
-      icon: Heart,
-      title: "Health",
-      emoji: "💓",
-      description: "Ensure availability and operational stability.",
-      tagline: "Know what's up—and what's about to go down.",
-      items: ["Uptime & availability", "Service health", "Infrastructure reliability"]
-    },
-    {
-      icon: Zap,
-      title: "Performance",
-      emoji: "⚡",
-      description: "Understand how systems behave under load.",
-      tagline: "Measure what matters to users and teams.",
-      items: ["Latency & throughput", "Resource utilization", "Performance trends"]
-    },
-    {
-      icon: Shield,
-      title: "Security",
-      emoji: "🔐",
-      description: "Reduce attack surface and exposure.",
-      tagline: "See risk before attackers do.",
-      items: ["Open ports & exposed services", "Vulnerabilities & misconfigurations", "Identity & access gaps"]
-    },
-    {
-      icon: Settings,
-      title: "Configuration",
-      emoji: "⚙️",
-      description: "Detect drift and enforce baselines.",
-      tagline: "Prevent silent configuration decay.",
-      items: ["Baseline comparison", "Config change detection", "Policy enforcement"]
-    },
-    {
-      icon: FileCheck,
-      title: "Compliance",
-      emoji: "📜",
-      description: "Stay continuously audit-ready.",
-      tagline: "Compliance shouldn't be a once-a-year panic.",
-      items: ["SOC 2, ISO 27001, HIPAA, PCI", "Continuous control monitoring", "Shared responsibility modeling"]
-    },
-    {
-      icon: FolderOpen,
-      title: "Evidence",
-      emoji: "📂",
-      description: "Automate audit proof.",
-      tagline: "No screenshots. No spreadsheets.",
-      items: ["Auto-collected evidence", "Evidence freshness tracking", "Auditor-ready exports"]
-    },
-    {
-      icon: GitBranch,
-      title: "Change",
-      emoji: "🔄",
-      description: "Track who changed what—and why it matters.",
-      tagline: "Every incident starts with a change.",
-      items: ["Infra & config changes", "Deployment tracking", "Compliance impact mapping"]
-    },
-    {
-      icon: DollarSign,
-      title: "Cost",
-      emoji: "💰",
-      description: "Understand spend and waste.",
-      tagline: "Visibility before optimization.",
-      items: ["Cloud & infra cost attribution", "Idle resource detection", "Cost efficiency insights"]
-    },
-    {
-      icon: AlertTriangle,
-      title: "Risk",
-      emoji: "⚠️",
-      description: "Turn signals into prioritized action.",
-      tagline: "Not all alerts are equal.",
-      items: ["Unified risk scoring", "Business impact mapping", "Executive-level risk views"]
-    }
-  ];
-
-  const targetAudiences = [
-    { role: "IT Operations & SRE", focus: "stability, uptime, performance" },
-    { role: "Security Teams", focus: "exposure, misconfiguration, risk" },
-    { role: "GRC & Compliance", focus: "continuous compliance & evidence" },
-    { role: "FinOps & Finance", focus: "cost clarity and efficiency" },
-    { role: "Executives", focus: "real risk, real readiness, real insight" }
-  ];
-
-  const infrastructureTypes = [
-    { icon: Server, label: "On-premise" },
-    { icon: Cloud, label: "Cloud" },
-    { icon: Layers, label: "Hybrid" },
-    { icon: Container, label: "Containers" },
-    { icon: Code, label: "APIs" },
-    { icon: Lock, label: "Identity systems" },
-    { icon: Network, label: "Networks" }
-  ];
-
   return (
-    <div className="min-h-screen overflow-x-hidden" suppressHydrationWarning>
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(to bottom right, var(--color-accent-1), var(--color-primary), var(--color-secondary))' }}>
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -inset-10 opacity-35">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full mix-blend-multiply filter blur-2xl opacity-60 animate-pulse" style={{ backgroundColor: 'var(--color-secondary)' }}></div>
-            <div className="absolute top-1/3 right-1/4 w-96 h-96 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-pulse animation-delay-2000" style={{ backgroundColor: 'var(--color-primary)' }}></div>
-            <div className="absolute bottom-1/4 left-1/3 w-96 h-96 rounded-full mix-blend-multiply filter blur-2xl opacity-55 animate-pulse animation-delay-4000" style={{ backgroundColor: 'var(--color-accent-1)' }}></div>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "var(--rd-bg-page)", fontFamily: "var(--rd-font-body)" }}>
+      {/* Hero */}
+      <section className="relative min-h-[88vh] flex items-center justify-center overflow-hidden px-4 sm:px-9 pt-[110px] pb-[90px]" style={{ background: "linear-gradient(160deg, var(--rd-bg-blue-wash) 0%, var(--rd-bg-white) 55%, var(--rd-blue-50) 100%)" }}>
+        <div className="absolute inset-0 opacity-25" style={{ backgroundImage: "linear-gradient(var(--rd-border-blue) 1px, transparent 1px), linear-gradient(90deg, var(--rd-border-blue) 1px, transparent 1px)", backgroundSize: "72px 72px" }} />
+        <div className="absolute top-[30%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] pointer-events-none" style={{ background: "radial-gradient(ellipse, rgba(37,99,235,.07) 0%, transparent 68%)" }} />
+        <div className="absolute -top-14 -right-14 w-[500px] h-[500px] pointer-events-none" style={{ background: "radial-gradient(ellipse, rgba(99,102,241,.06) 0%, transparent 65%)" }} />
+        <div className="relative z-10 text-center max-w-[920px] animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full border mb-9" style={{ borderColor: "var(--rd-blue-200)", background: "var(--rd-blue-50)", color: "var(--rd-blue-600)", fontSize: "13px", fontWeight: 700, letterSpacing: ".09em", textTransform: "uppercase" }}>
+            <span className="w-[7px] h-[7px] rounded-full bg-[var(--rd-blue-500)] animate-pulse" />
+            B2B Infrastructure Compliance Platform
           </div>
-        </div>
-        
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:100px_100px]"></div>
-        
-        <div className="relative z-10 container mx-auto px-4 text-center">
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
-            Opticini
+          <h1 className="text-[clamp(48px,6.5vw,82px)] font-extrabold leading-[1.04] tracking-tight mb-7" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
+            Complete Visibility.
+            <br />
+            <span className="bg-gradient-to-br from-[var(--rd-blue-600)] to-[var(--rd-indigo-400)] bg-clip-text text-transparent">Total Confidence.</span>
           </h1>
-          
-          <p className="text-2xl md:text-3xl text-white/95 font-semibold mb-4">
-            Complete Optics & Insight Into Your IT Infrastructure
+          <p className="text-[clamp(20px,2.5vw,24px)] max-w-[720px] mx-auto mb-5 font-light leading-[1.55]" style={{ color: "var(--rd-text-secondary)" }}>
+            One platform for discovery, operations, security, compliance, cost, and risk — across local, hybrid, and cloud infrastructure.
           </p>
-          
-          <p className="text-lg md:text-xl text-white/90 max-w-4xl mx-auto mb-8 leading-relaxed">
-            One platform for discovery, operations, security, compliance, cost, and risk—across local, hybrid, and cloud environments.
+          <p className="text-[17px] mb-[52px]" style={{ color: "var(--rd-text-muted)" }}>
+            Know what you have · Know how it performs · Prove compliance · Reduce risk
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-4 mb-[60px]">
+            <Link
+              href="/request-demo"
+              className="inline-flex items-center gap-2.5 px-9 py-4 rounded-lg text-white text-lg font-semibold transition-all hover:-translate-y-0.5"
+              style={{ background: "var(--rd-blue-600)", boxShadow: "0 6px 24px rgba(37,99,235,.22)" }}
+            >
+              Request Demo <ArrowRight className="h-[17px] w-[17px]" />
+            </Link>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-7">
+            {TRUST_SIGNALS.map((s) => (
+              <span key={s} className="flex items-center gap-2 text-base" style={{ color: "var(--rd-text-muted)" }}>
+                <Check className="h-[17px] w-[17px] shrink-0" style={{ color: "var(--rd-emerald-500)" }} />
+                {s}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="absolute bottom-9 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
+          <div className="w-px h-9" style={{ background: "linear-gradient(to bottom, transparent, var(--rd-border-medium))" }} />
+          <div className="w-1 h-1 rounded-full animate-bounce" style={{ background: "var(--rd-text-muted)" }} />
+        </div>
+      </section>
 
-          <p className="text-lg text-white/95 font-medium mb-12 max-w-3xl mx-auto">
-            👉 Know what you have. Know how it's performing. Know what's risky. Prove compliance. Reduce cost.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-12">
-            <Button size="lg" className="bg-white text-palette-primary hover:bg-white/90 border-0 px-8 py-6 text-lg font-semibold rounded-xl shadow-xl transform hover:scale-105 transition-all duration-300" asChild>
-              <Link href="/request-demo">
-                Request Early Access
-                <ArrowRight className="ml-2 h-5 w-5" />
+      {/* Problem */}
+      <section className="py-[108px] px-4 sm:px-9 border-y" style={{ background: "var(--rd-bg-subtle)", borderColor: "var(--rd-border-light)" }}>
+        <div className="max-w-[840px] mx-auto">
+          <div className="text-center mb-[68px]">
+            <p className="text-sm font-bold uppercase tracking-widest mb-3.5" style={{ color: "var(--rd-blue-600)" }}>The Challenge</p>
+            <h2 className="text-[clamp(32px,4vw,46px)] font-bold tracking-tight mb-4 leading-tight" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>Modern infrastructure is fragmented</h2>
+            <p className="text-xl max-w-[640px] mx-auto leading-relaxed" style={{ color: "var(--rd-text-secondary)" }}>
+              Your tools don&apos;t talk to each other — leaving security and compliance gaps invisible until it&apos;s too late.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3.5 mb-4">
+            {["Monitoring tools — Only show performance metrics", "Security scanners — Only show vulnerability lists", "Compliance tools — Only show point-in-time evidence", "Finance tools — Only show disconnected cost data"].map((item, i) => {
+              const [title, sub] = item.split(" — ");
+              return (
+                <div key={i} className="flex gap-4 p-6 rounded-xl border bg-white" style={{ borderColor: "var(--rd-border-light)", boxShadow: "0 1px 4px rgba(37,99,235,.05)" }}>
+                  <span className="w-[9px] h-[9px] rounded-full shrink-0 mt-2" style={{ background: "var(--rd-amber-500)" }} />
+                  <div>
+                    <p className="text-lg font-semibold mb-1" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>{title}</p>
+                    <p className="text-base" style={{ color: "var(--rd-text-secondary)" }}>{sub}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="p-7 rounded-xl text-center border" style={{ borderColor: "#fecaca", background: "#fff5f5" }}>
+            <p className="text-xl font-semibold mb-2" style={{ color: "#c53030", fontFamily: "var(--rd-font-heading)" }}>None of them talk to each other.</p>
+            <p className="text-[17px]" style={{ color: "#9b6b6b" }}>Teams stitch together dashboards, screenshots, and spreadsheets — while risk quietly grows.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Solution */}
+      <section className="py-[108px] px-4 sm:px-9" style={{ background: "var(--rd-bg-white)" }}>
+        <div className="max-w-[840px] mx-auto">
+          <div className="text-center mb-[68px]">
+            <p className="text-sm font-bold uppercase tracking-widest mb-3.5" style={{ color: "var(--rd-blue-600)" }}>The Opticini Solution</p>
+            <h2 className="text-[clamp(32px,4vw,46px)] font-bold tracking-tight mb-4 leading-tight" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>One unified insight plane</h2>
+            <p className="text-xl max-w-[640px] mx-auto leading-relaxed" style={{ color: "var(--rd-text-secondary)" }}>
+              Opticini replaces dozens of disconnected tools with a single, continuous view — mapped to health, security, compliance, cost, and risk in real time.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-3.5 mb-4">
+            {[
+              { emoji: "🖥️", label: "On-premise infrastructure" },
+              { emoji: "☁️", label: "Cloud & hybrid environments" },
+              { emoji: "🔌", label: "Apps, APIs & identity systems" },
+            ].map(({ emoji, label }) => (
+              <div key={label} className="flex items-center gap-4 p-6 rounded-xl border bg-white" style={{ borderColor: "var(--rd-blue-200)", boxShadow: "0 1px 4px rgba(37,99,235,.06)" }}>
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 text-2xl" style={{ background: "var(--rd-blue-100)" }}>{emoji}</div>
+                <span className="text-[17px] font-medium" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>{label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="p-6 rounded-xl text-center border" style={{ borderColor: "#a7f3d0", background: "#f0fdf4" }}>
+            <p className="text-xl font-semibold" style={{ color: "var(--rd-emerald-600)", fontFamily: "var(--rd-font-heading)" }}>All mapped to health, security, compliance, cost, and risk — in real time.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* 10 Insight Planes */}
+      <section id="platform" className="py-[108px] px-4 sm:px-9 border-y" style={{ background: "var(--rd-bg-blue-wash)", borderColor: "var(--rd-border-blue)" }}>
+        <div className="max-w-[1140px] mx-auto">
+          <div className="text-center mb-[68px]">
+            <p className="text-sm font-bold uppercase tracking-widest mb-3.5" style={{ color: "var(--rd-blue-600)" }}>Platform</p>
+            <h2 className="text-[clamp(32px,4vw,46px)] font-bold tracking-tight mb-4 leading-tight" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>10 Insight Planes. One Platform.</h2>
+            <p className="text-xl max-w-[640px] mx-auto leading-relaxed" style={{ color: "var(--rd-text-secondary)" }}>
+              Each insight plane is deeply integrated — a change in one domain instantly surfaces across all others.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+            {PLANES.map((p) => (
+              <Link
+                key={p.title}
+                href={p.href}
+                className="group p-6 rounded-xl border bg-white transition-all hover:-translate-y-0.5 hover:border-[var(--rd-blue-300)] hover:shadow-lg"
+                style={{ borderColor: "var(--rd-border-light)", boxShadow: "0 1px 3px rgba(37,99,235,.04)" }}
+              >
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-4 text-xl transition-colors group-hover:bg-[var(--rd-blue-100)]" style={{ background: "var(--rd-blue-50)" }}>{p.emoji}</div>
+                <p className="text-[17px] font-semibold mb-1.5" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>{p.title}</p>
+                <p className="text-sm leading-snug opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "var(--rd-blue-500)" }}>Learn more →</p>
+                <p className="text-sm leading-[1.45]" style={{ color: "var(--rd-text-secondary)" }}>{p.tagline}</p>
               </Link>
-            </Button>
-            <Button size="lg" className="bg-white/20 text-white border-2 border-white/50 hover:bg-white/30 px-8 py-6 text-lg rounded-xl backdrop-blur-sm font-semibold" asChild>
-              <Link href="/request-demo">
-                Book a Demo
-                <Play className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
-          
-          <div className="flex flex-wrap items-center justify-center gap-8 text-white/80">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-300" />
-              <span className="font-medium">Unified Platform</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-300" />
-              <span className="font-medium">Real-time Insights</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-300" />
-              <span className="font-medium">Always Audit-Ready</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-white/70 rounded-full mt-2 animate-pulse"></div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* The Problem Section */}
-      <section className="py-24 px-4 bg-gradient-to-br from-palette-accent-3 via-palette-accent-2/30 to-palette-accent-1/30 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20" style={{ background: 'radial-gradient(circle_800px_at_50%_50%, var(--color-accent-1), transparent)' }}></div>
-        <div className="container mx-auto max-w-4xl relative z-10">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12" style={{ color: 'var(--theme-text-primary)' }}>
-            The Problem
-          </h2>
-          
-          <p className="text-2xl font-semibold text-center mb-8" style={{ color: 'var(--theme-text-primary)' }}>
-            Modern infrastructure is fragmented.
-          </p>
-
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <Card className="border-2 hover:shadow-xl hover:scale-105 transition-all duration-300" style={{ borderColor: 'var(--color-primary)', backgroundColor: 'var(--color-accent-3)' }}>
-              <CardContent className="p-6">
-                <p className="text-lg font-semibold" style={{ color: 'var(--color-primary)' }}>Monitoring tools show performance</p>
-              </CardContent>
-            </Card>
-            <Card className="border-2 hover:shadow-xl hover:scale-105 transition-all duration-300" style={{ borderColor: 'var(--color-secondary)', backgroundColor: 'var(--color-accent-2)' }}>
-              <CardContent className="p-6">
-                <p className="text-lg font-semibold" style={{ color: 'var(--color-secondary)' }}>Security tools show vulnerabilities</p>
-              </CardContent>
-            </Card>
-            <Card className="border-2 hover:shadow-xl hover:scale-105 transition-all duration-300" style={{ borderColor: 'var(--color-accent-1)', backgroundColor: 'var(--color-accent-3)' }}>
-              <CardContent className="p-6">
-                <p className="text-lg font-semibold" style={{ color: 'var(--color-accent-1)' }}>Compliance tools collect evidence</p>
-              </CardContent>
-            </Card>
-            <Card className="border-2 hover:shadow-xl hover:scale-105 transition-all duration-300" style={{ borderColor: 'var(--color-primary)', backgroundColor: 'var(--color-accent-2)' }}>
-              <CardContent className="p-6">
-                <p className="text-lg font-semibold" style={{ color: 'var(--color-primary)' }}>Finance tools track spend</p>
-              </CardContent>
-            </Card>
+      {/* Audiences */}
+      <section className="py-[108px] px-4 sm:px-9" style={{ background: "var(--rd-bg-white)" }}>
+        <div className="max-w-[1140px] mx-auto">
+          <div className="text-center mb-[68px]">
+            <p className="text-sm font-bold uppercase tracking-widest mb-3.5" style={{ color: "var(--rd-blue-600)" }}>Built for Teams</p>
+            <h2 className="text-[clamp(32px,4vw,46px)] font-bold tracking-tight leading-tight" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>The right insights for every stakeholder</h2>
           </div>
-
-          <div className="backdrop-blur-sm border-2 rounded-2xl p-8 mb-4" style={{ background: `linear-gradient(to right, var(--color-primary), var(--color-secondary))`, borderColor: 'var(--color-primary)' }}>
-            <p className="text-2xl font-bold text-center text-white">
-              None of them talk to each other.
-            </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {AUDIENCES.map((a) => (
+              <div key={a.role} className="p-7 rounded-xl border bg-white transition-all hover:border-[var(--rd-blue-300)] hover:shadow-md" style={{ borderColor: "var(--rd-border-light)", boxShadow: "0 1px 3px rgba(37,99,235,.04)" }}>
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-5 text-xl" style={{ background: "var(--rd-blue-50)" }}>{a.emoji}</div>
+                <p className="text-xl font-semibold mb-3" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>{a.role}</p>
+                <p className="text-base leading-[1.55]" style={{ color: "var(--rd-text-secondary)" }}>{a.focus}</p>
+              </div>
+            ))}
           </div>
-
-          <p className="text-lg text-center font-medium" style={{ color: 'var(--theme-text-secondary)' }}>
-            Teams are left stitching together dashboards, exports, screenshots, and audits—while risk quietly grows.
-          </p>
         </div>
       </section>
 
-      {/* The Opticini Solution Section */}
-      <section className="py-24 px-4 bg-gradient-to-br from-palette-primary/20 via-palette-secondary/20 to-palette-accent-1/20 relative overflow-hidden">
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(circle_800px_at_50%_50%, var(--color-accent-1), transparent)', opacity: 0.15 }}></div>
-        <div className="container mx-auto max-w-4xl relative z-10">
-          <div className="bg-gradient-to-r from-palette-primary/10 to-palette-secondary/10 rounded-3xl p-12 border-2 border-palette-primary/30 backdrop-blur-sm">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-8 bg-gradient-to-r from-palette-primary to-palette-secondary bg-clip-text text-transparent">
-              The Opticini Solution
-            </h2>
-            
-            <p className="text-xl text-center mb-12 leading-relaxed font-semibold text-gray-800">
-              Opticini unifies infrastructure visibility into a single, continuous insight plane.
-            </p>
-
-            <p className="text-lg mb-8 font-medium text-gray-700">
-              Instead of dozens of disconnected tools, Opticini provides end-to-end optics across:
-            </p>
-
-            <div className="grid md:grid-cols-3 gap-4 mb-8">
-              <div className="rounded-xl p-6 border-2 hover:shadow-lg hover:scale-105 transition-all" style={{ backgroundColor: 'var(--color-accent-3)', borderColor: 'var(--color-primary)' }}>
-                <div className="flex items-center gap-3 mb-2">
-                  <CheckCircle className="h-6 w-6 flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
-                  <span className="font-semibold" style={{ color: 'var(--color-primary)' }}>On-premise infrastructure</span>
+      {/* Comparison */}
+      <section className="py-[108px] px-4 sm:px-9 border-y" style={{ background: "var(--rd-bg-subtle)", borderColor: "var(--rd-border-light)" }}>
+        <div className="max-w-[840px] mx-auto">
+          <div className="text-center mb-[68px]">
+            <p className="text-sm font-bold uppercase tracking-widest mb-3.5" style={{ color: "var(--rd-blue-600)" }}>Why Opticini</p>
+            <h2 className="text-[clamp(32px,4vw,46px)] font-bold tracking-tight leading-tight" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>The last tool you&apos;ll need to add</h2>
+          </div>
+          <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--rd-border-light)", boxShadow: "0 2px 10px rgba(37,99,235,.06)" }}>
+            <div className="grid grid-cols-2" style={{ background: "var(--rd-bg-subtle)" }}>
+              <div className="px-7 py-4 text-sm font-bold uppercase tracking-wider" style={{ color: "var(--rd-text-muted)" }}>Traditional Approach</div>
+              <div className="px-7 py-4 text-sm font-bold uppercase tracking-wider" style={{ color: "var(--rd-blue-600)" }}>With Opticini</div>
+            </div>
+            {COMPARISON.map((row, i) => (
+              <div key={i} className="grid grid-cols-2 border-t" style={{ borderColor: "var(--rd-border-light)", background: i % 2 === 0 ? "var(--rd-bg-white)" : "var(--rd-bg-subtle)" }}>
+                <div className="flex items-center gap-3 px-7 py-5 text-[17px]" style={{ color: "var(--rd-text-muted)" }}>
+                  <span className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: "#fca5a5" }} />
+                  {row.old}
+                </div>
+                <div className="flex items-center gap-3 px-7 py-5 text-[17px] font-medium" style={{ color: "var(--rd-text-heading)" }}>
+                  <Check className="h-[17px] w-[17px] shrink-0" style={{ color: "var(--rd-emerald-500)" }} />
+                  {row.new}
                 </div>
               </div>
-              <div className="rounded-xl p-6 border-2 hover:shadow-lg hover:scale-105 transition-all" style={{ backgroundColor: 'var(--color-accent-2)', borderColor: 'var(--color-secondary)' }}>
-                <div className="flex items-center gap-3 mb-2">
-                  <CheckCircle className="h-6 w-6 flex-shrink-0" style={{ color: 'var(--color-secondary)' }} />
-                  <span className="font-semibold" style={{ color: 'var(--color-secondary)' }}>Cloud & hybrid environments</span>
-                </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Infrastructure */}
+      <section className="py-[108px] px-4 sm:px-9" style={{ background: "var(--rd-bg-white)" }}>
+        <div className="max-w-[1140px] mx-auto text-center">
+          <p className="text-sm font-bold uppercase tracking-widest mb-3.5" style={{ color: "var(--rd-blue-600)" }}>Deployment</p>
+          <h2 className="text-[clamp(32px,4vw,46px)] font-bold tracking-tight mb-4 leading-tight" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>Works with your infrastructure, not against it</h2>
+          <p className="text-xl mb-12" style={{ color: "var(--rd-text-secondary)" }}>Agent-based or agentless. Your choice.</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            {INFRA.map(({ emoji, label }) => (
+              <div key={label} className="flex items-center gap-3 px-6 py-4 rounded-xl border bg-white text-[17px] font-medium transition-all hover:border-[var(--rd-blue-300)] hover:bg-[var(--rd-blue-50)]" style={{ borderColor: "var(--rd-border-light)", color: "var(--rd-text-secondary)", boxShadow: "0 1px 3px rgba(37,99,235,.04)" }}>
+                <span className="text-2xl">{emoji}</span> {label}
               </div>
-              <div className="rounded-xl p-6 border-2 hover:shadow-lg hover:scale-105 transition-all" style={{ backgroundColor: 'var(--color-accent-1)', borderColor: 'var(--color-primary)', opacity: 0.9 }}>
-                <div className="flex items-center gap-3 mb-2">
-                  <CheckCircle className="h-6 w-6 flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
-                  <span className="font-semibold" style={{ color: 'var(--color-primary)' }}>Applications, APIs, identity, and networks</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-r from-palette-primary to-palette-secondary rounded-2xl p-6 border-2 border-palette-primary/50 shadow-xl">
-              <p className="text-xl font-bold text-center text-white">
-                All mapped to health, security, compliance, cost, and risk—in real time.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* What Opticini Delivers - 10 Insight Planes */}
-      <section className="py-24 px-4 bg-gradient-to-br from-palette-accent-3 via-palette-accent-2/50 to-palette-accent-1/30 relative overflow-hidden">
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(circle_600px_at_30%_20%, var(--color-accent-1), transparent)', opacity: 0.2 }}></div>
-        <div className="container mx-auto max-w-7xl relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-palette-primary via-palette-secondary to-palette-primary bg-clip-text text-transparent">
-              What Opticini Delivers
-            </h2>
+      {/* Final CTA */}
+      <section className="py-[108px] px-4 sm:px-9" style={{ background: "linear-gradient(160deg, var(--rd-blue-600) 0%, #3b5bdb 60%, #4c6ef5 100%)" }}>
+        <div className="max-w-[660px] mx-auto text-center">
+          <h2 className="text-[clamp(36px,4.5vw,56px)] font-bold tracking-tight text-white mb-5" style={{ fontFamily: "var(--rd-font-heading)" }}>From visibility to confidence</h2>
+          <p className="text-xl text-white/80 mb-12 leading-[1.55]">Opticini doesn&apos;t just show you data. It shows what matters, why it matters, and what to do next.</p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link
+              href="/request-demo"
+              className="inline-flex items-center gap-2.5 px-9 py-4 rounded-lg bg-white text-lg font-bold transition-all hover:-translate-y-0.5"
+              style={{ color: "var(--rd-blue-600)", boxShadow: "0 6px 24px rgba(0,0,0,.15)" }}
+            >
+              Request Demo <ArrowRight className="h-[17px] w-[17px]" style={{ color: "var(--rd-blue-600)" }} />
+            </Link>
           </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {insightPlanes.map((plane, index) => {
-              const IconComponent = plane.icon;
-              // Cycle through palette colors for variety
-              const paletteColors = [
-                { bg: 'var(--color-accent-3)', border: 'var(--color-primary)', text: 'var(--color-primary)' },
-                { bg: 'var(--color-accent-2)', border: 'var(--color-secondary)', text: 'var(--color-secondary)' },
-                { bg: 'var(--color-accent-1)', border: 'var(--color-primary)', text: 'var(--color-primary)', opacity: 0.9 },
-                { bg: 'var(--color-accent-3)', border: 'var(--color-accent-1)', text: 'var(--color-accent-1)' },
-                { bg: 'var(--color-accent-2)', border: 'var(--color-primary)', text: 'var(--color-primary)' },
-                { bg: 'var(--color-accent-3)', border: 'var(--color-secondary)', text: 'var(--color-secondary)' },
-                { bg: 'var(--color-accent-1)', border: 'var(--color-secondary)', text: 'var(--color-secondary)', opacity: 0.9 },
-                { bg: 'var(--color-accent-2)', border: 'var(--color-accent-1)', text: 'var(--color-accent-1)' },
-                { bg: 'var(--color-accent-3)', border: 'var(--color-primary)', text: 'var(--color-primary)' },
-                { bg: 'var(--color-accent-2)', border: 'var(--color-secondary)', text: 'var(--color-secondary)' },
-              ];
-              const colors = paletteColors[index % paletteColors.length];
-              
-              return (
-                <Card key={index} className="group hover:shadow-2xl transition-all duration-300 border-2 hover:scale-105 hover:-translate-y-2" style={{ backgroundColor: colors.bg, borderColor: colors.border, opacity: colors.opacity || 1 }}>
-                  <CardHeader>
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-4xl">{plane.emoji}</span>
-                      <CardTitle className="text-2xl font-bold" style={{ color: colors.text }}>{plane.title}</CardTitle>
-                    </div>
-                    <CardDescription className="text-base font-medium" style={{ color: 'var(--theme-text-secondary)' }}>{plane.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="rounded-lg p-3 mb-4 border-2 backdrop-blur-sm" style={{ backgroundColor: 'var(--color-accent-3)', borderColor: colors.border }}>
-                      <p className="font-bold text-sm" style={{ color: colors.text }}>
-                        {plane.tagline}
-                      </p>
-                    </div>
-                    <ul className="space-y-2">
-                      {plane.items.map((item, itemIndex) => (
-                        <li key={itemIndex} className="flex items-start gap-2 text-sm font-medium" style={{ color: 'var(--theme-text-secondary)' }}>
-                          <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" style={{ color: colors.text }} />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* One Platform. Ten Insight Planes. */}
-      <section className="py-24 px-4 bg-gradient-to-br from-palette-primary via-palette-secondary to-palette-accent-1 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
-        <div className="container mx-auto max-w-4xl text-center relative z-10">
-          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-12 border-2 border-white/30 shadow-2xl">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
-              One Platform. Ten Insight Planes.
-            </h2>
-            <p className="text-xl mb-8 text-white/90 font-medium">
-              Opticini brings everything together into one coherent system, instead of siloed tools.
-            </p>
-            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-white/30">
-              <div className="flex flex-wrap justify-center gap-2 text-lg font-bold mb-4 text-white">
-                <span className="bg-white/30 px-4 py-2 rounded-lg">Discovery</span>
-                <ArrowRight className="h-5 w-5 mx-2 text-white" />
-                <span className="bg-white/30 px-4 py-2 rounded-lg">Health</span>
-                <ArrowRight className="h-5 w-5 mx-2 text-white" />
-                <span className="bg-white/30 px-4 py-2 rounded-lg">Performance</span>
-                <ArrowRight className="h-5 w-5 mx-2 text-white" />
-                <span className="bg-white/30 px-4 py-2 rounded-lg">Security</span>
-                <ArrowRight className="h-5 w-5 mx-2 text-white" />
-                <span className="bg-white/30 px-4 py-2 rounded-lg">Compliance</span>
-                <ArrowRight className="h-5 w-5 mx-2 text-white" />
-                <span className="bg-white/30 px-4 py-2 rounded-lg">Cost</span>
-                <ArrowRight className="h-5 w-5 mx-2 text-white" />
-                <span className="bg-white/30 px-4 py-2 rounded-lg">Risk</span>
-              </div>
-            </div>
-            <p className="text-xl font-bold text-white">
-              All connected. All contextual. Always current.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Who Opticini Is For */}
-      <section className="py-24 px-4 bg-gradient-to-br from-palette-accent-2/50 via-palette-accent-1/30 to-palette-accent-3 relative overflow-hidden">
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(circle_700px_at_70%_30%, var(--color-accent-1), transparent)', opacity: 0.15 }}></div>
-        <div className="container mx-auto max-w-6xl relative z-10">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 bg-gradient-to-r from-palette-primary via-palette-secondary to-palette-accent-1 bg-clip-text text-transparent">
-            Who Opticini Is For
-          </h2>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {targetAudiences.map((audience, index) => {
-              const paletteColors = [
-                { bg: 'var(--color-accent-3)', border: 'var(--color-primary)', text: 'var(--color-primary)' },
-                { bg: 'var(--color-accent-2)', border: 'var(--color-secondary)', text: 'var(--color-secondary)' },
-                { bg: 'var(--color-accent-1)', border: 'var(--color-primary)', text: 'var(--color-primary)', opacity: 0.9 },
-                { bg: 'var(--color-accent-3)', border: 'var(--color-accent-1)', text: 'var(--color-accent-1)' },
-                { bg: 'var(--color-accent-2)', border: 'var(--color-secondary)', text: 'var(--color-secondary)' },
-              ];
-              const colors = paletteColors[index % paletteColors.length];
-              
-              return (
-                <Card key={index} className="border-2 hover:shadow-2xl hover:scale-105 transition-all duration-300" style={{ backgroundColor: colors.bg, borderColor: colors.border, opacity: colors.opacity || 1 }}>
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-bold mb-3" style={{ color: colors.text }}>
-                      {audience.role}
-                    </h3>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--theme-text-secondary)' }}>
-                      – {audience.focus}
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Why Opticini Comparison */}
-      <section className="py-24 px-4 bg-gradient-to-br from-palette-accent-3 via-palette-accent-2 to-palette-accent-1/50 relative overflow-hidden">
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(circle_600px_at_50%_50%, var(--color-accent-2), transparent)', opacity: 0.2 }}></div>
-        <div className="container mx-auto max-w-4xl relative z-10">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 bg-gradient-to-r from-palette-primary via-palette-secondary to-palette-accent-1 bg-clip-text text-transparent">
-            Why Opticini
-          </h2>
-          
-          <div className="backdrop-blur-sm rounded-3xl p-8 border-4 shadow-2xl" style={{ backgroundColor: 'var(--color-accent-3)', borderColor: 'var(--color-primary)' }}>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b-4" style={{ borderColor: 'var(--color-primary)' }}>
-                    <th className="text-left p-4 font-bold text-lg" style={{ color: 'var(--theme-text-primary)' }}>Traditional Tools</th>
-                    <th className="text-left p-4 font-bold text-lg bg-gradient-to-r from-palette-primary to-palette-secondary bg-clip-text text-transparent">Opticini</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b-2 hover:opacity-80 transition-opacity" style={{ borderColor: 'var(--color-accent-2)' }}>
-                    <td className="p-4 font-medium" style={{ color: 'var(--theme-text-secondary)' }}>Siloed</td>
-                    <td className="p-4 font-bold text-lg" style={{ color: 'var(--color-primary)' }}>Unified</td>
-                  </tr>
-                  <tr className="border-b-2 hover:opacity-80 transition-opacity" style={{ borderColor: 'var(--color-accent-2)' }}>
-                    <td className="p-4 font-medium" style={{ color: 'var(--theme-text-secondary)' }}>Reactive</td>
-                    <td className="p-4 font-bold text-lg" style={{ color: 'var(--color-secondary)' }}>Continuous</td>
-                  </tr>
-                  <tr className="border-b-2 hover:opacity-80 transition-opacity" style={{ borderColor: 'var(--color-accent-2)' }}>
-                    <td className="p-4 font-medium" style={{ color: 'var(--theme-text-secondary)' }}>Tool-centric</td>
-                    <td className="p-4 font-bold text-lg" style={{ color: 'var(--color-accent-1)' }}>Insight-centric</td>
-                  </tr>
-                  <tr className="border-b-2 hover:opacity-80 transition-opacity" style={{ borderColor: 'var(--color-accent-2)' }}>
-                    <td className="p-4 font-medium" style={{ color: 'var(--theme-text-secondary)' }}>Audit panic</td>
-                    <td className="p-4 font-bold text-lg bg-gradient-to-r from-palette-primary to-palette-secondary bg-clip-text text-transparent">Always audit-ready</td>
-                  </tr>
-                  <tr className="hover:opacity-80 transition-opacity">
-                    <td className="p-4 font-medium" style={{ color: 'var(--theme-text-secondary)' }}>Data overload</td>
-                    <td className="p-4 font-bold text-lg bg-gradient-to-r from-palette-primary to-palette-secondary bg-clip-text text-transparent">Prioritized risk</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Built for Any Infrastructure */}
-      <section className="py-24 px-4 relative overflow-hidden" style={{ background: 'linear-gradient(to bottom right, var(--color-secondary), var(--color-primary), var(--color-accent-1))' }}>
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(circle_800px_at_50%_50%, var(--color-accent-1), transparent)', opacity: 0.3 }}></div>
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
-        <div className="container mx-auto max-w-6xl relative z-10">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-white">
-            Built for Any Infrastructure
-          </h2>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6 mb-8">
-            {infrastructureTypes.map((type, index) => {
-              const IconComponent = type.icon;
-              const paletteColors = [
-                { bg: 'var(--color-primary)', border: 'var(--color-accent-2)' },
-                { bg: 'var(--color-secondary)', border: 'var(--color-accent-3)' },
-                { bg: 'var(--color-accent-1)', border: 'var(--color-accent-2)' },
-                { bg: 'var(--color-primary)', border: 'var(--color-accent-1)' },
-                { bg: 'var(--color-secondary)', border: 'var(--color-accent-3)' },
-                { bg: 'var(--color-accent-1)', border: 'var(--color-primary)' },
-                { bg: 'var(--color-primary)', border: 'var(--color-secondary)' },
-              ];
-              const colors = paletteColors[index % paletteColors.length];
-              
-              return (
-                <Card key={index} className="text-center border-2 hover:shadow-2xl hover:scale-110 transition-all duration-300 hover:rotate-2" style={{ backgroundColor: colors.bg, borderColor: colors.border }}>
-                  <CardContent className="p-6">
-                    <IconComponent className="h-12 w-12 mx-auto mb-3 text-white" />
-                    <p className="text-sm font-bold text-white">{type.label}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-
-          <div className="backdrop-blur-md rounded-2xl p-6 border-2" style={{ backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'var(--color-accent-2)' }}>
-            <p className="text-center text-xl font-bold text-white">
-              Agent-based or agentless. Your choice.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* From Visibility to Confidence */}
-      <section className="py-24 px-4 bg-gradient-to-br from-palette-accent-3 via-palette-accent-2 to-palette-accent-1/50 relative overflow-hidden">
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(circle_700px_at_30%_70%, var(--color-accent-1), transparent)', opacity: 0.2 }}></div>
-        <div className="container mx-auto max-w-4xl text-center relative z-10">
-          <div className="backdrop-blur-sm rounded-3xl p-12 border-4 shadow-2xl" style={{ backgroundColor: 'var(--color-accent-3)', borderColor: 'var(--color-primary)' }}>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-palette-primary via-palette-secondary to-palette-accent-1 bg-clip-text text-transparent">
-              From Visibility to Confidence
-            </h2>
-            <p className="text-xl mb-4 font-medium" style={{ color: 'var(--theme-text-secondary)' }}>
-              Opticini doesn't just show data.
-            </p>
-            <div className="rounded-2xl p-6 border-2 shadow-xl" style={{ background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))', borderColor: 'var(--color-primary)' }}>
-              <p className="text-2xl md:text-3xl font-bold text-white">
-                It shows what matters, why it matters, and what to do next.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Get Started Section */}
-      <section className="py-24 px-4 bg-gradient-to-br from-palette-primary via-palette-secondary to-palette-accent-1 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_600px_at_50%_50%,rgba(255,255,255,0.1),transparent)]"></div>
-        <div className="container mx-auto max-w-4xl text-center relative z-10">
-          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-12 border-4 border-white/30 shadow-2xl">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-              Get Started with Opticini
-            </h2>
-            <p className="text-xl mb-2 text-white/90 font-medium">
-              Bring clarity to your infrastructure.
-            </p>
-            <p className="text-xl mb-12 text-white/90 font-medium">
-              Bring confidence to your operations.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Button size="lg" className="bg-white text-palette-primary hover:bg-white/90 px-10 py-7 text-xl font-bold rounded-xl shadow-2xl hover:shadow-white/50 hover:scale-110 transition-all duration-300" asChild>
-                <Link href="/request-demo">
-                  👉 Request Early Access
-                  <ArrowRight className="ml-2 h-6 w-6" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="border-4 border-white text-white hover:bg-white hover:text-palette-primary px-10 py-7 text-xl font-bold rounded-xl shadow-2xl hover:scale-110 transition-all duration-300" asChild>
-                <Link href="/request-demo">
-                  👉 Book a Demo
-                  <Play className="ml-2 h-6 w-6" />
-                </Link>
-              </Button>
-            </div>
-          </div>
+          <p className="text-base text-white/50 mt-8">No credit card required · SOC 2 compliant · Enterprise-ready</p>
         </div>
       </section>
     </div>
-  )
+  );
 }

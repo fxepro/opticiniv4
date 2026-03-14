@@ -93,10 +93,6 @@ urlpatterns += [
     path('api/version/releases/', views.version_release_list, name='version_release_list'),
     path('api/version/releases/create/', views.version_release_create, name='version_release_create'),
     path('api/version/releases/<uuid:release_id>/', views.version_release_detail, name='version_release_detail'),
-    # Audit reports router (includes /api/reports/ via router.urls)
-    # Note: When accessing /api/reports/, Django will skip the health_check pattern
-    # because it requires an exact match for /api/, and will match this include instead
-    path('api/', include('audit_reports.urls')),
     path('api/admin-tools/', include('api_monitoring.urls')),  # Admin API Monitoring
     # Analysis endpoints - each app has its own URLs
     path('', include('performance_analysis.urls')),
@@ -116,6 +112,8 @@ urlpatterns += [
     path('api/discovery/', include('discovery.urls')),  # Discovery (assets, inventory)
     # Compliance (single app: frameworks, controls, evidence, audits, policies, reports, tools)
     path("", include("compliance.urls")),
+    # Audit reports - must come AFTER account/compliance (path api/ would otherwise catch all)
+    path('api/', include('audit_reports.urls')),
     path('favicon.ico', favicon_view, name='favicon'),  # Prevent 404s in logs
 ]
 
