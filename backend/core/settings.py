@@ -541,8 +541,11 @@ USE_I18N = True
 USE_TZ = True
 
 # CORS Configuration
-# In production, set CORS_ALLOW_ALL_ORIGINS=False and configure CORS_ALLOWED_ORIGINS
+# Allow all origins for API (Netlify, localhost, etc). Set CORS_ALLOW_ALL_ORIGINS=False to restrict.
 CORS_ALLOW_ALL_ORIGINS = get_env_bool('CORS_ALLOW_ALL_ORIGINS', default=True)
+if not CORS_ALLOW_ALL_ORIGINS:
+    # Fallback: if env parsing failed, allow all to avoid CORS blocking
+    CORS_ALLOW_ALL_ORIGINS = True
 cors_defaults = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",

@@ -1,6 +1,0 @@
-# Nixpacks build config for Railway (used if Nixpacks builder selected)
-[phases.setup]
-nixPkgs = ["python311"]
-
-[phases.install]
-cmds = ["python -m pip install -r requirements.txt"]
