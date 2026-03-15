@@ -38,6 +38,12 @@ export function PostHogProviderWrapper({ children }: { children: React.ReactNode
 
     // Dynamically import posthog-js only on client side
     import('posthog-js').then((posthog) => {
+      // Skip site-config fetch on auth pages (login doesn't need it)
+      const authPaths = ['/workspace/login', '/register', '/login']
+      if (typeof window !== 'undefined' && authPaths.some((p) => window.location.pathname.startsWith(p))) {
+        setEnabled(false)
+        return
+      }
       console.log('[PostHog] Library loaded, fetching site config...')
       
       // Fetch server flag to decide if analytics should run

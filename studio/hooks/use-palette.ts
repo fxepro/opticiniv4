@@ -115,7 +115,13 @@ export function usePalette() {
   }, []); // Empty deps - function doesn't depend on any props/state
 
   useEffect(() => {
-    // Fetch fresh data from API on mount and route changes
+    // Skip API fetch on auth pages - use cached/default only (login doesn't need palette)
+    const authPaths = ['/workspace/login', '/register', '/login'];
+    if (authPaths.some((p) => pathname?.startsWith(p))) {
+      setLoading(false);
+      applyDefaultPalette();
+      return;
+    }
     fetchActivePalette();
   }, [pathname, fetchActivePalette]); // Re-fetch when route changes
 

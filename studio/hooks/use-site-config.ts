@@ -130,11 +130,10 @@ export function useSiteConfig() {
     // Ensure we're in browser context
     if (typeof window === 'undefined') return;
     
-    // Skip typography fetch on /typography page - it's a frontend-only analysis tool
-    // This prevents unnecessary API calls and mixed content warnings
-    // Check both pathname (from Next.js) and window.location (fallback for SSR/hydration)
+    // Skip typography fetch on auth pages and /typography - use cached/default only
     const currentPath = pathname || window.location.pathname;
-    if (currentPath === '/typography') {
+    const authPaths = ['/workspace/login', '/register', '/login'];
+    if (currentPath === '/typography' || authPaths.some((p) => currentPath?.startsWith(p))) {
       setLoading(false);
       // Still apply cached typography if available
       const cachedTypography = localStorage.getItem('activeTypography');
