@@ -2,6 +2,25 @@
 Custom middleware for request/response logging and performance monitoring
 """
 import time
+
+
+class CorsFixMiddleware:
+    """Ensure CORS headers on all API responses (belt-and-suspenders with django-cors-headers)."""
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if request.path.startswith('/api/'):
+            origin = request.META.get('HTTP_ORIGIN', '*')
+            if origin and origin != 'null':
+                response['Access-Control-Allow-Origin'] = origin
+            else:
+                response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Credentials'] = 'true'
+            response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+            response['Access-Control-Allow-Headers'] = 'accept, authorization, content-type, x-csrftoken'
+        return response
 import logging
 import json
 from django.utils.deprecation import MiddlewareMixin

@@ -286,6 +286,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'core.middleware.CorsFixMiddleware',  # Runs last on response - ensures CORS headers
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -569,6 +570,7 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+CORS_ALLOW_CREDENTIALS = True
 
 # Email Configuration
 # Supports both SMTP (Gmail, etc.) and Amazon SES via django-anymail
