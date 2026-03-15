@@ -546,11 +546,15 @@ CORS_ALLOW_ALL_ORIGINS = get_env_bool('CORS_ALLOW_ALL_ORIGINS', default=True)
 cors_defaults = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://aquamarine-dusk-c48b4d.netlify.app",  # Netlify preview
 ]
 # Auto-add production frontend URL if set
 if FRONTEND_URL:
     cors_defaults.extend(_frontend_origin_variants(FRONTEND_URL))
 CORS_ALLOWED_ORIGINS = get_env_list('CORS_ALLOWED_ORIGINS', default=cors_defaults)
+# Ensure Netlify preview is always allowed (in case CORS_ALLOWED_ORIGINS overrides defaults)
+if "https://aquamarine-dusk-c48b4d.netlify.app" not in CORS_ALLOWED_ORIGINS:
+    CORS_ALLOWED_ORIGINS = list(CORS_ALLOWED_ORIGINS) + ["https://aquamarine-dusk-c48b4d.netlify.app"]
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
