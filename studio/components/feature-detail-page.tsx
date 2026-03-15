@@ -2,7 +2,21 @@
 
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Check, ArrowRight } from "lucide-react";
+
+const FEATURE_LINKS = [
+  { title: "Discovery", href: "/features/discovery" },
+  { title: "Health", href: "/features/health" },
+  { title: "Performance", href: "/features/performance" },
+  { title: "Security", href: "/features/security" },
+  { title: "Configuration", href: "/features/configuration" },
+  { title: "Compliance", href: "/features/compliance" },
+  { title: "Evidence", href: "/features/evidence" },
+  { title: "Change", href: "/features/change" },
+  { title: "Cost", href: "/features/cost" },
+  { title: "Risk", href: "/features/risk" },
+];
 
 export type FeatureCard = {
   icon: string;
@@ -53,6 +67,7 @@ export type FeatureDetailConfig = {
 
 export function FeatureDetailPage({ config }: { config: FeatureDetailConfig }) {
   const c = config.colors;
+  const pathname = usePathname();
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ background: "var(--rd-bg-page)", fontFamily: "var(--rd-font-body)" }}>
       {/* Hero */}
@@ -84,8 +99,43 @@ export function FeatureDetailPage({ config }: { config: FeatureDetailConfig }) {
         </div>
       </section>
 
+      {/* Grey bar with feature nav inside */}
+      <div className="px-4 sm:px-8 -mt-6 mb-10">
+        <div
+          className="max-w-[1180px] mx-auto rounded-2xl py-6 px-8 flex items-center justify-center"
+          style={{
+            background: `linear-gradient(180deg, ${c.badgeBg} 0%, #e5e7eb 40%, #e5e7eb 60%, ${c.badgeBg} 100%)`,
+            borderWidth: 1,
+            borderColor: c.badgeBorder,
+            borderStyle: "solid",
+          }}
+        >
+          <nav className="flex flex-wrap justify-center items-center gap-3">
+            {FEATURE_LINKS.map((f) => {
+              const isActive = pathname === f.href || pathname === f.href + "/";
+              return (
+                <Link
+                  key={f.href}
+                  href={f.href}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    isActive ? "shadow-sm" : "hover:opacity-90"
+                  }`}
+                  style={{
+                    color: isActive ? c.primary : "var(--rd-text-heading)",
+                    background: isActive ? c.badgeBg : "transparent",
+                    border: isActive ? `1px solid ${c.badgeBorder}` : "1px solid transparent",
+                  }}
+                >
+                  {f.title}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
       {/* Positioning */}
-      <div className="pt-16 mt-12 py-11 px-4 sm:px-8 border-b" style={{ background: `linear-gradient(135deg, ${c.badgeBg}, #fff)`, borderColor: c.badgeBorder }}>
+      <div className="pt-12 pb-11 px-4 sm:px-8 border-b" style={{ background: `linear-gradient(135deg, ${c.badgeBg}, #fff)`, borderColor: c.badgeBorder }}>
         <div className="max-w-[760px] mx-auto text-center">
           <p className="text-[19px] font-bold mb-3" style={{ color: c.primary, fontFamily: "var(--font-sora), sans-serif" }}>{config.posStrong}</p>
           <p className="text-base leading-relaxed" style={{ color: "var(--rd-text-secondary)" }}>{config.posBody}</p>

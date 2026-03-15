@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables from .env file
 # Look for .env file in the backend directory (BASE_DIR)
 env_path = BASE_DIR / '.env'
-load_dotenv(dotenv_path=env_path)
+load_dotenv(dotenv_path=env_path, override=True)
 
 # Environment variable loading
 # Try to use python-decouple if available, otherwise use os.environ
@@ -324,173 +324,175 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 # Load database credentials from environment variables
+# DATABASE_URL or DATABASE_PUBLIC_URL takes precedence (Railway, Heroku, etc.)
+# Railway: DATABASE_PUBLIC_URL = public; DATABASE_URL = private (internal only)
+_db_url = (
+    os.environ.get('DATABASE_PUBLIC_URL') or
+    os.environ.get('DATABASE_URL') or
+    config('DATABASE_PUBLIC_URL', default='') or
+    config('DATABASE_URL', default='')
+)
+_db_url = (_db_url or '').strip() or None
+# Fallback: read .env directly (dotenv can miss vars in some setups)
+if not _db_url and (env_path := BASE_DIR / '.env').exists():
+    for line in env_path.read_text(encoding='utf-8', errors='ignore').splitlines():
+        line = line.strip()
+        if line.startswith('DATABASE_PUBLIC_URL=') and not line.startswith('#'):
+            _db_url = line.split('=', 1)[1].strip().strip('"\'')
+            break
+        if line.startswith('DATABASE_URL=') and not line.startswith('#'):
+            val = line.split('=', 1)[1].strip().strip('"\'')
+            if 'railway.internal' not in val:
+                _db_url = val
+                break
+if _db_url:
+    _parsed = urlparse(_db_url)
+    _db_base = {
+        'NAME': _parsed.path[1:] if _parsed.path else 'railway',
+        'USER': _parsed.username or 'postgres',
+        'PASSWORD': _parsed.password or '',
+        'HOST': _parsed.hostname or '127.0.0.1',
+        'PORT': str(_parsed.port or 5432),
+    }
+else:
+    _db_base = {
+        'NAME': config('DB_NAME', default='opticiniv3'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
+    }
+
+def _db_opts(search_path=None, include_core=True):
+    opts = {'connect_timeout': 10}
+    if search_path:
+        # Include core so FKs to auth_user/contenttypes resolve (auth lives in core schema)
+        if include_core and search_path != 'core':
+            path = f'{search_path},core,public'
+        else:
+            path = f'{search_path},public'
+        opts['options'] = f'-c search_path={path}'
+    else:
+        opts['options'] = '-c search_path=public,core'
+    return opts
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='opticiniv3'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='127.0.0.1'),  # Use 127.0.0.1 instead of localhost to force IPv4
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-        },
+        'NAME': _db_base['NAME'],
+        'USER': _db_base['USER'],
+        'PASSWORD': _db_base['PASSWORD'],
+        'HOST': _db_base['HOST'],
+        'PORT': _db_base['PORT'],
+        'OPTIONS': _db_opts('public', include_core=True),  # public,core so auth_user resolves
     },
-    # Platform core schema: same DB, search_path=core so core app tables resolve to core.*
     'core': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='opticiniv3'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='127.0.0.1'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c search_path=core,public',
-        },
+        'NAME': _db_base['NAME'],
+        'USER': _db_base['USER'],
+        'PASSWORD': _db_base['PASSWORD'],
+        'HOST': _db_base['HOST'],
+        'PORT': _db_base['PORT'],
+        'OPTIONS': _db_opts('core'),
     },
-    # Platform discovery schema: search_path=discovery so discovery app tables resolve to discovery.*
     'discovery': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='opticiniv3'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='127.0.0.1'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c search_path=discovery,public',
-        },
+        'NAME': _db_base['NAME'],
+        'USER': _db_base['USER'],
+        'PASSWORD': _db_base['PASSWORD'],
+        'HOST': _db_base['HOST'],
+        'PORT': _db_base['PORT'],
+        'OPTIONS': _db_opts('discovery'),
     },
-    # Platform identity schema: search_path=identity so identity app tables resolve to identity.*
     'identity': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='opticiniv3'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='127.0.0.1'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c search_path=identity,public',
-        },
+        'NAME': _db_base['NAME'],
+        'USER': _db_base['USER'],
+        'PASSWORD': _db_base['PASSWORD'],
+        'HOST': _db_base['HOST'],
+        'PORT': _db_base['PORT'],
+        'OPTIONS': _db_opts('identity'),
     },
-    # Platform change schema: search_path=change so change app tables resolve to change.*
     'change': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='opticiniv3'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='127.0.0.1'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c search_path=change,public',
-        },
+        'NAME': _db_base['NAME'],
+        'USER': _db_base['USER'],
+        'PASSWORD': _db_base['PASSWORD'],
+        'HOST': _db_base['HOST'],
+        'PORT': _db_base['PORT'],
+        'OPTIONS': _db_opts('change'),
     },
-    # Platform compliance schema (single source of truth for frameworks, controls)
     'compliance': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='opticiniv3'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='127.0.0.1'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c search_path=compliance,public',
-        },
+        'NAME': _db_base['NAME'],
+        'USER': _db_base['USER'],
+        'PASSWORD': _db_base['PASSWORD'],
+        'HOST': _db_base['HOST'],
+        'PORT': _db_base['PORT'],
+        'OPTIONS': _db_opts('compliance'),
     },
-    # Platform evidence schema (single source of truth for evidence items)
     'evidence': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='opticiniv3'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='127.0.0.1'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c search_path=evidence,public',
-        },
+        'NAME': _db_base['NAME'],
+        'USER': _db_base['USER'],
+        'PASSWORD': _db_base['PASSWORD'],
+        'HOST': _db_base['HOST'],
+        'PORT': _db_base['PORT'],
+        'OPTIONS': _db_opts('evidence'),
     },
-    # Platform audit schema (single source of truth for audits)
     'audit': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='opticiniv3'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='127.0.0.1'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c search_path=audit,public',
-        },
+        'NAME': _db_base['NAME'],
+        'USER': _db_base['USER'],
+        'PASSWORD': _db_base['PASSWORD'],
+        'HOST': _db_base['HOST'],
+        'PORT': _db_base['PORT'],
+        'OPTIONS': _db_opts('audit'),
     },
-    # Platform cost schema
     'cost': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='opticiniv3'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='127.0.0.1'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c search_path=cost,public',
-        },
+        'NAME': _db_base['NAME'],
+        'USER': _db_base['USER'],
+        'PASSWORD': _db_base['PASSWORD'],
+        'HOST': _db_base['HOST'],
+        'PORT': _db_base['PORT'],
+        'OPTIONS': _db_opts('cost'),
     },
-    # Platform risk schema
     'risk': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='opticini'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='127.0.0.1'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c search_path=risk,public',
-        },
+        'NAME': _db_base['NAME'],
+        'USER': _db_base['USER'],
+        'PASSWORD': _db_base['PASSWORD'],
+        'HOST': _db_base['HOST'],
+        'PORT': _db_base['PORT'],
+        'OPTIONS': _db_opts('risk'),
     },
-    # Platform monitoring schema (incidents, alerts, uptime_metrics)
     'monitoring': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='opticiniv3'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='127.0.0.1'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c search_path=monitoring,public',
-        },
+        'NAME': _db_base['NAME'],
+        'USER': _db_base['USER'],
+        'PASSWORD': _db_base['PASSWORD'],
+        'HOST': _db_base['HOST'],
+        'PORT': _db_base['PORT'],
+        'OPTIONS': _db_opts('monitoring'),
     },
-    # Platform reports schema (materialized summaries, trends)
     'reports': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='opticiniv3'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='127.0.0.1'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c search_path=reports,public',
-        },
+        'NAME': _db_base['NAME'],
+        'USER': _db_base['USER'],
+        'PASSWORD': _db_base['PASSWORD'],
+        'HOST': _db_base['HOST'],
+        'PORT': _db_base['PORT'],
+        'OPTIONS': _db_opts('reports'),
     },
-    # Platform org schema (personnel, departments, roles)
     'org': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='opticiniv3'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='127.0.0.1'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c search_path=org,public',
-        },
+        'NAME': _db_base['NAME'],
+        'USER': _db_base['USER'],
+        'PASSWORD': _db_base['PASSWORD'],
+        'HOST': _db_base['HOST'],
+        'PORT': _db_base['PORT'],
+        'OPTIONS': _db_opts('org'),
     },
 }
 DATABASE_ROUTERS = [

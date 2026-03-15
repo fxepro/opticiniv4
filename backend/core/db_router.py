@@ -5,11 +5,19 @@ The 'core' alias uses search_path=core,public so table names resolve to the core
 
 
 # Apps whose tables live in core schema (auth, users, sessions, etc.)
-CORE_USER_APP_LABELS = {"auth", "contenttypes", "sessions", "admin", "users"}
+# Includes: actstream (contenttypes), financials/marketing (auth), and all apps with FK to auth.User
+CORE_USER_APP_LABELS = {
+    "auth", "contenttypes", "sessions", "admin", "users", "actstream", "financials", "marketing",
+    "affiliates", "blog", "collateral", "db_management", "security_monitoring", "multilanguage",
+    "monitor_analysis", "ssl_analysis", "links_analysis", "api_analysis", "typography_analysis",
+    "sitemap_analysis", "performance_analysis", "dns_analysis", "audit_reports", "site_settings",
+    "auditlog",
+    "monitoring",  # FK to users.MonitoredSite
+}
 
 
 class UserTablesRouter:
-    """Route auth, users, sessions, contenttypes, admin to core schema."""
+    """Route auth/users and all apps with FK to auth.User to core schema."""
 
     def db_for_read(self, model, **hints):
         if model._meta.app_label in CORE_USER_APP_LABELS:

@@ -10,6 +10,25 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # Drop unique_together before RemoveField (0016 used country_id in unique_together;
+        # Django expects field names - drop via RunSQL to avoid KeyError)
+        migrations.RunSQL(
+            sql="""
+            DO $$
+            BEGIN
+                IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'core' AND table_name = 'organization_regions') THEN
+                    ALTER TABLE core.organization_regions DROP CONSTRAINT IF EXISTS organization_regions_organization_id_country_id_key;
+                END IF;
+            END $$;
+            """,
+            reverse_sql=migrations.RunSQL.noop,
+            state_operations=[
+                migrations.AlterUniqueTogether(
+                    name='organizationregion',
+                    unique_together=None,
+                ),
+            ],
+        ),
         migrations.RemoveField(
             model_name='organizationregion',
             name='country',
@@ -22,17 +41,27 @@ class Migration(migrations.Migration):
             model_name='team',
             name='organization',
         ),
-        migrations.AlterUniqueTogether(
-            name='organizationregion',
-            unique_together=None,
+        # Drop unique_together before RemoveField (field must exist for AlterUniqueTogether)
+        migrations.RunSQL(
+            sql="""
+            DO $$
+            BEGIN
+                IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'core' AND table_name = 'org_connector_module_scope') THEN
+                    ALTER TABLE core.org_connector_module_scope DROP CONSTRAINT IF EXISTS org_connector_module_scope_org_connector_id_module_key;
+                END IF;
+            END $$;
+            """,
+            reverse_sql=migrations.RunSQL.noop,
+            state_operations=[
+                migrations.AlterUniqueTogether(
+                    name='orgconnectormodulescope',
+                    unique_together=None,
+                ),
+            ],
         ),
         migrations.RemoveField(
             model_name='orgconnectormodulescope',
             name='org_connector',
-        ),
-        migrations.AlterUniqueTogether(
-            name='orgconnectormodulescope',
-            unique_together=None,
         ),
         migrations.DeleteModel(
             name='Country',

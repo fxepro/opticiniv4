@@ -80,9 +80,10 @@ export function Footer() {
               Partnerships
             </p>
             <ul className="flex flex-col gap-3.5">
-              <li><Link href="/partners" className="text-base hover:text-[var(--rd-blue-600)] transition-colors" style={{ color: "var(--rd-text-secondary)" }}>Partners</Link></li>
-              <li><Link href="/affiliate" className="text-base hover:text-[var(--rd-blue-600)] transition-colors" style={{ color: "var(--rd-text-secondary)" }}>Affiliates</Link></li>
-              <li><Link href="/consultants" className="text-base hover:text-[var(--rd-blue-600)] transition-colors" style={{ color: "var(--rd-text-secondary)" }}>Consultants</Link></li>
+              <li><Link href="/partnerships/affiliates" className="text-base hover:text-[var(--rd-blue-600)] transition-colors" style={{ color: "var(--rd-text-secondary)" }}>Affiliates</Link></li>
+              <li><Link href="/partnerships/consultants" className="text-base hover:text-[var(--rd-blue-600)] transition-colors" style={{ color: "var(--rd-text-secondary)" }}>Consultants</Link></li>
+              <li><Link href="/partnerships/audit-partners" className="text-base hover:text-[var(--rd-blue-600)] transition-colors" style={{ color: "var(--rd-text-secondary)" }}>Audit Partners</Link></li>
+              <li><Link href="/partnerships/technology-partners" className="text-base hover:text-[var(--rd-blue-600)] transition-colors" style={{ color: "var(--rd-text-secondary)" }}>Technology Partners</Link></li>
             </ul>
           </div>
           <div>

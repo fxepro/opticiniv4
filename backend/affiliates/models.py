@@ -22,7 +22,14 @@ def generate_affiliate_code(length=8):
 
 
 class Affiliate(models.Model):
-    """Affiliate account information and settings"""
+    """Partner account (affiliate, consultant, audit partner, technology partner)"""
+    PARTNER_TYPE_CHOICES = (
+        ('affiliate', 'Affiliate'),
+        ('consultant', 'Consultant'),
+        ('audit_partner', 'Audit Partner'),
+        ('technology_partner', 'Technology Partner'),
+    )
+
     STATUS_CHOICES = (
         ('pending', 'Pending Approval'),
         ('active', 'Active'),
@@ -49,6 +56,9 @@ class Affiliate(models.Model):
     
     # User relationship (OneToOne - profile extension)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='affiliate')
+
+    # Partner type: affiliate, consultant, audit_partner, technology_partner
+    partner_type = models.CharField(max_length=30, choices=PARTNER_TYPE_CHOICES, default='affiliate', db_index=True)
     
     # Affiliate identification
     affiliate_code = models.CharField(max_length=50, unique=True, db_index=True, 

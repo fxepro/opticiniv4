@@ -1,4 +1,5 @@
 # Seed PolicyTemplate from SOC2_System_Policy_Templates_Seed.csv + control mapping from FULL20
+# policy_templates lives in compliance schema only; skip when CSV absent
 
 import csv
 from pathlib import Path
@@ -27,14 +28,18 @@ def load_control_mapping():
     return mapping
 
 
-def seed_policy_templates(apps, schema_editor):
+def forward(apps, schema_editor):
+    if schema_editor.connection.alias != "compliance":
+        return
+    with schema_editor.connection.cursor() as c:
+        c.execute(
+            "ALTER TABLE policy_templates ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();"
+        )
     PolicyTemplate = apps.get_model("compliance", "PolicyTemplate")
     csv_path = get_project_root() / "docs" / "SOC2 Data Seed" / "SOC2_System_Policy_Templates_Seed.csv"
     if not csv_path.exists():
-        raise FileNotFoundError(f"CSV not found: {csv_path}")
-
+        return
     control_mapping = load_control_mapping()
-
     with open(csv_path, encoding="utf-8-sig", errors="replace") as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -42,10 +47,8 @@ def seed_policy_templates(apps, schema_editor):
             policy_code = row.get("policy_code", "").strip()
             if not code_id or not policy_code:
                 continue
-
             mapped = control_mapping.get(policy_code, [])
-
-            PolicyTemplate.objects.update_or_create(
+            PolicyTemplate.objects.using("compliance").update_or_create(
                 policy_template_code_id=code_id,
                 defaults={
                     "policy_code": policy_code,
@@ -67,7 +70,9 @@ def seed_policy_templates(apps, schema_editor):
             )
 
 
-def reverse_seed(apps, schema_editor):
+def reverse(apps, schema_editor):
+    if schema_editor.connection.alias != "compliance":
+        return
     PolicyTemplate = apps.get_model("compliance", "PolicyTemplate")
     code_ids = [
         "POLSEC001", "POLSEC002", "POLSEC003", "POLSEC004", "POLSEC005",
@@ -75,7 +80,7 @@ def reverse_seed(apps, schema_editor):
         "POLSEC011", "POLSEC012", "POLSEC013", "POLSEC014", "POLSEC015",
         "POLSEC016", "POLSEC017", "POLSEC018", "POLSEC019", "POLSEC020",
     ]
-    PolicyTemplate.objects.filter(policy_template_code_id__in=code_ids).delete()
+    PolicyTemplate.objects.using("compliance").filter(policy_template_code_id__in=code_ids).delete()
 
 
 class Migration(migrations.Migration):
@@ -85,10 +90,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(
-            sql="ALTER TABLE policy_templates ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();",
-            reverse_sql=migrations.RunSQL.noop,
-            state_operations=[],
-        ),
-        migrations.RunPython(seed_policy_templates, reverse_seed),
+        migrations.RunPython(forward, reverse),
     ]

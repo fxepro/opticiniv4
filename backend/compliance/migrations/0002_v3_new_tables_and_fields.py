@@ -13,67 +13,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # New columns on existing tables (compliance schema)
-        migrations.AddField(
-            model_name="complianceframework",
-            name="publisher",
-            field=models.CharField(blank=True, max_length=255),
-        ),
-        migrations.AddField(
-            model_name="complianceframework",
-            name="family",
-            field=models.CharField(blank=True, max_length=100),
-        ),
-        migrations.AddField(
-            model_name="compliancecontrol",
-            name="objective",
-            field=models.TextField(blank=True),
-        ),
-        migrations.AddField(
-            model_name="compliancecontrol",
-            name="nature",
-            field=models.CharField(blank=True, max_length=50),
-        ),
-        migrations.AddField(
-            model_name="compliancecontrol",
-            name="testing_frequency",
-            field=models.CharField(blank=True, max_length=20),
-        ),
-        migrations.AddField(
-            model_name="compliancecontrol",
-            name="maturity_level",
-            field=models.CharField(blank=True, max_length=20),
-        ),
-        migrations.AddField(
-            model_name="compliancecontrol",
-            name="implementation_status",
-            field=models.CharField(blank=True, max_length=20),
-        ),
-        migrations.AddField(
-            model_name="compliancecontrol",
-            name="likelihood_score",
-            field=models.IntegerField(blank=True, null=True),
-        ),
-        migrations.AddField(
-            model_name="compliancecontrol",
-            name="impact_score",
-            field=models.IntegerField(blank=True, null=True),
-        ),
-        migrations.AddField(
-            model_name="compliancecontrol",
-            name="risk_score",
-            field=models.IntegerField(blank=True, null=True),
-        ),
-        migrations.AddField(
-            model_name="compliancecontrol",
-            name="control_owner_personnel_id",
-            field=models.UUIDField(blank=True, null=True),
-        ),
-        migrations.AddField(
-            model_name="compliancecontrol",
-            name="lifecycle_status",
-            field=models.CharField(blank=True, max_length=20),
-        ),
+        # New columns on existing tables - publisher, family, objective, etc. already in 0001
         # New tables - compliance schema (order respects FKs)
         migrations.CreateModel(
             name="FrameworkVersion",

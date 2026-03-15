@@ -68,8 +68,9 @@ export default function WorkspaceLoginPage() {
       if (redirectUrl) {
         sessionStorage.removeItem('checkout_redirect');
         router.push(redirectUrl);
+      } else if (userRes.data?.is_superuser) {
+        router.push("/workspace/admin-overview");
       } else {
-        // Redirect to workspace (new unified dashboard)
         router.push("/workspace");
       }
     } catch (err: any) {
