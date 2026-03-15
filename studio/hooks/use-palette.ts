@@ -58,6 +58,11 @@ export function usePalette() {
   }, [palette, pathname]); // Re-apply on palette change or route change
 
   const fetchActivePalette = useCallback(async () => {
+    // Never fetch on auth pages
+    if (typeof window !== 'undefined') {
+      const p = pathname ?? window.location.pathname;
+      if (['/workspace/login', '/register', '/login'].some((auth) => p?.startsWith(auth))) return;
+    }
     // Prevent duplicate simultaneous requests
     if (fetchingRef.current) return;
     
@@ -112,12 +117,14 @@ export function usePalette() {
     } finally {
       fetchingRef.current = false;
     }
-  }, []); // Empty deps - function doesn't depend on any props/state
+  }, [pathname]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     // Skip API fetch on auth pages - use cached/default only (login doesn't need palette)
     const authPaths = ['/workspace/login', '/register', '/login'];
-    if (authPaths.some((p) => pathname?.startsWith(p))) {
+    const currentPath = pathname ?? window.location.pathname;
+    if (authPaths.some((p) => currentPath?.startsWith(p))) {
       setLoading(false);
       applyDefaultPalette();
       return;

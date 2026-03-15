@@ -82,6 +82,11 @@ export function useSiteConfig() {
   };
 
   const fetchSiteConfig = useCallback(async () => {
+    // Never fetch on auth pages
+    if (typeof window !== 'undefined') {
+      const p = pathname ?? window.location.pathname;
+      if (['/workspace/login', '/register', '/login'].some((auth) => p?.startsWith(auth))) return;
+    }
     // Prevent duplicate simultaneous requests
     if (fetchingRef.current) return;
     
@@ -124,7 +129,7 @@ export function useSiteConfig() {
     } finally {
       fetchingRef.current = false;
     }
-  }, []); // Empty deps - function doesn't depend on any props/state
+  }, [pathname]);
 
   useEffect(() => {
     // Ensure we're in browser context
