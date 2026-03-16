@@ -79,7 +79,7 @@ export default function RequestDemoPage() {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE}/api/emails/demo-request/`, {
+      const response = await axios.post(`${API_BASE}/api/demo-request/`, {
         ...formData,
         user_id: user?.id || null,
         username: user?.username || null,

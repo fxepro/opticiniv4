@@ -8,6 +8,9 @@ urlpatterns = [
     path('api/demo-request/', views.send_demo_request, name='send_demo_request'),
     path('api/update-signup/', views.send_update_signup, name='send_update_signup'),
     
+    # Admin form submissions / messages
+    path('api/admin/email-captures/', views.list_email_captures, name='list_email_captures'),
+
     # Admin feedback management endpoints
     path('api/admin/feedback/', views.list_feedback, name='list_feedback'),
     path('api/admin/feedback/stats/', views.feedback_stats, name='feedback_stats'),

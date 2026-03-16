@@ -650,6 +650,46 @@ def delete_feedback(request, feedback_id):
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
+def list_email_captures(request):
+    """List all email captures (contact, consultation, demo request, etc.) - admin only"""
+    try:
+        form_type = request.query_params.get('form_type', None)
+        search = request.query_params.get('search', None)
+
+        queryset = EmailCapture.objects.all()
+
+        if form_type:
+            queryset = queryset.filter(form_type=form_type)
+
+        if search:
+            queryset = queryset.filter(email__icontains=search)
+
+        # Limit to 500 most recent
+        queryset = queryset[:500]
+
+        data = [
+            {
+                'id': ec.id,
+                'email': ec.email,
+                'form_type': ec.form_type,
+                'form_type_display': ec.get_form_type_display(),
+                'metadata': ec.metadata,
+                'created_at': ec.created_at.isoformat() if ec.created_at else None,
+            }
+            for ec in queryset
+        ]
+        return Response(data)
+
+    except Exception as e:
+        logger.error(f"Error listing email captures: {str(e)}")
+        return Response({
+            'error': 'Failed to retrieve messages',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
 def feedback_stats(request):
     """Get feedback statistics (admin only)"""
     try:

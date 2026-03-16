@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,7 @@ import {
   Shield, 
   Settings, 
   MessageSquare, 
+  Inbox,
   BarChart3, 
   Activity, 
   TrendingUp, 
@@ -30,7 +32,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <Card className="bg-white border-slate-200 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -102,6 +104,26 @@ export default function AdminDashboardPage() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="bg-white border-slate-200 shadow-sm">
+          <Link href="/workspace/messages">
+            <CardContent className="p-6 hover:bg-slate-50 transition-colors rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Messages</p>
+                  <p className="text-h2-dynamic font-bold text-slate-800">Inbox</p>
+                  <p className="text-xs text-blue-600 flex items-center mt-1">
+                    <Inbox className="h-3 w-3 mr-1" />
+                    Contact & demo requests
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <Inbox className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Link>
+        </Card>
       </div>
 
       {/* Main Content Grid */}
@@ -120,33 +142,50 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button className="h-20 bg-white hover:bg-slate-50 border-slate-200 text-slate-800 justify-start shadow-sm">
-                  <Users className="h-6 w-6 mr-3 text-blue-600" />
-                  <div className="text-left">
-                    <div className="font-semibold">User Management</div>
-                    <div className="text-sm text-slate-600">Manage users and roles</div>
-                  </div>
+                <Button asChild className="h-20 bg-white hover:bg-slate-50 border-slate-200 text-slate-800 justify-start shadow-sm">
+                  <Link href="/workspace/users" className="flex items-center w-full h-full">
+                    <Users className="h-6 w-6 mr-3 text-blue-600 shrink-0" />
+                    <div className="text-left">
+                      <div className="font-semibold">User Management</div>
+                      <div className="text-sm text-slate-600">Manage users and roles</div>
+                    </div>
+                  </Link>
                 </Button>
-                <Button className="h-20 bg-white hover:bg-slate-50 border-slate-200 text-slate-800 justify-start shadow-sm">
-                  <MessageSquare className="h-6 w-6 mr-3 text-yellow-600" />
-                  <div className="text-left">
-                    <div className="font-semibold">Feedback Review</div>
-                    <div className="text-sm text-slate-600">Review user feedback</div>
-                  </div>
+                <Button asChild className="h-20 bg-white hover:bg-slate-50 border-slate-200 text-slate-800 justify-start shadow-sm">
+                  <Link href="/workspace/feedback" className="flex items-center w-full h-full">
+                    <MessageSquare className="h-6 w-6 mr-3 text-yellow-600 shrink-0" />
+                    <div className="text-left">
+                      <div className="font-semibold">Feedback Review</div>
+                      <div className="text-sm text-slate-600">Review user feedback</div>
+                    </div>
+                  </Link>
                 </Button>
-                <Button className="h-20 bg-white hover:bg-slate-50 border-slate-200 text-slate-800 justify-start shadow-sm">
-                  <Settings className="h-6 w-6 mr-3 text-green-600" />
-                  <div className="text-left">
-                    <div className="font-semibold">System Settings</div>
-                    <div className="text-sm text-slate-600">Configure platform</div>
-                  </div>
+                <Button asChild className="h-20 bg-white hover:bg-slate-50 border-slate-200 text-slate-800 justify-start shadow-sm">
+                  <Link href="/workspace/messages" className="flex items-center w-full h-full">
+                    <Inbox className="h-6 w-6 mr-3 text-blue-600 shrink-0" />
+                    <div className="text-left">
+                      <div className="font-semibold">Messages</div>
+                      <div className="text-sm text-slate-600">Contact, consultation, demo requests</div>
+                    </div>
+                  </Link>
                 </Button>
-                <Button className="h-20 bg-white hover:bg-slate-50 border-slate-200 text-slate-800 justify-start shadow-sm">
-                  <BarChart3 className="h-6 w-6 mr-3 text-palette-primary" />
-                  <div className="text-left">
-                    <div className="font-semibold">Analytics</div>
-                    <div className="text-sm text-slate-600">View usage metrics</div>
-                  </div>
+                <Button asChild className="h-20 bg-white hover:bg-slate-50 border-slate-200 text-slate-800 justify-start shadow-sm">
+                  <Link href="/workspace/system-settings" className="flex items-center w-full h-full">
+                    <Settings className="h-6 w-6 mr-3 text-green-600 shrink-0" />
+                    <div className="text-left">
+                      <div className="font-semibold">System Settings</div>
+                      <div className="text-sm text-slate-600">Configure platform</div>
+                    </div>
+                  </Link>
+                </Button>
+                <Button asChild className="h-20 bg-white hover:bg-slate-50 border-slate-200 text-slate-800 justify-start shadow-sm">
+                  <Link href="/workspace/analytics" className="flex items-center w-full h-full">
+                    <BarChart3 className="h-6 w-6 mr-3 text-palette-primary shrink-0" />
+                    <div className="text-left">
+                      <div className="font-semibold">Analytics</div>
+                      <div className="text-sm text-slate-600">View usage metrics</div>
+                    </div>
+                  </Link>
                 </Button>
               </div>
             </CardContent>

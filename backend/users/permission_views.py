@@ -553,6 +553,13 @@ def get_navigation(request):
                         "permission": "feedback.view"
                     },
                     {
+                        "id": "messages",
+                        "title": "Messages",
+                        "href": "/workspace/messages",
+                        "icon": "Inbox",
+                        "permission": "feedback.view"
+                    },
+                    {
                         "id": "financials",
                         "title": "Financials",
                         "href": "/workspace/financials",
@@ -1273,6 +1280,13 @@ def _build_navigation_structure_for_matrix():
                         "title": "Feedback",
                         "href": "/workspace/feedback",
                         "icon": "MessageSquare",
+                        "permission": "feedback.view"
+                    },
+                    {
+                        "id": "messages",
+                        "title": "Messages",
+                        "href": "/workspace/messages",
+                        "icon": "Inbox",
                         "permission": "feedback.view"
                     },
                     {

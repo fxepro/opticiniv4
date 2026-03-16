@@ -34,7 +34,7 @@ export function Footer() {
 
       {/* Main Footer */}
       <div className="py-[68px] px-4 sm:px-9 pt-16 pb-11" style={{ background: "var(--rd-bg-white)" }}>
-        <div className="max-w-[1140px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-12">
+        <div className="max-w-[1140px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-12">
           <div>
             <Link href="/" className="font-extrabold text-xl block mb-3.5" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
               Opticini<span style={{ color: "var(--rd-blue-600)" }}>.</span>
@@ -94,6 +94,29 @@ export function Footer() {
               {["Nonprofits", "Startups", "SMB", "Government", "Healthcare", "Fintech", "Education"].map((name) => (
                 <li key={name}>
                   <Link href={`/verticals/${name.toLowerCase()}`} className="text-base hover:text-[var(--rd-blue-600)] transition-colors" style={{ color: "var(--rd-text-secondary)" }}>
+                    {name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="min-w-[180px]">
+            <p className="text-[13px] font-bold uppercase tracking-wider mb-5" style={{ color: "var(--rd-text-muted)", fontFamily: "var(--rd-font-heading)" }}>
+              Frameworks
+            </p>
+            <ul className="flex flex-col gap-3.5">
+              {[
+                { name: "ISO/IEC 27002", slug: "iso-27002" },
+                { name: "HIPAA Security Rule", slug: "hipaa" },
+                { name: "SOC 2", slug: "soc2" },
+                { name: "NIST SP 800-53", slug: "nist-800-53" },
+                { name: "NIST Cybersecurity", slug: "nist-csf" },
+                { name: "ISO/IEC 27001", slug: "iso-27001" },
+                { name: "PCI DSS", slug: "pci-dss" },
+                { name: "CIS Critical Security", slug: "cis-controls" },
+              ].map(({ name, slug }) => (
+                <li key={slug}>
+                  <Link href={`/frameworks/${slug}`} className="text-base hover:text-[var(--rd-blue-600)] transition-colors whitespace-nowrap" style={{ color: "var(--rd-text-secondary)" }}>
                     {name}
                   </Link>
                 </li>

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { applyTheme } from "@/lib/theme";
-import { BookOpen, Wrench, Shield, Plug, Search, Gauge, TrendingUp, BarChart3, Cpu, Database, Network, Settings, Users, LayoutDashboard, CreditCard, FileText, Globe, CircleDollarSign, MapPin, Lock, Package, MessageSquare, ExternalLink, Loader2, Clock, Video, Plus } from "lucide-react";
+import { BookOpen, Wrench, Shield, Plug, Search, Gauge, TrendingUp, BarChart3, Cpu, Database, Network, Settings, Users, LayoutDashboard, CreditCard, FileText, Globe, CircleDollarSign, MapPin, Lock, Package, MessageSquare, Inbox, ExternalLink, Loader2, Clock, Video, Plus } from "lucide-react";
 import { fetchLearningMaterials, type LearningMaterial } from "@/lib/api/collateral";
 
 interface CategoryMaterials {
@@ -87,6 +87,7 @@ export default function CollateralPage() {
     { href: "/workspace/tools-management", title: "Tools Management", icon: Wrench, tag: "tools-management" },
     { href: "/workspace/themes", title: "Theme Manager", icon: FileText, tag: "themes" },
     { href: "/workspace/feedback", title: "Feedback", icon: MessageSquare, tag: "feedback" },
+    { href: "/workspace/messages", title: "Messages", icon: Inbox, tag: "messages" },
     { href: "/workspace/financials", title: "Financials", icon: CreditCard, tag: "financials" },
     { href: "/workspace/marketing", title: "Marketing & Deals", icon: TrendingUp, tag: "marketing" },
     { href: "/workspace/affiliates", title: "Affiliates", icon: Users, tag: "affiliates" },
