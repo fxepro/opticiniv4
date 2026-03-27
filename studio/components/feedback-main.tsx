@@ -1,95 +1,96 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { Star, Send, Heart, ThumbsUp, AlertTriangle } from "lucide-react";
-import { PageHero } from "@/components/page-hero";
-import { PageLayout } from "@/components/page-layout";
+import React, { useState } from "react"
+import { useTranslation } from "react-i18next"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/hooks/use-toast"
+import { Star, Send, Heart, ThumbsUp, AlertTriangle } from "lucide-react"
+import { PageHero } from "@/components/page-hero"
+import { PageLayout } from "@/components/page-layout"
 
-// Use relative URL in production (browser), localhost in dev (SSR)
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  (typeof window !== "undefined" ? "" : "http://localhost:8000")
 
 export default function FeedbackMain() {
-  const [rating, setRating] = useState(0);
-  const [hoveredRating, setHoveredRating] = useState(0);
-  const [greatWork, setGreatWork] = useState("");
-  const [couldBeBetter, setCouldBeBetter] = useState("");
-  const [removeAndRelish, setRemoveAndRelish] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+  const { t } = useTranslation()
+  const [rating, setRating] = useState(0)
+  const [hoveredRating, setHoveredRating] = useState(0)
+  const [greatWork, setGreatWork] = useState("")
+  const [couldBeBetter, setCouldBeBetter] = useState("")
+  const [removeAndRelish, setRemoveAndRelish] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+    e.preventDefault()
+
     if (rating === 0) {
       toast({
-        title: "Rating Required",
-        description: "Please select a star rating before submitting feedback.",
+        title: t("feedback.toastRatingTitle"),
+        description: t("feedback.toastRatingDesc"),
         variant: "destructive",
-      });
-      return;
+      })
+      return
     }
 
     if (!greatWork && !couldBeBetter && !removeAndRelish) {
       toast({
-        title: "Feedback Required",
-        description: "Please provide at least one piece of feedback.",
+        title: t("feedback.toastFeedbackTitle"),
+        description: t("feedback.toastFeedbackDesc"),
         variant: "destructive",
-      });
-      return;
+      })
+      return
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
     try {
-      // Send to Django backend
       const response = await fetch(`${API_BASE}/api/feedback/`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           rating,
           greatWork,
           couldBeBetter,
-          removeAndRelish
+          removeAndRelish,
         }),
-      });
-      
-      const result = await response.json();
-      
+      })
+
+      const result = await response.json()
+
       if (response.ok && result.success) {
         toast({
-          title: "Thank You!",
-          description: "Your feedback has been submitted successfully. We appreciate your input!",
-        });
+          title: t("feedback.toastThanksTitle"),
+          description: t("feedback.toastThanksDesc"),
+        })
 
-        // Reset form
-        setRating(0);
-        setGreatWork("");
-        setCouldBeBetter("");
-        setRemoveAndRelish("");
+        setRating(0)
+        setGreatWork("")
+        setCouldBeBetter("")
+        setRemoveAndRelish("")
       } else {
-        throw new Error(result.error || 'Failed to submit feedback');
+        throw new Error(result.error || "Failed to submit feedback")
       }
-    } catch (error) {
+    } catch {
       toast({
-        title: "Error",
-        description: "Failed to submit feedback. Please try again.",
+        title: t("feedback.toastErrorTitle"),
+        description: t("feedback.toastErrorDesc"),
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const renderStars = () => {
     return Array.from({ length: 5 }, (_, index) => {
-      const starNumber = index + 1;
-      const isFilled = starNumber <= (hoveredRating || rating);
-      
+      const starNumber = index + 1
+      const isFilled = starNumber <= (hoveredRating || rating)
+
       return (
         <button
           key={index}
@@ -99,51 +100,45 @@ export default function FeedbackMain() {
           onMouseEnter={() => setHoveredRating(starNumber)}
           onMouseLeave={() => setHoveredRating(0)}
         >
-            <Star
-              className={`h-12 w-12 transition-all duration-200 ${
-                isFilled
-                  ? "text-[var(--rd-blue-600)] fill-current"
-                  : "text-gray-300 hover:text-[var(--rd-blue-400)]"
-              }`}
-            />
+          <Star
+            className={`h-12 w-12 transition-all duration-200 ${
+              isFilled
+                ? "text-[var(--rd-blue-600)] fill-current"
+                : "text-gray-300 hover:text-[var(--rd-blue-400)]"
+            }`}
+          />
         </button>
-      );
-    });
-  };
+      )
+    })
+  }
 
   const getRatingText = () => {
-    if (rating === 0) return "Rate your experience";
-    if (rating === 1) return "Poor";
-    if (rating === 2) return "Fair";
-    if (rating === 3) return "Good";
-    if (rating === 4) return "Very Good";
-    if (rating === 5) return "Excellent";
-    return "";
-  };
+    if (rating === 0) return t("feedback.rating0")
+    const key = `feedback.rating${rating}` as const
+    return t(key)
+  }
 
   return (
     <PageLayout>
       <PageHero
-        badge="We value your input"
-        title="Share Your Feedback"
-        subtitle="Help us improve Opticini by sharing your thoughts, suggestions, and experiences"
+        badge={t("feedback.heroBadge")}
+        title={t("feedback.heroTitle")}
+        subtitle={t("feedback.heroSubtitle")}
       />
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 pt-16 pb-16 max-w-3xl">
         <div className="mt-12 bg-white border-[1.5px] rounded-[18px] shadow-lg overflow-hidden" style={{ borderColor: "var(--rd-border-light)" }}>
           <div className="text-center pb-8 pt-12 px-6">
             <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>
-              How was your experience?
+              {t("feedback.experienceTitle")}
             </h2>
             <p className="text-lg" style={{ color: "var(--rd-text-secondary)" }}>
-              Your feedback helps us make Opticini better for everyone
+              {t("feedback.experienceSubtitle")}
             </p>
           </div>
 
           <div className="px-6 pb-12">
             <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Star Rating */}
               <div className="text-center">
                 <div className="flex justify-center items-center space-x-2 mb-4">
                   {renderStars()}
@@ -153,56 +148,52 @@ export default function FeedbackMain() {
                 </p>
               </div>
 
-              {/* Feedback Sections */}
               <div className="space-y-6">
-                {/* Great Work */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
                       <ThumbsUp className="h-5 w-5 text-green-600" />
                     </div>
                     <h3 className="text-lg font-semibold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>
-                      What did we do great?
+                      {t("feedback.greatTitle")}
                     </h3>
                   </div>
                   <Textarea
-                    placeholder="Tell us what you loved about Opticini. What features worked well? What exceeded your expectations?"
+                    placeholder={t("feedback.greatPlaceholder")}
                     value={greatWork}
                     onChange={(e) => setGreatWork(e.target.value)}
                     className="min-h-[100px] resize-none rounded-lg border-[1.5px] focus:border-[var(--rd-blue-600)] focus:ring-[var(--rd-blue-600)]"
                   />
                 </div>
 
-                {/* Could Be Better */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                       <Heart className="h-5 w-5 text-blue-600" />
                     </div>
                     <h3 className="text-lg font-semibold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>
-                      What could be better?
+                      {t("feedback.betterTitle")}
                     </h3>
                   </div>
                   <Textarea
-                    placeholder="Share suggestions for improvement. What features need work? What would make your experience smoother?"
+                    placeholder={t("feedback.betterPlaceholder")}
                     value={couldBeBetter}
                     onChange={(e) => setCouldBeBetter(e.target.value)}
                     className="min-h-[100px] resize-none rounded-lg border-[1.5px] focus:border-[var(--rd-blue-600)] focus:ring-[var(--rd-blue-600)]"
                   />
                 </div>
 
-                {/* Remove and Relish */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
                       <AlertTriangle className="h-5 w-5 text-red-600" />
                     </div>
                     <h3 className="text-lg font-semibold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>
-                      What should we remove and relish?
+                      {t("feedback.removeTitle")}
                     </h3>
                   </div>
                   <Textarea
-                    placeholder="What features are frustrating or unnecessary? What should we completely remove or redesign?"
+                    placeholder={t("feedback.removePlaceholder")}
                     value={removeAndRelish}
                     onChange={(e) => setRemoveAndRelish(e.target.value)}
                     className="min-h-[100px] resize-none rounded-lg border-[1.5px] focus:border-[var(--rd-blue-600)] focus:ring-[var(--rd-blue-600)]"
@@ -210,7 +201,6 @@ export default function FeedbackMain() {
                 </div>
               </div>
 
-              {/* Submit Button */}
               <div className="text-center pt-6 pb-12">
                 <Button
                   type="submit"
@@ -220,13 +210,13 @@ export default function FeedbackMain() {
                 >
                   {isSubmitting ? (
                     <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Submitting...
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2 inline-block align-middle" />
+                      {t("feedback.submitting")}
                     </>
                   ) : (
                     <>
-                      <Send className="h-5 w-5 mr-2" />
-                      Submit Feedback
+                      <Send className="h-5 w-5 mr-2 inline" />
+                      {t("feedback.submit")}
                     </>
                   )}
                 </Button>
@@ -236,5 +226,5 @@ export default function FeedbackMain() {
         </div>
       </div>
     </PageLayout>
-  );
+  )
 }

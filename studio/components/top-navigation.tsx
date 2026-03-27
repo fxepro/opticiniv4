@@ -15,6 +15,11 @@ export function TopNavigation() {
   const pathname = usePathname();
   const router = useRouter();
   const [loggedIn, setLoggedIn] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
     const checkAuthState = () => {
@@ -40,6 +45,8 @@ export function TopNavigation() {
     router.push("/");
   };
 
+  const tr = (key: string, fallback: string) => (hydrated ? t(key) : fallback);
+
   const navLink = (href: string, label: string, Icon?: React.ComponentType<{ className?: string }>) => (
     <Link
       href={href}
@@ -62,25 +69,27 @@ export function TopNavigation() {
     >
       <div className="hidden sm:flex items-center gap-2 text-sm" style={{ color: "var(--rd-text-muted)" }}>
         <span className="w-[7px] h-[7px] rounded-full bg-[var(--rd-emerald-500)] animate-pulse" />
-        All systems operational
+        {tr("navigation.allSystemsOperational", "All systems operational")}
         <span className="mx-1" style={{ color: "var(--rd-text-faint)" }}>·</span>
-        <Link href="/contact-sales" className="hover:text-[var(--rd-blue-600)] transition-colors">Talk to Sales</Link>
+        <Link href="/contact-sales" className="hover:text-[var(--rd-blue-600)] transition-colors">
+          {tr("navigation.talkToSales", "Talk to Sales")}
+        </Link>
       </div>
       <div className="flex items-center gap-0.5 ml-auto">
         <LanguageSelector />
-        {navLink("/blog", t("navigation.blog"), FileText)}
-        {navLink("/feedback", t("navigation.feedback"), MessageCircle)}
-        {navLink("/consult", t("navigation.consult"), User)}
-        {navLink("/upgrade", t("navigation.upgrade"), BarChart3)}
+        {navLink("/blog", tr("navigation.blog", "Blog"), FileText)}
+        {navLink("/feedback", tr("navigation.feedback", "Feedback"), MessageCircle)}
+        {navLink("/consult", tr("navigation.consult", "Consult"), User)}
+        {navLink("/upgrade", tr("navigation.upgrade", "Upgrade"), BarChart3)}
         <div className="w-px h-4 mx-1.5" style={{ background: "var(--rd-border-light)" }} />
-        {navLink(loggedIn ? "/workspace" : "/workspace/login", "Workspace", User)}
+        {navLink(loggedIn ? "/workspace" : "/workspace/login", tr("navigation.workspace", "Workspace"), User)}
         {loggedIn && (
           <button
             onClick={handleLogout}
             className="text-sm px-3 py-1.5 rounded-md text-[var(--rd-text-secondary)] hover:text-[var(--rd-blue-600)] hover:bg-[var(--rd-blue-50)] transition-colors"
           >
             <LogOut className="h-3.5 w-3.5 mr-1 inline" />
-            {t("navigation.logout")}
+            {tr("navigation.logout", "Logout")}
           </button>
         )}
       </div>

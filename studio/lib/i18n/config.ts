@@ -1,5 +1,7 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
+import { mergeAllLocaleContent } from './merge-public-pages'
+import { landingOverlays } from './landing-overlays-data'
 
 // Import translation files - Recommended SaaS language set
 import enTranslations from '../locales/en/common.json'
@@ -19,23 +21,30 @@ import hiTranslations from '../locales/hi/common.json'
 import arTranslations from '../locales/ar/common.json'
 import heTranslations from '../locales/he/common.json'
 
+function withFullI18n(
+  base: Record<string, unknown>,
+  lng: string
+): Record<string, unknown> {
+  return mergeAllLocaleContent(base, lng, landingOverlays)
+}
+
 const resources = {
-  en: { translation: enTranslations },
-  es: { translation: esTranslations },
-  fr: { translation: frTranslations },
-  de: { translation: deTranslations },
-  it: { translation: itTranslations },
-  pt: { translation: ptTranslations },
-  ru: { translation: ruTranslations },
-  sv: { translation: svTranslations },
-  no: { translation: noTranslations },
-  da: { translation: daTranslations },
-  zh: { translation: zhTranslations },
-  ja: { translation: jaTranslations },
-  ko: { translation: koTranslations },
-  hi: { translation: hiTranslations },
-  ar: { translation: arTranslations },
-  he: { translation: heTranslations },
+  en: { translation: withFullI18n(enTranslations as Record<string, unknown>, 'en') },
+  es: { translation: withFullI18n(esTranslations as Record<string, unknown>, 'es') },
+  fr: { translation: withFullI18n(frTranslations as Record<string, unknown>, 'fr') },
+  de: { translation: withFullI18n(deTranslations as Record<string, unknown>, 'de') },
+  it: { translation: withFullI18n(itTranslations as Record<string, unknown>, 'it') },
+  pt: { translation: withFullI18n(ptTranslations as Record<string, unknown>, 'pt') },
+  ru: { translation: withFullI18n(ruTranslations as Record<string, unknown>, 'ru') },
+  sv: { translation: withFullI18n(svTranslations as Record<string, unknown>, 'sv') },
+  no: { translation: withFullI18n(noTranslations as Record<string, unknown>, 'no') },
+  da: { translation: withFullI18n(daTranslations as Record<string, unknown>, 'da') },
+  zh: { translation: withFullI18n(zhTranslations as Record<string, unknown>, 'zh') },
+  ja: { translation: withFullI18n(jaTranslations as Record<string, unknown>, 'ja') },
+  ko: { translation: withFullI18n(koTranslations as Record<string, unknown>, 'ko') },
+  hi: { translation: withFullI18n(hiTranslations as Record<string, unknown>, 'hi') },
+  ar: { translation: withFullI18n(arTranslations as Record<string, unknown>, 'ar') },
+  he: { translation: withFullI18n(heTranslations as Record<string, unknown>, 'he') },
 }
 
 // Check if we're in browser environment before using LanguageDetector

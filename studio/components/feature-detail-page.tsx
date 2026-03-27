@@ -1,22 +1,27 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Check, ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Check } from "lucide-react";
+import {
+  getFeaturesPlaneResource,
+  getHomePlatformPlanesResource,
+} from "@/lib/i18n/read-translation-resource";
 
-const FEATURE_LINKS = [
-  { title: "Discovery", href: "/features/discovery" },
-  { title: "Health", href: "/features/health" },
-  { title: "Performance", href: "/features/performance" },
-  { title: "Security", href: "/features/security" },
-  { title: "Configuration", href: "/features/configuration" },
-  { title: "Compliance", href: "/features/compliance" },
-  { title: "Evidence", href: "/features/evidence" },
-  { title: "Change", href: "/features/change" },
-  { title: "Cost", href: "/features/cost" },
-  { title: "Risk", href: "/features/risk" },
-];
+const FEATURE_NAV = [
+  { slug: "discovery", href: "/features/discovery", fallback: "Discovery" },
+  { slug: "health", href: "/features/health", fallback: "Health" },
+  { slug: "performance", href: "/features/performance", fallback: "Performance" },
+  { slug: "security", href: "/features/security", fallback: "Security" },
+  { slug: "configuration", href: "/features/configuration", fallback: "Configuration" },
+  { slug: "compliance", href: "/features/compliance", fallback: "Compliance" },
+  { slug: "evidence", href: "/features/evidence", fallback: "Evidence" },
+  { slug: "change", href: "/features/change", fallback: "Change" },
+  { slug: "cost", href: "/features/cost", fallback: "Cost" },
+  { slug: "risk", href: "/features/risk", fallback: "Risk" },
+] as const;
 
 export type FeatureCard = {
   icon: string;
@@ -65,9 +70,61 @@ export type FeatureDetailConfig = {
   };
 };
 
-export function FeatureDetailPage({ config }: { config: FeatureDetailConfig }) {
-  const c = config.colors;
+function isFeatureBundle(x: unknown): x is Omit<FeatureDetailConfig, "colors"> {
+  return (
+    typeof x === "object" &&
+    x !== null &&
+    !Array.isArray(x) &&
+    typeof (x as FeatureDetailConfig).title === "string" &&
+    typeof (x as FeatureDetailConfig).planeNum === "number"
+  );
+}
+
+export function FeatureDetailPage({
+  config,
+  slug,
+}: {
+  config: FeatureDetailConfig;
+  slug: string;
+}) {
+  const { t, i18n } = useTranslation();
   const pathname = usePathname();
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+  const merged = useMemo(() => {
+    const rawBundle = getFeaturesPlaneResource(i18n, slug);
+    let next: FeatureDetailConfig = config;
+    if (isFeatureBundle(rawBundle)) {
+      next = { ...config, ...rawBundle, colors: config.colors };
+    } else {
+      const planes = getHomePlatformPlanesResource(i18n);
+      const plane = planes.find((p) => p.slug === slug);
+      if (plane?.title) {
+        next = { ...next, title: plane.title };
+        if (plane.tagline) {
+          next = { ...next, subtitle: plane.tagline };
+        }
+      }
+    }
+    return next;
+  }, [config, slug, i18n, i18n.language, i18n.resolvedLanguage]);
+  const c = merged.colors;
+  const tr = (key: string, fallback: string) => (hydrated ? t(key) : fallback);
+
+  const navLinks = useMemo(() => {
+    const planes = getHomePlatformPlanesResource(i18n);
+    const titles: Record<string, string> = {};
+    for (const p of planes) {
+      if (p?.slug && p?.title) titles[p.slug] = p.title;
+    }
+    return FEATURE_NAV.map((l) => ({
+      href: l.href,
+      title: titles[l.slug] ?? l.fallback,
+    }));
+  }, [i18n, i18n.language, i18n.resolvedLanguage]);
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ background: "var(--rd-bg-page)", fontFamily: "var(--rd-font-body)" }}>
       {/* Hero */}
@@ -77,19 +134,19 @@ export function FeatureDetailPage({ config }: { config: FeatureDetailConfig }) {
         <div className="relative max-w-[860px] mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border mb-6 text-xs font-bold uppercase tracking-wider" style={{ borderColor: c.badgeBorder, background: c.badgeBg, color: c.primary }}>
             <span className="w-[7px] h-[7px] rounded-full animate-pulse" style={{ background: c.primary }} />
-            Insight Plane {String(config.planeNum).padStart(2, "0")}
+            {tr("featureUi.planeInsight", `Insight Plane ${String(merged.planeNum).padStart(2, "0")}`)}
           </div>
           <h1 className="text-[clamp(40px,6vw,72px)] font-extrabold tracking-tight mb-3" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>
-            {config.title}
+            {merged.title}
           </h1>
           <p className="text-[clamp(18px,2.5vw,24px)] font-medium mb-5" style={{ color: "var(--rd-text-secondary)" }}>
-            {config.subtitle}
+            {merged.subtitle}
           </p>
           <div className="inline-block px-5 py-2.5 rounded-lg border-l-4 mb-9 text-[15px] italic" style={{ borderColor: c.taglineBorder, background: c.taglineBg, color: c.primary }}>
-            {config.tagline}
+            {merged.tagline}
           </div>
           <div className="flex flex-wrap justify-center gap-3">
-            {config.stats.map((s, i) => (
+            {merged.stats.map((s, i) => (
               <div key={i} className="bg-white border rounded-xl px-5 py-3 flex flex-col items-center gap-0.5 min-w-[110px] shadow-sm" style={{ borderColor: "var(--rd-border-light)" }}>
                 <span className="text-[22px] font-extrabold" style={{ color: c.primary, fontFamily: "var(--font-sora), sans-serif" }}>{s.value}</span>
                 <span className="text-[11px] font-medium" style={{ color: "var(--rd-text-muted)" }}>{s.label}</span>
@@ -111,7 +168,7 @@ export function FeatureDetailPage({ config }: { config: FeatureDetailConfig }) {
           }}
         >
           <nav className="flex flex-wrap justify-center items-center gap-3">
-            {FEATURE_LINKS.map((f) => {
+            {navLinks.map((f) => {
               const isActive = pathname === f.href || pathname === f.href + "/";
               return (
                 <Link
@@ -137,18 +194,18 @@ export function FeatureDetailPage({ config }: { config: FeatureDetailConfig }) {
       {/* Positioning */}
       <div className="pt-12 pb-11 px-4 sm:px-8 border-b" style={{ background: `linear-gradient(135deg, ${c.badgeBg}, #fff)`, borderColor: c.badgeBorder }}>
         <div className="max-w-[760px] mx-auto text-center">
-          <p className="text-[19px] font-bold mb-3" style={{ color: c.primary, fontFamily: "var(--font-sora), sans-serif" }}>{config.posStrong}</p>
-          <p className="text-base leading-relaxed" style={{ color: "var(--rd-text-secondary)" }}>{config.posBody}</p>
+          <p className="text-[19px] font-bold mb-3" style={{ color: c.primary, fontFamily: "var(--font-sora), sans-serif" }}>{merged.posStrong}</p>
+          <p className="text-base leading-relaxed" style={{ color: "var(--rd-text-secondary)" }}>{merged.posBody}</p>
         </div>
       </div>
 
       {/* Cards Section */}
       <section className="py-[72px] px-4 sm:px-8" style={{ background: "var(--rd-bg-white)" }}>
         <div className="max-w-[1180px] mx-auto">
-          <p className="text-[11px] font-bold uppercase tracking-widest mb-2.5" style={{ color: "var(--rd-blue-600)" }}>{config.sectionLabel}</p>
-          <h2 className="text-[clamp(24px,3vw,34px)] font-bold mb-10" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{config.sectionTitle}</h2>
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-2.5" style={{ color: "var(--rd-blue-600)" }}>{merged.sectionLabel}</p>
+          <h2 className="text-[clamp(24px,3vw,34px)] font-bold mb-10" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{merged.sectionTitle}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {config.cards.map((card, i) => (
+            {merged.cards.map((card, i) => (
               <div key={i} className="bg-white border-[1.5px] rounded-[18px] p-7 transition-all hover:border-[#93c5fd] hover:shadow-lg hover:-translate-y-0.5" style={{ borderColor: "var(--rd-border-light)" }}>
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center text-[22px] mb-4" style={{ background: c.cardIconBg }}>{card.icon}</div>
                 <p className="text-base font-bold mb-2.5" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{card.title}</p>
@@ -170,17 +227,17 @@ export function FeatureDetailPage({ config }: { config: FeatureDetailConfig }) {
       </section>
 
       {/* Compare Table */}
-      {config.compareRows.length > 0 && (
+      {merged.compareRows.length > 0 && (
       <section className="py-[72px] px-4 sm:px-8" style={{ background: "var(--rd-bg-subtle)" }}>
         <div className="max-w-[820px] mx-auto">
-          <p className="text-[11px] font-bold uppercase tracking-widest mb-2.5 text-center" style={{ color: "var(--rd-blue-600)" }}>{config.compareLabel}</p>
-          <h2 className="text-[clamp(24px,3vw,34px)] font-bold mb-10 text-center" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{config.compareTitle}</h2>
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-2.5 text-center" style={{ color: "var(--rd-blue-600)" }}>{merged.compareLabel}</p>
+          <h2 className="text-[clamp(24px,3vw,34px)] font-bold mb-10 text-center" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{merged.compareTitle}</h2>
           <div className="border-[1.5px] rounded-[18px] overflow-hidden bg-white" style={{ borderColor: "var(--rd-border-light)" }}>
             <div className="grid grid-cols-2" style={{ background: "linear-gradient(135deg, #f0f6ff, var(--rd-bg-subtle))" }}>
-              <div className="px-5 py-3.5 text-[13px] font-bold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{config.compareOld}</div>
-              <div className="px-5 py-3.5 text-[13px] font-bold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{config.compareNew}</div>
+              <div className="px-5 py-3.5 text-[13px] font-bold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{merged.compareOld}</div>
+              <div className="px-5 py-3.5 text-[13px] font-bold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{merged.compareNew}</div>
             </div>
-            {config.compareRows.map((row, i) => (
+            {merged.compareRows.map((row, i) => (
               <div key={i} className="grid grid-cols-2 border-t" style={{ borderColor: "var(--rd-border-light)", background: i % 2 === 0 ? "var(--rd-bg-white)" : "var(--rd-bg-subtle)" }}>
                 <div className="px-5 py-3.5 text-sm flex items-center gap-2" style={{ color: "var(--rd-text-secondary)" }}>
                   <span className="text-red-500 font-bold">✗</span> {row.old}
@@ -197,14 +254,14 @@ export function FeatureDetailPage({ config }: { config: FeatureDetailConfig }) {
       )}
 
       {/* Extra Section (for Cost, Risk, etc.) */}
-      {config.extraSection && (
+      {merged.extraSection && (
         <section className="py-[72px] px-4 sm:px-8" style={{ background: "var(--rd-bg-white)" }}>
           <div className="max-w-[1180px] mx-auto">
-            <p className="text-[11px] font-bold uppercase tracking-widest mb-2.5 text-center" style={{ color: "var(--rd-blue-600)" }}>{config.extraSection.label}</p>
-            <h2 className="text-[clamp(24px,3vw,34px)] font-bold mb-10 text-center" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{config.extraSection.title}</h2>
-            {config.extraSection.cards && (
+            <p className="text-[11px] font-bold uppercase tracking-widest mb-2.5 text-center" style={{ color: "var(--rd-blue-600)" }}>{merged.extraSection.label}</p>
+            <h2 className="text-[clamp(24px,3vw,34px)] font-bold mb-10 text-center" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{merged.extraSection.title}</h2>
+            {merged.extraSection.cards && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {config.extraSection.cards.map((card, i) => (
+                {merged.extraSection.cards.map((card, i) => (
                   <div key={i} className="bg-white border-[1.5px] rounded-[18px] p-7" style={{ borderColor: "var(--rd-border-light)" }}>
                     <p className="text-base font-bold mb-2" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{card.title}</p>
                     <p className="text-[13px]" style={{ color: "var(--rd-text-secondary)" }}>{card.sub}</p>
@@ -212,9 +269,9 @@ export function FeatureDetailPage({ config }: { config: FeatureDetailConfig }) {
                 ))}
               </div>
             )}
-            {config.extraSection.miniCards && (
+            {merged.extraSection.miniCards && (
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                {config.extraSection.miniCards.map((card, i) => (
+                {merged.extraSection.miniCards.map((card, i) => (
                   <div key={i} className="bg-white border-[1.5px] rounded-xl p-4 text-center transition-all hover:border-[#93c5fd] hover:shadow-md" style={{ borderColor: "var(--rd-border-light)" }}>
                     <p className="text-sm font-bold mb-1" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{card.title}</p>
                     <p className="text-xs" style={{ color: "var(--rd-text-secondary)" }}>{card.sub}</p>
@@ -227,11 +284,11 @@ export function FeatureDetailPage({ config }: { config: FeatureDetailConfig }) {
       )}
 
       {/* Outcome */}
-      <section className="py-[72px] px-4 sm:px-8" style={{ background: config.extraSection ? "var(--rd-bg-subtle)" : "var(--rd-bg-white)" }}>
+      <section className="py-[72px] px-4 sm:px-8" style={{ background: merged.extraSection ? "var(--rd-bg-subtle)" : "var(--rd-bg-white)" }}>
         <div className="max-w-[820px] mx-auto">
           <div className="rounded-[18px] p-11 text-center border-[1.5px]" style={{ borderColor: c.outcomeBorder, background: `linear-gradient(135deg, ${c.outcomeBg}, #fff)` }}>
-            <p className="text-[11px] font-bold uppercase tracking-widest mb-3.5" style={{ color: c.primary }}>{config.outcomeLabel}</p>
-            <p className="text-xl font-semibold leading-snug max-w-[600px] mx-auto" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{config.outcomeText}</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest mb-3.5" style={{ color: c.primary }}>{merged.outcomeLabel}</p>
+            <p className="text-xl font-semibold leading-snug max-w-[600px] mx-auto" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{merged.outcomeText}</p>
           </div>
         </div>
       </section>
@@ -239,14 +296,14 @@ export function FeatureDetailPage({ config }: { config: FeatureDetailConfig }) {
       {/* CTA */}
       <section className="py-[72px] px-4 sm:px-8" style={{ background: c.ctaGradient }}>
         <div className="max-w-[680px] mx-auto text-center">
-          <h2 className="text-[clamp(26px,4vw,40px)] font-extrabold text-white mb-3" style={{ fontFamily: "var(--font-sora), sans-serif" }}>{config.ctaTitle}</h2>
-          <p className="text-[17px] text-white/85 mb-9">{config.ctaSubtitle}</p>
+          <h2 className="text-[clamp(26px,4vw,40px)] font-extrabold text-white mb-3" style={{ fontFamily: "var(--font-sora), sans-serif" }}>{merged.ctaTitle}</h2>
+          <p className="text-[17px] text-white/85 mb-9">{merged.ctaSubtitle}</p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link href="/request-demo" className="inline-flex items-center gap-2 px-7 py-3 rounded-lg bg-white font-bold text-[15px] transition-all hover:-translate-y-0.5" style={{ color: c.ctaBtnColor }}>
-              Request Demo
+              {tr("featureUi.requestDemo", "Request Demo")}
             </Link>
             <Link href="/#platform" className="inline-flex items-center gap-2 px-7 py-3 rounded-lg border-2 border-white/50 text-white font-bold text-[15px] transition-all hover:bg-white/10 hover:border-white">
-              See integrations →
+              {tr("featureUi.seeIntegrations", "See integrations ->")}
             </Link>
           </div>
         </div>

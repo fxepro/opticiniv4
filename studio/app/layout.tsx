@@ -9,6 +9,7 @@ import { ToasterProvider } from "@/components/toaster-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { PaletteProvider } from "@/components/palette-provider"
 import { PostHogProviderWrapper } from "@/lib/posthog"
+import { CookieConsentBanner } from "@/components/cookie-consent-banner"
 import { LanguageProvider } from "@/components/language-provider"
 import { I18nProvider } from "@/components/i18n-provider"
 
@@ -207,6 +208,7 @@ export default function RootLayout({
               
               <main className="min-h-screen" style={{ background: "var(--rd-bg-page)" }}>{children}</main>
               <ConditionalFooter />
+              <CookieConsentBanner />
               <ToasterProvider />
             </PaletteProvider>
           </ThemeProvider>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Mail, Building, MessageSquare, CheckCircle, AlertCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { PageHero } from "@/components/page-hero";
 
 // Use relative URL in production (browser), localhost in dev (SSR)
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
 
 export default function RequestDemoPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [loggedIn, setLoggedIn] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -88,10 +89,10 @@ export default function RequestDemoPage() {
       if (response.data.success) {
         setSubmitted(true);
       } else {
-        setError(response.data.error || "Failed to submit demo request. Please try again.");
+        setError(response.data.error || t("requestDemo.errorFallback"));
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to submit demo request. Please try again.");
+      setError(err.response?.data?.error || t("requestDemo.errorFallback"));
     } finally {
       setLoading(false);
     }
@@ -107,20 +108,22 @@ export default function RequestDemoPage() {
                 <CheckCircle className="h-12 w-12" style={{ color: "var(--rd-emerald-600)" }} />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>Demo Request Submitted!</CardTitle>
+            <CardTitle className="text-2xl font-bold" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
+              {t("requestDemo.submittedTitle")}
+            </CardTitle>
             <CardDescription style={{ color: "var(--rd-text-secondary)" }}>
-              Thank you for your interest. We'll review your request and get back to you soon.
+              {t("requestDemo.submittedSubtitle")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="p-4 rounded-xl" style={{ background: "var(--rd-bg-subtle)" }}>
               <p className="text-sm mb-2 font-semibold" style={{ color: "var(--rd-text-heading)" }}>
-                What happens next?
+                {t("requestDemo.whatsNextTitle")}
               </p>
               <ul className="text-sm space-y-1 list-disc list-inside" style={{ color: "var(--rd-text-secondary)" }}>
-                <li>Our team will review your demo request</li>
-                <li>We'll contact you within 24-48 hours</li>
-                <li>You'll get access to a demo account with sample data</li>
+                {(t("requestDemo.whatsNext", { returnObjects: true }) as string[]).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
               </ul>
             </div>
             <div className="flex flex-col gap-2">
@@ -128,7 +131,7 @@ export default function RequestDemoPage() {
                 onClick={() => router.push("/")}
                 className="w-full"
               >
-                Return to Homepage
+                {t("requestDemo.returnHome")}
               </Button>
               {loggedIn && (
                 <Button
@@ -136,7 +139,7 @@ export default function RequestDemoPage() {
                   onClick={() => router.push("/workspace")}
                   className="w-full"
                 >
-                  Go to Workspace
+                  {t("requestDemo.goWorkspace")}
                 </Button>
               )}
             </div>
@@ -149,9 +152,9 @@ export default function RequestDemoPage() {
   return (
     <div className="min-h-screen" style={{ background: "var(--rd-bg-page)", fontFamily: "var(--rd-font-body)" }}>
       <PageHero
-        badge="Request Demo"
-        title="Experience Opticini with Demo Data"
-        subtitle="Get access to a demo account with pre-loaded sample data to explore all features and capabilities of Opticini."
+        badge={t("requestDemo.heroBadge")}
+        title={t("requestDemo.heroTitle")}
+        subtitle={t("requestDemo.heroSubtitle")}
       />
       <div className="container mx-auto px-4 pt-16 pb-16 max-w-6xl">
         {/* Info Cards */}
@@ -161,9 +164,9 @@ export default function RequestDemoPage() {
             style={{ background: "var(--rd-bg-white)", borderColor: "var(--rd-border-light)" }}
           >
             <Building className="h-8 w-8 mx-auto mb-3" style={{ color: "var(--rd-blue-600)" }} />
-            <h3 className="font-semibold mb-2" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>Sample Data</h3>
+            <h3 className="font-semibold mb-2" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>{t("requestDemo.cards.sampleDataTitle")}</h3>
             <p className="text-sm" style={{ color: "var(--rd-text-secondary)" }}>
-              Explore real monitoring data, reports, and analytics from sample websites
+              {t("requestDemo.cards.sampleDataBody")}
             </p>
           </div>
           <div
@@ -171,9 +174,9 @@ export default function RequestDemoPage() {
             style={{ background: "var(--rd-bg-white)", borderColor: "var(--rd-border-light)" }}
           >
             <User className="h-8 w-8 mx-auto mb-3" style={{ color: "var(--rd-blue-600)" }} />
-            <h3 className="font-semibold mb-2" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>Full Access</h3>
+            <h3 className="font-semibold mb-2" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>{t("requestDemo.cards.fullAccessTitle")}</h3>
             <p className="text-sm" style={{ color: "var(--rd-text-secondary)" }}>
-              Access all features including AI analysis, monitoring, and reporting tools
+              {t("requestDemo.cards.fullAccessBody")}
             </p>
           </div>
           <div
@@ -181,9 +184,9 @@ export default function RequestDemoPage() {
             style={{ background: "var(--rd-bg-white)", borderColor: "var(--rd-border-light)" }}
           >
             <MessageSquare className="h-8 w-8 mx-auto mb-3" style={{ color: "var(--rd-blue-600)" }} />
-            <h3 className="font-semibold mb-2" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>Expert Support</h3>
+            <h3 className="font-semibold mb-2" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>{t("requestDemo.cards.expertSupportTitle")}</h3>
             <p className="text-sm" style={{ color: "var(--rd-text-secondary)" }}>
-              Get guidance from our team to help you make the most of your demo
+              {t("requestDemo.cards.expertSupportBody")}
             </p>
           </div>
         </div>
@@ -191,11 +194,11 @@ export default function RequestDemoPage() {
         {/* Demo Request Form */}
         <Card className="shadow-lg rounded-[18px] border-[1.5px]" style={{ borderColor: "var(--rd-border-light)" }}>
           <CardHeader>
-            <CardTitle>Request Demo Account</CardTitle>
+            <CardTitle>{t("requestDemo.formTitle")}</CardTitle>
             <CardDescription>
               {loggedIn 
-                ? `Signed in as ${user?.username || user?.email}. We'll use your account details.`
-                : "Sign in to pre-fill your information, or fill out the form manually."
+                ? t("requestDemo.formSignedIn", { user: user?.username || user?.email || "" })
+                : t("requestDemo.formAnonymous")
               }
             </CardDescription>
           </CardHeader>
@@ -210,14 +213,14 @@ export default function RequestDemoPage() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name *</Label>
+                  <Label htmlFor="name">{t("requestDemo.labels.fullName")}</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
                       id="name"
                       name="name"
                       type="text"
-                      placeholder="John Doe"
+                      placeholder={t("requestDemo.placeholders.name")}
                       value={formData.name}
                       onChange={handleChange}
                       className="pl-10"
@@ -228,14 +231,14 @@ export default function RequestDemoPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
+                  <Label htmlFor="email">{t("requestDemo.labels.email")}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
                       id="email"
                       name="email"
                       type="email"
-                      placeholder="john@example.com"
+                      placeholder={t("requestDemo.placeholders.email")}
                       value={formData.email}
                       onChange={handleChange}
                       className="pl-10"
@@ -248,14 +251,14 @@ export default function RequestDemoPage() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="company">Company / Organization</Label>
+                  <Label htmlFor="company">{t("requestDemo.labels.company")}</Label>
                   <div className="relative">
                     <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
                       id="company"
                       name="company"
                       type="text"
-                      placeholder="Acme Inc."
+                      placeholder={t("requestDemo.placeholders.company")}
                       value={formData.company}
                       onChange={handleChange}
                       className="pl-10"
@@ -265,7 +268,7 @@ export default function RequestDemoPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="role">Your Role *</Label>
+                  <Label htmlFor="role">{t("requestDemo.labels.role")}</Label>
                   <Select
                     value={formData.role}
                     onValueChange={(value) => handleSelectChange("role", value)}
@@ -273,23 +276,19 @@ export default function RequestDemoPage() {
                     disabled={loading}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your role" />
+                      <SelectValue placeholder={t("requestDemo.placeholders.role")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="CTO">CTO / Technical Director</SelectItem>
-                      <SelectItem value="Engineering Manager">Engineering Manager</SelectItem>
-                      <SelectItem value="Developer">Developer</SelectItem>
-                      <SelectItem value="DevOps">DevOps Engineer</SelectItem>
-                      <SelectItem value="Product Manager">Product Manager</SelectItem>
-                      <SelectItem value="Marketing">Marketing Manager</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      {(t("requestDemo.roleOptions", { returnObjects: true }) as { value: string; label: string }[]).map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="useCase">Primary Use Case *</Label>
+                <Label htmlFor="useCase">{t("requestDemo.labels.useCase")}</Label>
                 <Select
                   value={formData.useCase}
                   onValueChange={(value) => handleSelectChange("useCase", value)}
@@ -297,27 +296,22 @@ export default function RequestDemoPage() {
                   disabled={loading}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="What do you want to use Opticini for?" />
+                    <SelectValue placeholder={t("requestDemo.placeholders.useCase")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Website Monitoring">Website Monitoring</SelectItem>
-                    <SelectItem value="Performance Analysis">Performance Analysis</SelectItem>
-                    <SelectItem value="Security Auditing">Security Auditing</SelectItem>
-                    <SelectItem value="SEO Monitoring">SEO Monitoring</SelectItem>
-                    <SelectItem value="API Monitoring">API Monitoring</SelectItem>
-                    <SelectItem value="Multi-site Management">Multi-site Management</SelectItem>
-                    <SelectItem value="Team Collaboration">Team Collaboration</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    {(t("requestDemo.useCaseOptions", { returnObjects: true }) as { value: string; label: string }[]).map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="message">Additional Information</Label>
+                <Label htmlFor="message">{t("requestDemo.labels.message")}</Label>
                 <Textarea
                   id="message"
                   name="message"
-                  placeholder="Tell us more about your needs, timeline, or any specific features you'd like to explore..."
+                  placeholder={t("requestDemo.placeholders.message")}
                   value={formData.message}
                   onChange={handleChange}
                   rows={4}
@@ -334,12 +328,10 @@ export default function RequestDemoPage() {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Submitting...
+                    {t("requestDemo.submitting")}
                   </>
                 ) : (
-                  <>
-                    Submit Demo Request
-                  </>
+                  <>{t("requestDemo.submit")}</>
                 )}
               </Button>
             </form>

@@ -1,19 +1,36 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Calendar, User, Clock, ArrowRight } from 'lucide-react';
+import { Search, Calendar, User, Clock } from 'lucide-react';
 import { fetchFeaturedPosts, fetchRecentPosts, fetchCategories, fetchTags, type BlogPost, type Category, type Tag } from '@/lib/api/blog';
 import { format } from 'date-fns';
 import { PageHero } from '@/components/page-hero';
 import { PageLayout } from '@/components/page-layout';
+import { PUBLIC_PAGES_EN } from '@/lib/i18n/public-pages-en';
+
+const BLOG_EN = PUBLIC_PAGES_EN.blog;
 
 export default function BlogPage() {
+  const { t } = useTranslation();
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  const tr = (key: string, fallback: string) => (hydrated ? t(key) : fallback);
+
+  const minReadLabel = (count: number) =>
+    hydrated
+      ? t('blog.minRead', { count })
+      : BLOG_EN.minRead.replace(/\{\{count\}\}/g, String(count));
   const router = useRouter();
   const [featuredPosts, setFeaturedPosts] = useState<BlogPost[]>([]);
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
@@ -87,7 +104,7 @@ export default function BlogPage() {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--rd-blue-600)] mx-auto mb-4"></div>
-            <p style={{ color: "var(--rd-text-secondary)" }}>Loading blog posts...</p>
+            <p style={{ color: "var(--rd-text-secondary)" }}>{tr("blog.loading", BLOG_EN.loading)}</p>
           </div>
         </div>
       </PageLayout>
@@ -97,9 +114,9 @@ export default function BlogPage() {
   return (
     <PageLayout>
       <PageHero
-        badge="Resources"
-        title="Blog"
-        subtitle="Insights, tips, and updates about website performance, SEO, and digital marketing"
+        badge={tr("blog.heroBadge", BLOG_EN.heroBadge)}
+        title={tr("blog.heroTitle", BLOG_EN.heroTitle)}
+        subtitle={tr("blog.heroSubtitle", BLOG_EN.heroSubtitle)}
       />
       <div className="container mx-auto px-4 pt-16 pb-16 max-w-7xl" style={{ background: "var(--rd-bg-page)" }}>
         {/* Search */}
@@ -108,7 +125,7 @@ export default function BlogPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5" style={{ color: "var(--rd-text-muted)" }} />
               <Input
-                placeholder="Search posts..."
+                placeholder={tr("blog.searchPlaceholder", BLOG_EN.searchPlaceholder)}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -116,7 +133,7 @@ export default function BlogPage() {
                 style={{ borderColor: "var(--rd-border-light)" }}
               />
             </div>
-            <Button onClick={handleSearch} className="rounded-lg font-semibold" style={{ background: "var(--rd-blue-600)", color: "#fff" }}>Search</Button>
+            <Button onClick={handleSearch} className="rounded-lg font-semibold" style={{ background: "var(--rd-blue-600)", color: "#fff" }}>{tr("blog.search", BLOG_EN.search)}</Button>
           </div>
         </div>
 
@@ -126,7 +143,7 @@ export default function BlogPage() {
             {/* Featured Posts */}
             {featuredPosts.length > 0 && (
               <div>
-                <h2 className="text-2xl font-bold mb-6" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>Featured Posts</h2>
+                <h2 className="text-2xl font-bold mb-6" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{tr("blog.featuredPosts", BLOG_EN.featuredPosts)}</h2>
                 <div className="space-y-6">
                   {featuredPosts.map((post) => (
                     <div key={post.id} className="bg-white border-[1.5px] rounded-[18px] overflow-hidden transition-all hover:border-[#93c5fd] hover:shadow-lg">
@@ -148,7 +165,7 @@ export default function BlogPage() {
                                 {post.category && (
                                   <Badge variant="outline" style={{ borderColor: "var(--rd-border-light)" }}>{post.category.name}</Badge>
                                 )}
-                                <Badge style={{ background: "var(--rd-blue-600)", color: "#fff" }}>Featured</Badge>
+                                <Badge style={{ background: "var(--rd-blue-600)", color: "#fff" }}>{tr("blog.featuredBadge", BLOG_EN.featuredBadge)}</Badge>
                               </div>
                               <h3 className="text-xl font-semibold mb-2 hover:text-[var(--rd-blue-600)] transition-colors" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>
                                 {post.title}
@@ -171,7 +188,7 @@ export default function BlogPage() {
                                 )}
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-4 w-4" />
-                                  {post.read_time} min read
+                                  {minReadLabel(post.read_time)}
                                 </span>
                               </div>
                             </div>
@@ -187,7 +204,7 @@ export default function BlogPage() {
             {/* Recent Posts */}
             {recentPosts.length > 0 && (
               <div>
-                <h2 className="text-2xl font-bold mb-6" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>Recent Posts</h2>
+                <h2 className="text-2xl font-bold mb-6" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{tr("blog.recentPosts", BLOG_EN.recentPosts)}</h2>
                 <div className="space-y-6">
                   {recentPosts.map((post) => (
                     <div key={post.id} className="bg-white border-[1.5px] rounded-[18px] overflow-hidden transition-all hover:border-[#93c5fd] hover:shadow-lg" style={{ borderColor: "var(--rd-border-light)" }}>
@@ -231,7 +248,7 @@ export default function BlogPage() {
                                 )}
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-4 w-4" />
-                                  {post.read_time} min read
+                                  {minReadLabel(post.read_time)}
                                 </span>
                               </div>
                             </div>
@@ -246,7 +263,7 @@ export default function BlogPage() {
 
             {featuredPosts.length === 0 && recentPosts.length === 0 && (
               <div className="bg-white border-[1.5px] rounded-[18px] py-16 px-6 text-center" style={{ borderColor: "var(--rd-border-light)" }}>
-                <p className="text-lg" style={{ color: "var(--rd-text-secondary)" }}>No blog posts available yet.</p>
+                <p className="text-lg" style={{ color: "var(--rd-text-secondary)" }}>{tr("blog.noPosts", BLOG_EN.noPosts)}</p>
               </div>
             )}
           </div>
@@ -257,7 +274,7 @@ export default function BlogPage() {
             {/* Categories */}
             {categories.length > 0 && (
               <div className="bg-white border-[1.5px] rounded-[18px] p-6" style={{ borderColor: "var(--rd-border-light)" }}>
-                <h3 className="font-semibold mb-4" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>Categories</h3>
+                <h3 className="font-semibold mb-4" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{tr("blog.categories", BLOG_EN.categories)}</h3>
                 <div className="space-y-2">
                   {categories.map((category) => (
                     <Link
@@ -277,7 +294,7 @@ export default function BlogPage() {
             {/* Tags */}
             {tags.length > 0 && (
               <div className="bg-white border-[1.5px] rounded-[18px] p-6" style={{ borderColor: "var(--rd-border-light)" }}>
-                <h3 className="font-semibold mb-4" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>Tags</h3>
+                <h3 className="font-semibold mb-4" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--font-sora), sans-serif" }}>{tr("blog.tags", BLOG_EN.tags)}</h3>
                 <div className="flex flex-wrap gap-2">
                   {tags.map((tag) => (
                     <Link

@@ -1,7 +1,8 @@
 "use client"
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { getConsent } from '@/components/cookie-consent-banner'
 
 // Dynamically import PostHog to avoid SSR issues
 const PostHogProvider = dynamic(
@@ -15,93 +16,67 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'und
 export function PostHogProviderWrapper({ children }: { children: React.ReactNode }) {
   const [enabled, setEnabled] = useState(false)
   const [posthogClient, setPosthogClient] = useState<any>(null)
-  // Allow PostHog in development if explicitly enabled via env var
   const isDev = process.env.NODE_ENV === 'development'
   const allowInDev = process.env.NEXT_PUBLIC_POSTHOG_ENABLE_DEV === 'true'
 
-  useEffect(() => {
-    // Debug logging
-    console.log('[PostHog] Initialization check:', {
-      isDev,
-      allowInDev,
-      hasWindow: typeof window !== 'undefined',
-      shouldSkip: (isDev && !allowInDev) || typeof window === 'undefined'
-    })
-
-    // Skip if in dev mode AND not explicitly enabled for dev
-    if ((isDev && !allowInDev) || typeof window === 'undefined') {
-      console.log('[PostHog] Skipped:', isDev && !allowInDev ? 'Dev mode disabled' : 'No window object')
+  const tryInitPostHog = () => {
+    // GDPR: Only load PostHog when user has consented to analytics
+    const consent = getConsent()
+    if (consent && !consent.analytics) {
+      return
+    }
+    // Pending consent = no banner answer yet; don't load until user accepts
+    if (consent === null) {
       return
     }
 
-    console.log('[PostHog] Starting initialization...')
+    if ((isDev && !allowInDev) || typeof window === 'undefined') return
 
-    // Dynamically import posthog-js only on client side
     import('posthog-js').then((posthog) => {
-      // Skip site-config fetch on auth pages (login doesn't need it)
       const authPaths = ['/workspace/login', '/register', '/login']
       if (typeof window !== 'undefined' && authPaths.some((p) => window.location.pathname.startsWith(p))) {
         setEnabled(false)
         return
       }
-      console.log('[PostHog] Library loaded, fetching site config...')
-      
-      // Fetch server flag to decide if analytics should run
+
       fetch(`${API_BASE}/api/site-config/public/`)
-        .then(res => {
-          console.log('[PostHog] Site config response:', res.status)
-          return res.json()
-        })
+        .then(res => res.json())
         .then(data => {
           const allow = !!data?.enable_analytics
           const key = process.env.NEXT_PUBLIC_POSTHOG_KEY
           const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com'
-          
-          console.log('[PostHog] Config check:', {
-            allow,
-            hasKey: !!key,
-            keyLength: key?.length || 0,
-            keyPreview: key ? `${key.substring(0, 10)}...` : 'missing',
-            host,
-            isPlaceholder: key === 'your_posthog_project_api_key_here'
-          })
 
           if (allow && key && key !== 'your_posthog_project_api_key_here') {
             try {
-              console.log('[PostHog] Initializing with key and host:', { key: `${key.substring(0, 10)}...`, host })
               posthog.default.init(key, {
                 api_host: host,
                 person_profiles: 'identified_only',
                 capture_pageview: true,
                 capture_pageleave: true,
-                loaded: (posthog) => {
-                  console.log('[PostHog] ✅ Initialized successfully!')
-                }
+                respect_dnt: true,
               })
               setPosthogClient(posthog.default)
               setEnabled(true)
-              console.log('[PostHog] ✅ Enabled and ready')
             } catch (error) {
-              console.error('[PostHog] ❌ Initialization failed:', error)
+              console.error('[PostHog] Init failed:', error)
               setEnabled(false)
             }
           } else {
-            const reasons = []
-            if (!allow) reasons.push('Analytics not enabled in settings')
-            if (!key) reasons.push('API key missing')
-            if (key === 'your_posthog_project_api_key_here') reasons.push('API key is placeholder')
-            console.warn('[PostHog] ⚠️ Not initializing:', reasons.join(', '))
             setEnabled(false)
           }
         })
-        .catch((error) => {
-          console.error('[PostHog] ❌ Failed to fetch site config:', error)
-          setEnabled(false)
-        })
-    }).catch((error) => {
-      console.error('[PostHog] ❌ Failed to load posthog-js:', error)
-      setEnabled(false)
-    })
+        .catch(() => setEnabled(false))
+    }).catch(() => setEnabled(false))
+  }
+
+  useEffect(() => {
+    tryInitPostHog()
+
+    const onConsentUpdate = () => {
+      tryInitPostHog()
+    }
+    window.addEventListener('cookie-consent-updated', onConsentUpdate)
+    return () => window.removeEventListener('cookie-consent-updated', onConsentUpdate)
   }, [isDev, allowInDev])
 
   // Only skip PostHog provider if disabled or not initialized

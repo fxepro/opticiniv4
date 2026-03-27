@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,26 +14,10 @@ import { PageLayout } from "@/components/page-layout";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== "undefined" ? "" : "http://localhost:8000");
 
-const VERTICALS = [
-  { value: "nonprofits", label: "Nonprofits" },
-  { value: "startups", label: "Startups" },
-  { value: "smb", label: "SMB" },
-  { value: "government", label: "Government" },
-  { value: "healthcare", label: "Healthcare" },
-  { value: "fintech", label: "Fintech" },
-  { value: "education", label: "Education" },
-  { value: "other", label: "Other" },
-];
-
-const TIME_TO_START = [
-  { value: "immediately", label: "Immediately" },
-  { value: "30-days", label: "Within 30 days" },
-  { value: "90-days", label: "Within 90 days" },
-  { value: "6-months", label: "Within 6 months" },
-  { value: "exploring", label: "Exploring options" },
-];
-
 export default function ContactSalesPage() {
+  const { t } = useTranslation();
+  const VERTICALS = t("contactSales.verticals", { returnObjects: true }) as { value: string; label: string }[];
+  const TIME_TO_START = t("contactSales.timeToStart", { returnObjects: true }) as { value: string; label: string }[];
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -82,8 +67,8 @@ export default function ContactSalesPage() {
 
       if (response.ok && result.success) {
         toast({
-          title: "Message Sent",
-          description: "Our sales team will reach out within 24 hours.",
+          title: t("contactSales.toastSuccessTitle"),
+          description: t("contactSales.toastSuccessDesc"),
         });
         setFormData({
           name: "",
@@ -100,8 +85,8 @@ export default function ContactSalesPage() {
       }
     } catch {
       toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
+        title: t("contactSales.toastErrorTitle"),
+        description: t("contactSales.toastErrorDesc"),
         variant: "destructive",
       });
     } finally {
@@ -112,19 +97,19 @@ export default function ContactSalesPage() {
   return (
     <PageLayout>
       <PageHero
-        badge="Contact Sales"
-        title="Talk to Our Sales Team"
-        subtitle="Get in touch to discuss how Opticini can support your compliance and operational needs."
+        badge={t("contactSales.heroBadge")}
+        title={t("contactSales.heroTitle")}
+        subtitle={t("contactSales.heroSubtitle")}
       />
 
       <section className="pt-16 mt-12 py-12 px-4" style={{ background: "var(--rd-bg-white)" }}>
         <div className="max-w-2xl mx-auto">
           <div className="mb-10">
             <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
-              Tell us about your project
+              {t("contactSales.sectionTitle")}
             </h2>
             <p className="text-base" style={{ color: "var(--rd-text-secondary)" }}>
-              Share your details and we'll connect you with the right person to discuss pricing, implementation, and how Opticini fits your organization.
+              {t("contactSales.sectionSubtitle")}
             </p>
           </div>
 
@@ -135,7 +120,7 @@ export default function ContactSalesPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="name">Full Name *</Label>
+                  <Label htmlFor="name">{t("contactSales.labelName")}</Label>
                   <Input
                     id="name"
                     value={formData.name}
@@ -146,7 +131,7 @@ export default function ContactSalesPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="email">Email *</Label>
+                  <Label htmlFor="email">{t("contactSales.labelEmail")}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -161,7 +146,7 @@ export default function ContactSalesPage() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="company">Company / Organization *</Label>
+                  <Label htmlFor="company">{t("contactSales.labelCompany")}</Label>
                   <Input
                     id="company"
                     value={formData.company}
@@ -172,7 +157,7 @@ export default function ContactSalesPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">{t("contactSales.labelPhone")}</Label>
                   <Input
                     id="phone"
                     value={formData.phone}
@@ -184,12 +169,12 @@ export default function ContactSalesPage() {
               </div>
 
               <div>
-                <Label htmlFor="role">Your Role</Label>
+                <Label htmlFor="role">{t("contactSales.labelRole")}</Label>
                 <Input
                   id="role"
                   value={formData.role}
                   onChange={(e) => handleInputChange("role", e.target.value)}
-                  placeholder="e.g. CISO, Compliance Manager, IT Director"
+                  placeholder={t("contactSales.rolePlaceholder")}
                   className="mt-1 rounded-lg border-[1.5px]"
                   style={{ borderColor: "var(--rd-border-light)" }}
                 />
@@ -197,10 +182,10 @@ export default function ContactSalesPage() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="vertical">Industry / Vertical</Label>
+                  <Label htmlFor="vertical">{t("contactSales.labelVertical")}</Label>
                   <Select value={formData.vertical} onValueChange={(v) => handleInputChange("vertical", v)}>
                     <SelectTrigger className="mt-1 rounded-lg border-[1.5px]" style={{ borderColor: "var(--rd-border-light)" }}>
-                      <SelectValue placeholder="Select your industry" />
+                      <SelectValue placeholder={t("contactSales.verticalPlaceholder")} />
                     </SelectTrigger>
                     <SelectContent>
                       {VERTICALS.map((v) => (
@@ -212,10 +197,10 @@ export default function ContactSalesPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="timeToStart">When do you plan to start?</Label>
+                  <Label htmlFor="timeToStart">{t("contactSales.labelTimeline")}</Label>
                   <Select value={formData.timeToStart} onValueChange={(v) => handleInputChange("timeToStart", v)}>
                     <SelectTrigger className="mt-1 rounded-lg border-[1.5px]" style={{ borderColor: "var(--rd-border-light)" }}>
-                      <SelectValue placeholder="Select timeline" />
+                      <SelectValue placeholder={t("contactSales.timelinePlaceholder")} />
                     </SelectTrigger>
                     <SelectContent>
                       {TIME_TO_START.map((t) => (
@@ -229,14 +214,14 @@ export default function ContactSalesPage() {
               </div>
 
               <div>
-                <Label htmlFor="message">Tell us about your needs *</Label>
+                <Label htmlFor="message">{t("contactSales.labelMessage")}</Label>
                 <Textarea
                   id="message"
                   value={formData.message}
                   onChange={(e) => handleInputChange("message", e.target.value)}
                   required
                   rows={4}
-                  placeholder="Describe your compliance challenges, goals, or what you're looking to achieve..."
+                  placeholder={t("contactSales.messagePlaceholder")}
                   className="mt-1 rounded-lg border-[1.5px] resize-none"
                   style={{ borderColor: "var(--rd-border-light)" }}
                 />
@@ -251,12 +236,12 @@ export default function ContactSalesPage() {
                 {isSubmitting ? (
                   <>
                     <Clock className="h-5 w-5 mr-2 animate-spin" />
-                    Sending...
+                    {t("contactSales.sending")}
                   </>
                 ) : (
                   <>
                     <MessageCircle className="h-5 w-5 mr-2" />
-                    Contact Sales
+                    {t("contactSales.submit")}
                   </>
                 )}
               </Button>

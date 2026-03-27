@@ -219,16 +219,16 @@ export default function DashboardPage() {
             }}
           >
             <span className="w-[6px] h-[6px] rounded-full bg-[var(--rd-blue-500)] animate-pulse" />
-            Dashboard
+            {t("workspaceOverview.badge")}
           </div>
           <h1
             className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2"
             style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}
           >
-            Workspace Overview
+            {t("workspaceOverview.title")}
           </h1>
           <p className="text-base" style={{ color: "var(--rd-text-secondary)" }}>
-            Monitor audits, sites, and activity at a glance.
+            {t("workspaceOverview.subtitle")}
           </p>
         </div>
       </section>
