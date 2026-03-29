@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Calendar, User, Clock } from 'lucide-react';
-import { fetchFeaturedPosts, fetchRecentPosts, fetchCategories, fetchTags, type BlogPost, type Category, type Tag } from '@/lib/api/blog';
+import { fetchPublicPublishedPosts, fetchCategories, fetchTags, type BlogPost, type Category, type Tag } from '@/lib/api/blog';
 import { format } from 'date-fns';
 import { PageHero } from '@/components/page-hero';
 import { PageLayout } from '@/components/page-layout';
@@ -37,6 +37,7 @@ export default function BlogPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
+  const [postsError, setPostsError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -46,47 +47,45 @@ export default function BlogPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      // Use Promise.allSettled to handle partial failures gracefully
-      const results = await Promise.allSettled([
-        fetchFeaturedPosts(),
-        fetchRecentPosts(10),
+      setPostsError(null);
+
+      const [postsResult, categoriesResult, tagsResult] = await Promise.allSettled([
+        fetchPublicPublishedPosts({ page_size: 40 }),
         fetchCategories(),
         fetchTags(),
       ]);
-      
-      // Handle featured posts
-      if (results[0].status === 'fulfilled') {
-        setFeaturedPosts(results[0].value);
+
+      if (postsResult.status === 'fulfilled') {
+        const all = postsResult.value;
+        setFeaturedPosts(all.filter((p) => p.featured));
+        setRecentPosts(all.filter((p) => !p.featured));
       } else {
-        console.error('Error loading featured posts:', results[0].reason);
+        const msg =
+          postsResult.reason instanceof Error
+            ? postsResult.reason.message
+            : 'Could not load blog posts.';
+        console.error('Blog posts fetch failed:', postsResult.reason);
         setFeaturedPosts([]);
-      }
-      
-      // Handle recent posts
-      if (results[1].status === 'fulfilled') {
-        setRecentPosts(results[1].value);
-      } else {
-        console.error('Error loading recent posts:', results[1].reason);
         setRecentPosts([]);
+        setPostsError(msg);
       }
-      
-      // Handle categories
-      if (results[2].status === 'fulfilled') {
-        setCategories(results[2].value);
+
+      if (categoriesResult.status === 'fulfilled') {
+        setCategories(categoriesResult.value);
       } else {
-        console.error('Error loading categories:', results[2].reason);
+        console.error('Error loading categories:', categoriesResult.reason);
         setCategories([]);
       }
-      
-      // Handle tags
-      if (results[3].status === 'fulfilled') {
-        setTags(results[3].value);
+
+      if (tagsResult.status === 'fulfilled') {
+        setTags(tagsResult.value);
       } else {
-        console.error('Error loading tags:', results[3].reason);
+        console.error('Error loading tags:', tagsResult.reason);
         setTags([]);
       }
     } catch (error) {
       console.error('Error loading blog data:', error);
+      setPostsError(error instanceof Error ? error.message : 'Could not load blog.');
     } finally {
       setLoading(false);
     }
@@ -119,6 +118,20 @@ export default function BlogPage() {
         subtitle={tr("blog.heroSubtitle", BLOG_EN.heroSubtitle)}
       />
       <div className="container mx-auto px-4 pt-16 pb-16 max-w-7xl" style={{ background: "var(--rd-bg-page)" }}>
+        {postsError && (
+          <div
+            className="max-w-3xl mx-auto mb-8 rounded-lg border px-4 py-3 text-sm"
+            style={{
+              borderColor: "#fecaca",
+              background: "#fef2f2",
+              color: "#991b1b",
+            }}
+            role="alert"
+          >
+            <p className="font-semibold mb-1">Blog could not load</p>
+            <p className="opacity-90">{postsError}</p>
+          </div>
+        )}
         {/* Search */}
         <div className="max-w-2xl mx-auto mb-12 mt-12">
           <div className="flex gap-2">
@@ -261,9 +274,12 @@ export default function BlogPage() {
               </div>
             )}
 
-            {featuredPosts.length === 0 && recentPosts.length === 0 && (
+            {featuredPosts.length === 0 && recentPosts.length === 0 && !postsError && (
               <div className="bg-white border-[1.5px] rounded-[18px] py-16 px-6 text-center" style={{ borderColor: "var(--rd-border-light)" }}>
                 <p className="text-lg" style={{ color: "var(--rd-text-secondary)" }}>{tr("blog.noPosts", BLOG_EN.noPosts)}</p>
+                <p className="text-sm mt-3" style={{ color: "var(--rd-text-muted)" }}>
+                  Posts must be <strong>Published</strong> on the production database (Railway). Drafts only show in the workspace.
+                </p>
               </div>
             )}
           </div>

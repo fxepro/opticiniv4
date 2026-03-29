@@ -5,8 +5,9 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  # Blog and other API calls need the Django URL (set in Netlify UI → Environment variables):
-  # NEXT_PUBLIC_API_BASE_URL=https://<your-service>.up.railway.app
+  # Baked into the client bundle at build time — public blog + API calls hit Railway.
+  NEXT_PUBLIC_API_BASE_URL = "https://opticiniv4-backend-opticini-dev.up.railway.app"
+  NEXT_PUBLIC_APP_URL = "https://opticini.com"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

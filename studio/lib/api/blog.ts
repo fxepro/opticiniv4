@@ -5,8 +5,9 @@
 
 import { getApiBaseUrl } from '../api-config';
 
+/** No trailing slash — avoids `//api/...` when concatenating paths. */
 function getAPI_BASE(): string {
-  return getApiBaseUrl();
+  return getApiBaseUrl().replace(/\/+$/, '');
 }
 
 // Types
@@ -279,17 +280,41 @@ export async function deleteBlogPost(id: number): Promise<void> {
   }
 }
 
-export async function fetchFeaturedPosts(): Promise<BlogPost[]> {
-  // Public endpoint
+/**
+ * All published posts for the public blog index (single request).
+ * Uses `isPublic: true` so a stale `access_token` in localStorage never causes 401 on the marketing site.
+ */
+export async function fetchPublicPublishedPosts(options?: {
+  page_size?: number;
+}): Promise<BlogPost[]> {
+  const pageSize = options?.page_size ?? 30;
   const API_BASE = getAPI_BASE();
-  const response = await makeRequest(`${API_BASE}/api/blog/posts/featured/`, {}, true);
+  const qs = new URLSearchParams({
+    status: 'published',
+    ordering: '-published_at',
+    page_size: String(pageSize),
+    page: '1',
+  });
+  const path = API_BASE ? `${API_BASE}/api/blog/posts/` : '/api/blog/posts/';
+  const url = `${path}?${qs.toString()}`;
+  const response = await makeRequest(url, {}, true);
+  const data: BlogPostListResponse = await response.json();
+  return Array.isArray(data.results) ? data.results : [];
+}
+
+export async function fetchFeaturedPosts(): Promise<BlogPost[]> {
+  const API_BASE = getAPI_BASE();
+  const path = API_BASE ? `${API_BASE}/api/blog/posts/featured/` : '/api/blog/posts/featured/';
+  const response = await makeRequest(path, {}, true);
   return response.json();
 }
 
 export async function fetchRecentPosts(limit: number = 10): Promise<BlogPost[]> {
-  // Public endpoint
   const API_BASE = getAPI_BASE();
-  const response = await makeRequest(`${API_BASE}/api/blog/posts/recent/?limit=${limit}`, {}, true);
+  const path = API_BASE
+    ? `${API_BASE}/api/blog/posts/recent/?limit=${limit}`
+    : `/api/blog/posts/recent/?limit=${limit}`;
+  const response = await makeRequest(path, {}, true);
   return response.json();
 }
 
