@@ -60,6 +60,10 @@ class BlogPost(models.Model):
     tags = models.ManyToManyField(Tag, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     featured = models.BooleanField(default=False)
+    show_author = models.BooleanField(
+        default=True,
+        help_text='When enabled, the author name appears in the post header on the public blog.',
+    )
     published_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -5,6 +5,7 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "/bin/sh -c \"python manage.py migrate core 0025 --noinput; python manage.py migrate core 0026 --fake --noinput; python manage.py migrate --noinput; gunicorn core.wsgi:application --bind 0.0.0.0:${PORT:-8080}\""
+# set -eu: if any migrate step fails, do not start Gunicorn (avoids live 500s on schema mismatch).
+startCommand = "/bin/sh -c \"set -eu; python manage.py migrate core 0025 --noinput; python manage.py migrate core 0026 --fake --noinput; python manage.py migrate --noinput; exec gunicorn core.wsgi:application --bind 0.0.0.0:${PORT:-8080}\""
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

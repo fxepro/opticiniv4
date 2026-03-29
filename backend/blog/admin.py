@@ -31,7 +31,7 @@ class BlogPostAdmin(admin.ModelAdmin):
             'fields': ('title', 'slug', 'excerpt', 'content', 'featured_image')
         }),
         ('Metadata', {
-            'fields': ('author', 'category', 'tags', 'status', 'featured', 'language')
+            'fields': ('author', 'category', 'tags', 'status', 'featured', 'show_author', 'language')
         }),
         ('Publishing', {
             'fields': ('published_at', 'created_at', 'updated_at')

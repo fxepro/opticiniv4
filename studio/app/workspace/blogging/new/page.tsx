@@ -31,6 +31,7 @@ export default function NewPostPage() {
     category_id: null as number | null,
     status: 'draft' as 'draft' | 'published' | 'archived',
     featured: false,
+    show_author: true,
     meta_title: '',
     meta_description: '',
     meta_keywords: '',
@@ -238,6 +239,16 @@ export default function NewPostPage() {
                 />
                 <Label htmlFor="featured" className="cursor-pointer">
                   Featured Post
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="show_author"
+                  checked={formData.show_author}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, show_author: !!checked }))}
+                />
+                <Label htmlFor="show_author" className="cursor-pointer">
+                  Show writer on public post
                 </Label>
               </div>
               <div>

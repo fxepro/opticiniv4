@@ -69,7 +69,7 @@ class BlogPostListSerializer(serializers.ModelSerializer):
         model = BlogPost
         fields = [
             'id', 'title', 'slug', 'excerpt', 'featured_image_url',
-            'author', 'category', 'tags', 'status', 'featured',
+            'author', 'category', 'tags', 'status', 'featured', 'show_author',
             'published_at', 'created_at', 'updated_at',
             'views_count', 'read_time', 'language'
         ]
@@ -105,7 +105,7 @@ class BlogPostSerializer(serializers.ModelSerializer):
             'id', 'title', 'slug', 'excerpt', 'content',
             'featured_image', 'featured_image_url', 'og_image', 'og_image_url',
             'author', 'category', 'category_id', 'tags', 'tag_ids',
-            'status', 'featured', 'published_at', 'created_at', 'updated_at',
+            'status', 'featured', 'show_author', 'published_at', 'created_at', 'updated_at',
             'views_count', 'read_time',
             'meta_title', 'meta_description', 'meta_keywords',
             'language', 'translations'
@@ -195,7 +195,7 @@ class BlogPostCreateSerializer(serializers.ModelSerializer):
         model = BlogPost
         fields = [
             'title', 'slug', 'excerpt', 'content', 'featured_image',
-            'category_id', 'tag_ids', 'status', 'featured',
+            'category_id', 'tag_ids', 'status', 'featured', 'show_author',
             'meta_title', 'meta_description', 'meta_keywords', 'og_image',
             'language', 'translations'
         ]
