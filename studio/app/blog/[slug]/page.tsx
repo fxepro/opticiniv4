@@ -11,33 +11,6 @@ import { Calendar, User, Clock, ArrowLeft, Share2 } from 'lucide-react';
 import { fetchBlogPostBySlug, incrementViewCount, fetchRecentPosts, type BlogPost } from '@/lib/api/blog';
 import { format } from 'date-fns';
 
-/** Collapse whitespace and strip HTML for comparing excerpt to rich-text blocks. */
-function normalizeComparableText(s: string): string {
-  return s
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
-}
-
-/** Remove leading &lt;p&gt;/&lt;div&gt; nodes whose text matches the plain excerpt (duplicate lead-in). */
-function removeLeadingBlocksMatchingExcerpt(body: HTMLElement, excerptPlain: string): void {
-  const exNorm = normalizeComparableText(excerptPlain);
-  if (!exNorm) return;
-  for (;;) {
-    const first = body.firstElementChild;
-    if (!first) break;
-    const tag = first.tagName.toLowerCase();
-    if (tag !== 'p' && tag !== 'div') break;
-    const blockNorm = normalizeComparableText(first.textContent || '');
-    if (blockNorm === exNorm) {
-      first.remove();
-      continue;
-    }
-    break;
-  }
-}
-
 export default function BlogPostPage() {
   const params = useParams();
   const router = useRouter();
@@ -54,9 +27,6 @@ export default function BlogPostPage() {
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(post.content, 'text/html');
-    if (post.excerpt?.trim()) {
-      removeLeadingBlocksMatchingExcerpt(doc.body, post.excerpt);
-    }
     const headingElements = doc.querySelectorAll('h1, h2, h3');
     
     const headingsList = Array.from(headingElements).map((heading, index) => {
@@ -74,7 +44,7 @@ export default function BlogPostPage() {
       headings: headingsList,
       processedContent: doc.body.innerHTML,
     };
-  }, [post?.content, post?.excerpt]);
+  }, [post?.content]);
 
   useEffect(() => {
     if (slug) {
@@ -222,23 +192,21 @@ export default function BlogPostPage() {
           <h1 className="text-h3-dynamic font-bold mb-4">{post.title}</h1>
 
           {/* Meta Information */}
-          <div className="flex flex-wrap items-center gap-6 text-muted-foreground mb-6 pb-6 border-b">
-            {post.show_author !== false && (
-              <div className="flex items-center gap-2">
-                {post.author.avatar_url ? (
-                  <Image
-                    src={post.author.avatar_url}
-                    alt={post.author.full_name || post.author.username}
-                    width={32}
-                    height={32}
-                    className="rounded-full"
-                  />
-                ) : (
-                  <User className="h-5 w-5" />
-                )}
-                <span>{post.author.full_name || post.author.username}</span>
-              </div>
-            )}
+          <div className="flex items-center gap-6 text-muted-foreground mb-6 pb-6 border-b">
+            <div className="flex items-center gap-2">
+              {post.author.avatar_url ? (
+                <Image
+                  src={post.author.avatar_url}
+                  alt={post.author.full_name || post.author.username}
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+              ) : (
+                <User className="h-5 w-5" />
+              )}
+              <span>{post.author.full_name || post.author.username}</span>
+            </div>
             {post.published_at && (
               <div className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
@@ -267,13 +235,10 @@ export default function BlogPostPage() {
             </div>
           )}
 
-          {/* Excerpt (body HTML has duplicate lead paragraphs stripped when they match excerpt) */}
-          {post.excerpt?.trim() && (
-            <div className="mb-8 pb-8 border-b" style={{ borderColor: 'var(--rd-border-light)' }}>
-              <p className="text-h4-dynamic text-muted-foreground font-medium m-0">
-                {post.excerpt}
-              </p>
-            </div>
+          {post.excerpt && (
+            <p className="text-h4-dynamic text-muted-foreground mb-8 font-medium">
+              {post.excerpt}
+            </p>
           )}
 
           {/* Content */}
