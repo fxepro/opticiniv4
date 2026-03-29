@@ -47,14 +47,14 @@ const resources = {
   he: { translation: withFullI18n(heTranslations as Record<string, unknown>, 'he') },
 }
 
-// Check if we're in browser environment before using LanguageDetector
-const isBrowser = typeof window !== 'undefined'
-
-// Initialize i18n
-const initConfig: any = {
+/**
+ * Initial language must match SSR (`en`) so the first client render hydrates without text mismatches.
+ * User preference (localStorage / navigator) is applied after mount in `I18nProvider`.
+ */
+const initConfig = {
   resources,
   fallbackLng: 'en',
-  lng: isBrowser ? undefined : 'en', // Force 'en' during SSR
+  lng: 'en',
   defaultNS: 'translation',
   interpolation: {
     escapeValue: false, // React already escapes values
@@ -62,26 +62,6 @@ const initConfig: any = {
   react: {
     useSuspense: false, // Disable suspense for better compatibility
   },
-}
-
-// Only add LanguageDetector and detection config on client side
-if (isBrowser) {
-  try {
-    // Dynamically import LanguageDetector to avoid SSR issues
-    const LanguageDetector = require('i18next-browser-languagedetector')
-    i18n.use(LanguageDetector.default || LanguageDetector)
-    initConfig.detection = {
-      // Order of detection methods
-      order: ['localStorage', 'navigator', 'htmlTag'],
-      // Keys to lookup language from
-      lookupLocalStorage: 'preferred_language',
-      // Cache user language
-      caches: ['localStorage'],
-    }
-  } catch (e) {
-    // LanguageDetector not available, continue without it
-    console.warn('LanguageDetector not available, using default language')
-  }
 }
 
 i18n.use(initReactI18next).init(initConfig)

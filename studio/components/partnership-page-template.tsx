@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle, Clock, MessageCircle } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import { PageHero } from "@/components/page-hero";
 import { PageLayout } from "@/components/page-layout";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import type { PartnershipContent, PartnershipSection } from "@/lib/partnerships-data";
+import { usePartnershipPageContent } from "@/lib/i18n/use-footer-linked-page-content";
+import { PUBLIC_PAGES_EN } from "@/lib/i18n/public-pages-en";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== "undefined" ? "" : "http://localhost:8000");
 
@@ -19,8 +22,11 @@ const sectionStyles = {
   bullets: "py-16 px-4 border-b",
   closing: "py-16 px-4",
 };
+const FLP_EN = PUBLIC_PAGES_EN.footerLinkedPages;
 
 export function PartnershipPageTemplate({ content }: { content: PartnershipContent }) {
+  const { t } = useTranslation();
+  const [hydrated, setHydrated] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -30,6 +36,13 @@ export function PartnershipPageTemplate({ content }: { content: PartnershipConte
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const tr = (key: string, fallback: string) => (hydrated ? t(key) : fallback);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  const page = usePartnershipPageContent(content);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -42,8 +55,8 @@ export function PartnershipPageTemplate({ content }: { content: PartnershipConte
     try {
       const payload = {
         ...formData,
-        service: `partnership-${content.slug}`,
-        message: `[${content.title} partnership inquiry]\n\n${formData.message}`,
+        service: `partnership-${page.slug}`,
+        message: `[${page.title} partnership inquiry]\n\n${formData.message}`,
       };
 
       const response = await fetch(`${API_BASE}/api/consultation/`, {
@@ -56,8 +69,8 @@ export function PartnershipPageTemplate({ content }: { content: PartnershipConte
 
       if (response.ok && result.success) {
         toast({
-          title: "Inquiry Submitted",
-          description: "We'll get back to you within 24 hours.",
+          title: tr("footerLinkedPages.toastInquirySubmittedTitle", FLP_EN.toastInquirySubmittedTitle),
+          description: tr("footerLinkedPages.toastInquirySubmittedDesc", FLP_EN.toastInquirySubmittedDesc),
         });
         setFormData({ name: "", email: "", company: "", phone: "", message: "" });
       } else {
@@ -65,8 +78,8 @@ export function PartnershipPageTemplate({ content }: { content: PartnershipConte
       }
     } catch {
       toast({
-        title: "Error",
-        description: "Failed to submit inquiry. Please try again.",
+        title: tr("footerLinkedPages.toastErrorTitle", FLP_EN.toastErrorTitle),
+        description: tr("footerLinkedPages.toastErrorDesc", FLP_EN.toastErrorDesc),
         variant: "destructive",
       });
     } finally {
@@ -74,21 +87,21 @@ export function PartnershipPageTemplate({ content }: { content: PartnershipConte
     }
   };
 
-  const showInquiryForm = content.slug !== "affiliates";
+  const showInquiryForm = page.slug !== "affiliates";
 
   return (
     <PageLayout>
       <PageHero
-        badge="Partnerships"
-        title={content.title}
-        subtitle={content.subtitle}
+        badge={tr("footerLinkedPages.partnershipsBadge", FLP_EN.partnershipsBadge)}
+        title={page.title}
+        subtitle={page.subtitle}
       />
 
       {/* Intro */}
       <section className="pt-16 mt-12 py-12 px-4 border-b" style={{ background: "var(--rd-bg-white)", borderColor: "var(--rd-border-light)" }}>
         <div className="max-w-3xl mx-auto">
-          {content.intro.map((p, i) => (
-            <p key={i} className={`text-base leading-relaxed ${i < content.intro.length - 1 ? "mb-4" : ""}`} style={{ color: "var(--rd-text-secondary)" }}>
+          {page.intro.map((p, i) => (
+            <p key={i} className={`text-base leading-relaxed ${i < page.intro.length - 1 ? "mb-4" : ""}`} style={{ color: "var(--rd-text-secondary)" }}>
               {p}
             </p>
           ))}
@@ -96,7 +109,7 @@ export function PartnershipPageTemplate({ content }: { content: PartnershipConte
       </section>
 
       {/* Sections */}
-      {content.sections.map((section, idx) => (
+      {page.sections.map((section, idx) => (
         <SectionBlock key={idx} section={section} idx={idx} />
       ))}
 
@@ -106,10 +119,13 @@ export function PartnershipPageTemplate({ content }: { content: PartnershipConte
           <div className="container mx-auto max-w-2xl">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
-                Get in Touch
+                {tr("footerLinkedPages.inquiryTitle", FLP_EN.inquiryTitle)}
               </h2>
               <p className="text-xl" style={{ color: "var(--rd-text-secondary)" }}>
-                Interested in partnering with Opticini? Tell us about your organization and we&apos;ll reach out.
+                {tr(
+                  "footerLinkedPages.inquirySubtitlePartnership",
+                  FLP_EN.inquirySubtitlePartnership
+                )}
               </p>
             </div>
 
@@ -120,7 +136,7 @@ export function PartnershipPageTemplate({ content }: { content: PartnershipConte
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="name">Full Name *</Label>
+                    <Label htmlFor="name">{tr("footerLinkedPages.labelFullName", FLP_EN.labelFullName)}</Label>
                     <Input
                       id="name"
                       value={formData.name}
@@ -131,7 +147,7 @@ export function PartnershipPageTemplate({ content }: { content: PartnershipConte
                     />
                   </div>
                   <div>
-                    <Label htmlFor="email">Email *</Label>
+                    <Label htmlFor="email">{tr("footerLinkedPages.labelEmail", FLP_EN.labelEmail)}</Label>
                     <Input
                       id="email"
                       type="email"
@@ -145,7 +161,7 @@ export function PartnershipPageTemplate({ content }: { content: PartnershipConte
                 </div>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="company">Organization</Label>
+                    <Label htmlFor="company">{tr("footerLinkedPages.labelOrganization", FLP_EN.labelOrganization)}</Label>
                     <Input
                       id="company"
                       value={formData.company}
@@ -155,7 +171,7 @@ export function PartnershipPageTemplate({ content }: { content: PartnershipConte
                     />
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="phone">{tr("footerLinkedPages.labelPhone", FLP_EN.labelPhone)}</Label>
                     <Input
                       id="phone"
                       value={formData.phone}
@@ -166,14 +182,17 @@ export function PartnershipPageTemplate({ content }: { content: PartnershipConte
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="message">Tell us about your interest *</Label>
+                  <Label htmlFor="message">{tr("footerLinkedPages.labelInterest", FLP_EN.labelInterest)}</Label>
                   <Textarea
                     id="message"
                     value={formData.message}
                     onChange={(e) => handleInputChange("message", e.target.value)}
                     required
                     rows={4}
-                    placeholder="Describe your experience, services, or how you'd like to partner with Opticini..."
+                    placeholder={tr(
+                      "footerLinkedPages.placeholderPartnershipInterest",
+                      FLP_EN.placeholderPartnershipInterest
+                    )}
                     className="mt-1 rounded-lg border-[1.5px] resize-none"
                     style={{ borderColor: "var(--rd-border-light)" }}
                   />
@@ -187,12 +206,12 @@ export function PartnershipPageTemplate({ content }: { content: PartnershipConte
                   {isSubmitting ? (
                     <>
                       <Clock className="h-5 w-5 mr-2 animate-spin" />
-                      Submitting...
+                      {tr("footerLinkedPages.submitting", FLP_EN.submitting)}
                     </>
                   ) : (
                     <>
                       <MessageCircle className="h-5 w-5 mr-2" />
-                      Submit Inquiry
+                      {tr("footerLinkedPages.submitInquiry", FLP_EN.submitInquiry)}
                     </>
                   )}
                 </Button>
@@ -206,21 +225,21 @@ export function PartnershipPageTemplate({ content }: { content: PartnershipConte
       <section className="py-16 px-4 text-white" style={{ background: "linear-gradient(160deg, var(--rd-blue-700), var(--rd-blue-600), var(--rd-blue-500))" }}>
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ fontFamily: "var(--rd-font-heading)" }}>
-            {content.ctaText}
+            {page.ctaText}
           </h2>
           <p className="text-lg text-white/90 mb-8">
-            Get in touch to learn more about partnering with Opticini.
+            {tr("footerLinkedPages.ctaPartnershipSubtitle", FLP_EN.ctaPartnershipSubtitle)}
           </p>
           {showInquiryForm ? (
             <Button asChild size="lg" className="bg-white rounded-lg font-semibold hover:bg-white/95" style={{ color: "var(--rd-blue-700)" }}>
               <Link href="#inquiry">
-                {content.ctaText}
+                {page.ctaText}
               </Link>
             </Button>
           ) : (
             <Button asChild size="lg" className="bg-white rounded-lg font-semibold hover:bg-white/95" style={{ color: "var(--rd-blue-700)" }}>
-              <Link href={content.ctaHref}>
-                {content.ctaText}
+              <Link href={page.ctaHref}>
+                {page.ctaText}
               </Link>
             </Button>
           )}

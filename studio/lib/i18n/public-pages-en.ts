@@ -58,6 +58,41 @@ export const PUBLIC_PAGES_EN = {
       "Login failed. Please check your credentials.",
   },
 
+  footerLinkedPages: {
+    partnershipsBadge: "Partnerships",
+    frameworksBadge: "Compliance Frameworks",
+    inquiryTitle: "Get in Touch",
+    inquirySubtitlePartnership:
+      "Interested in partnering with Opticini? Tell us about your organization and we'll reach out.",
+    inquirySubtitleVertical:
+      "Interested in how Opticini can support {{title}}? Tell us about your organization and we'll reach out.",
+    labelFullName: "Full Name *",
+    labelEmail: "Email *",
+    labelOrganization: "Organization",
+    labelPhone: "Phone",
+    labelInterest: "Tell us about your interest *",
+    labelNeeds: "Tell us about your needs *",
+    placeholderPartnershipInterest:
+      "Describe your experience, services, or how you'd like to partner with Opticini...",
+    placeholderVerticalNeeds:
+      "Describe your compliance or operational challenges...",
+    submitting: "Submitting...",
+    submitInquiry: "Submit Inquiry",
+    toastInquirySubmittedTitle: "Inquiry Submitted",
+    toastInquirySubmittedDesc: "We'll get back to you within 24 hours.",
+    toastErrorTitle: "Error",
+    toastErrorDesc: "Failed to submit inquiry. Please try again.",
+    ctaPartnershipSubtitle:
+      "Get in touch to learn more about partnering with Opticini.",
+    ctaVerticalTitle: "Ready to simplify compliance?",
+    ctaVerticalSubtitle:
+      "See how Opticini helps {{title}} focus on their mission.",
+    ctaFrameworkTitle: "Ready to simplify {{title}} compliance?",
+    ctaFrameworkSubtitle:
+      "See how Opticini helps teams manage controls, evidence, and audit readiness.",
+    requestDemo: "Request Demo",
+  },
+
   blog: {
     heroBadge: "Resources",
     heroTitle: "Blog",

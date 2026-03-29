@@ -27,7 +27,7 @@ export default function BlogPostPage() {
     
     const parser = new DOMParser();
     const doc = parser.parseFromString(post.content, 'text/html');
-    const headingElements = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    const headingElements = doc.querySelectorAll('h1, h2, h3');
     
     const headingsList = Array.from(headingElements).map((heading, index) => {
       const id = `heading-${index}`;
@@ -268,8 +268,16 @@ export default function BlogPostPage() {
         {headings.length > 0 && (
           <aside className="lg:col-span-1">
             <div className="sticky top-24">
-              <div className="p-6 bg-white border-[1.5px] rounded-[18px] overflow-hidden" style={{ borderColor: "var(--rd-border-light)" }}>
-                <h3 className="text-h4-dynamic font-semibold mb-4">Table of Contents</h3>
+              <div
+                className="p-6 bg-white border-[1.5px] rounded-[18px] overflow-hidden"
+                style={{ borderColor: "var(--rd-border-light)" }}
+              >
+                <h3
+                  className="font-semibold mb-4"
+                  style={{ fontSize: "calc(var(--font-size-h4, 24px) * 0.75)" }}
+                >
+                  Table of Contents
+                </h3>
                 <nav className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
                   {headings.map((heading) => (
                     <a
@@ -279,14 +287,12 @@ export default function BlogPostPage() {
                         e.preventDefault();
                         scrollToHeading(heading.id);
                       }}
-                      className={`block text-sm transition-colors break-words ${
+                      className={`block text-sm leading-snug transition-colors break-words ${
                         heading.level === 1
                           ? 'font-semibold pl-0'
                           : heading.level === 2
                           ? 'pl-4'
-                          : heading.level === 3
-                          ? 'pl-8 text-muted-foreground'
-                          : 'pl-12 text-muted-foreground text-xs'
+                          : 'pl-8 text-muted-foreground'
                       } ${
                         activeHeading === heading.id
                           ? 'text-palette-primary font-medium'

@@ -1,9 +1,11 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Cookie, Settings, Shield, Eye, Database, AlertTriangle } from "lucide-react"
 import { CookiePreferencesButton } from "@/components/cookie-preferences-button"
+import { PUBLIC_PAGES_EN } from "@/lib/i18n/public-pages-en"
 
 type CookieCard = { title: string; body: string }
 type CookieBlock = { title: string; body: string; bullets: string[] }
@@ -81,9 +83,18 @@ const CATEGORY_STYLES = [
   },
 ] as const
 
+const COOKIE_FALLBACK = PUBLIC_PAGES_EN.cookies as unknown as CookiesPageI18n
+
 export default function CookiePolicyPage() {
   const { t } = useTranslation()
-  const i18nData = t("cookies", { returnObjects: true }) as CookiesPageI18n
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => setHydrated(true), [])
+
+  const fromT = t("cookies", { returnObjects: true })
+  const i18nData =
+    hydrated && fromT && typeof fromT === "object" && "title" in (fromT as object)
+      ? (fromT as CookiesPageI18n)
+      : COOKIE_FALLBACK
 
   return (
     <div className="container mx-auto px-4 py-8">

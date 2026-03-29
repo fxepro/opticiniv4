@@ -67,7 +67,8 @@ export function Footer() {
     setHydrated(true);
   }, []);
 
-  const tr = (key: string, fallback: string) => (hydrated ? t(key) : fallback);
+  const tr = (key: string, fallback: string) =>
+    hydrated ? String(t(key, { defaultValue: fallback })) : fallback;
 
   return (
     <footer style={{ fontFamily: "var(--rd-font-body)" }}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,9 +8,12 @@ import { Label } from "@/components/ui/label";
 import { CheckCircle, Clock, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { PageHero } from "@/components/page-hero";
 import { PageLayout } from "@/components/page-layout";
 import type { VerticalContent, VerticalSection } from "@/lib/verticals-data";
+import { useVerticalPageContent } from "@/lib/i18n/use-footer-linked-page-content";
+import { PUBLIC_PAGES_EN } from "@/lib/i18n/public-pages-en";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== "undefined" ? "" : "http://localhost:8000");
 
@@ -20,8 +23,11 @@ const sectionStyles = {
   bullets: "py-16 px-4 border-b",
   closing: "py-16 px-4",
 };
+const FLP_EN = PUBLIC_PAGES_EN.footerLinkedPages;
 
 export function VerticalPageTemplate({ content }: { content: VerticalContent }) {
+  const { t } = useTranslation();
+  const [hydrated, setHydrated] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -31,6 +37,13 @@ export function VerticalPageTemplate({ content }: { content: VerticalContent }) 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const tr = (key: string, fallback: string) => (hydrated ? t(key) : fallback);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  const page = useVerticalPageContent(content);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -43,8 +56,8 @@ export function VerticalPageTemplate({ content }: { content: VerticalContent }) 
     try {
       const payload = {
         ...formData,
-        service: `vertical-${content.slug}`,
-        message: `[${content.title} vertical inquiry]\n\n${formData.message}`,
+        service: `vertical-${page.slug}`,
+        message: `[${page.title} vertical inquiry]\n\n${formData.message}`,
       };
 
       const response = await fetch(`${API_BASE}/api/consultation/`, {
@@ -57,8 +70,8 @@ export function VerticalPageTemplate({ content }: { content: VerticalContent }) 
 
       if (response.ok && result.success) {
         toast({
-          title: "Inquiry Submitted",
-          description: "We'll get back to you within 24 hours.",
+          title: tr("footerLinkedPages.toastInquirySubmittedTitle", FLP_EN.toastInquirySubmittedTitle),
+          description: tr("footerLinkedPages.toastInquirySubmittedDesc", FLP_EN.toastInquirySubmittedDesc),
         });
         setFormData({ name: "", email: "", company: "", phone: "", message: "" });
       } else {
@@ -66,8 +79,8 @@ export function VerticalPageTemplate({ content }: { content: VerticalContent }) 
       }
     } catch {
       toast({
-        title: "Error",
-        description: "Failed to submit inquiry. Please try again.",
+        title: tr("footerLinkedPages.toastErrorTitle", FLP_EN.toastErrorTitle),
+        description: tr("footerLinkedPages.toastErrorDesc", FLP_EN.toastErrorDesc),
         variant: "destructive",
       });
     } finally {
@@ -78,16 +91,16 @@ export function VerticalPageTemplate({ content }: { content: VerticalContent }) 
   return (
     <PageLayout>
       <PageHero
-        badge={content.title}
-        title={content.title}
-        subtitle={content.subtitle}
+        badge={page.title}
+        title={page.title}
+        subtitle={page.subtitle}
       />
 
       {/* Intro */}
       <section className="pt-16 mt-12 py-12 px-4 border-b" style={{ background: "var(--rd-bg-white)", borderColor: "var(--rd-border-light)" }}>
         <div className="max-w-3xl mx-auto">
-          {content.intro.map((p, i) => (
-            <p key={i} className={`text-base leading-relaxed ${i < content.intro.length - 1 ? "mb-4" : ""}`} style={{ color: "var(--rd-text-secondary)" }}>
+          {page.intro.map((p, i) => (
+            <p key={i} className={`text-base leading-relaxed ${i < page.intro.length - 1 ? "mb-4" : ""}`} style={{ color: "var(--rd-text-secondary)" }}>
               {p}
             </p>
           ))}
@@ -95,7 +108,7 @@ export function VerticalPageTemplate({ content }: { content: VerticalContent }) 
       </section>
 
       {/* Sections */}
-      {content.sections.map((section, idx) => (
+      {page.sections.map((section, idx) => (
         <SectionBlock key={idx} section={section} idx={idx} />
       ))}
 
@@ -104,10 +117,12 @@ export function VerticalPageTemplate({ content }: { content: VerticalContent }) 
         <div className="container mx-auto max-w-2xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: "var(--rd-text-heading)", fontFamily: "var(--rd-font-heading)" }}>
-              Get in Touch
+              {tr("footerLinkedPages.inquiryTitle", FLP_EN.inquiryTitle)}
             </h2>
             <p className="text-xl" style={{ color: "var(--rd-text-secondary)" }}>
-              Interested in how Opticini can support {content.title}? Tell us about your organization and we'll reach out.
+              {hydrated
+                ? t("footerLinkedPages.inquirySubtitleVertical", { title: page.title })
+                : FLP_EN.inquirySubtitleVertical.replace("{{title}}", page.title)}
             </p>
           </div>
 
@@ -118,7 +133,7 @@ export function VerticalPageTemplate({ content }: { content: VerticalContent }) 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="name">Full Name *</Label>
+                  <Label htmlFor="name">{tr("footerLinkedPages.labelFullName", FLP_EN.labelFullName)}</Label>
                   <Input
                     id="name"
                     value={formData.name}
@@ -129,7 +144,7 @@ export function VerticalPageTemplate({ content }: { content: VerticalContent }) 
                   />
                 </div>
                 <div>
-                  <Label htmlFor="email">Email *</Label>
+                  <Label htmlFor="email">{tr("footerLinkedPages.labelEmail", FLP_EN.labelEmail)}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -143,7 +158,7 @@ export function VerticalPageTemplate({ content }: { content: VerticalContent }) 
               </div>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="company">Organization</Label>
+                  <Label htmlFor="company">{tr("footerLinkedPages.labelOrganization", FLP_EN.labelOrganization)}</Label>
                   <Input
                     id="company"
                     value={formData.company}
@@ -153,7 +168,7 @@ export function VerticalPageTemplate({ content }: { content: VerticalContent }) 
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">{tr("footerLinkedPages.labelPhone", FLP_EN.labelPhone)}</Label>
                   <Input
                     id="phone"
                     value={formData.phone}
@@ -164,14 +179,17 @@ export function VerticalPageTemplate({ content }: { content: VerticalContent }) 
                 </div>
               </div>
               <div>
-                <Label htmlFor="message">Tell us about your needs *</Label>
+                <Label htmlFor="message">{tr("footerLinkedPages.labelNeeds", FLP_EN.labelNeeds)}</Label>
                 <Textarea
                   id="message"
                   value={formData.message}
                   onChange={(e) => handleInputChange("message", e.target.value)}
                   required
                   rows={4}
-                  placeholder="Describe your compliance or operational challenges..."
+                  placeholder={tr(
+                    "footerLinkedPages.placeholderVerticalNeeds",
+                    FLP_EN.placeholderVerticalNeeds
+                  )}
                   className="mt-1 rounded-lg border-[1.5px] resize-none"
                   style={{ borderColor: "var(--rd-border-light)" }}
                 />
@@ -185,12 +203,12 @@ export function VerticalPageTemplate({ content }: { content: VerticalContent }) 
                 {isSubmitting ? (
                   <>
                     <Clock className="h-5 w-5 mr-2 animate-spin" />
-                    Submitting...
+                    {tr("footerLinkedPages.submitting", FLP_EN.submitting)}
                   </>
                 ) : (
                   <>
                     <MessageCircle className="h-5 w-5 mr-2" />
-                    Submit Inquiry
+                    {tr("footerLinkedPages.submitInquiry", FLP_EN.submitInquiry)}
                   </>
                 )}
               </Button>
@@ -203,14 +221,16 @@ export function VerticalPageTemplate({ content }: { content: VerticalContent }) 
       <section className="py-16 px-4 text-white" style={{ background: "linear-gradient(160deg, var(--rd-blue-700), var(--rd-blue-600), var(--rd-blue-500))" }}>
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ fontFamily: "var(--rd-font-heading)" }}>
-            Ready to simplify compliance?
+            {tr("footerLinkedPages.ctaVerticalTitle", FLP_EN.ctaVerticalTitle)}
           </h2>
           <p className="text-lg text-white/90 mb-8">
-            See how Opticini helps {content.title} focus on their mission.
+            {hydrated
+              ? t("footerLinkedPages.ctaVerticalSubtitle", { title: page.title })
+              : FLP_EN.ctaVerticalSubtitle.replace("{{title}}", page.title)}
           </p>
           <Button asChild size="lg" className="bg-white rounded-lg font-semibold hover:bg-white/95" style={{ color: "var(--rd-blue-700)" }}>
             <Link href="/request-demo">
-              Request Demo
+              {tr("footerLinkedPages.requestDemo", FLP_EN.requestDemo)}
             </Link>
           </Button>
         </div>

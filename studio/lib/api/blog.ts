@@ -163,8 +163,8 @@ export async function fetchBlogPosts(params?: {
   
   const API_BASE = getAPI_BASE();
   const url = `${API_BASE}/api/blog/posts/${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-  // Public endpoint
-  const response = await makeRequest(url, {}, true);
+  // Send auth when logged in so workspace can list drafts/archived; anonymous callers still get published-only (no token).
+  const response = await makeRequest(url, {});
   return response.json();
 }
 

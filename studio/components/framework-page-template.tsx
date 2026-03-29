@@ -1,32 +1,47 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import { PageHero } from "@/components/page-hero";
 import { PageLayout } from "@/components/page-layout";
 import { Button } from "@/components/ui/button";
 import type { FrameworkContent, FrameworkSection } from "@/lib/frameworks-data";
+import { useFrameworkPageContent } from "@/lib/i18n/use-footer-linked-page-content";
+import { PUBLIC_PAGES_EN } from "@/lib/i18n/public-pages-en";
 
 const sectionStyles = {
   bullets: "py-16 px-4 border-b",
   table: "py-16 px-4 border-b",
   subsections: "py-16 px-4 border-b",
 };
+const FLP_EN = PUBLIC_PAGES_EN.footerLinkedPages;
 
 export function FrameworkPageTemplate({ content }: { content: FrameworkContent }) {
+  const { t } = useTranslation();
+  const [hydrated, setHydrated] = useState(false);
+  const tr = (key: string, fallback: string) => (hydrated ? t(key) : fallback);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  const page = useFrameworkPageContent(content);
+
   return (
     <PageLayout>
       <PageHero
-        badge="Compliance Frameworks"
-        title={content.title}
-        subtitle={content.subtitle}
+        badge={tr("footerLinkedPages.frameworksBadge", FLP_EN.frameworksBadge)}
+        title={page.title}
+        subtitle={page.subtitle}
       />
 
       {/* Intro */}
       <section className="pt-16 mt-12 py-12 px-4 border-b" style={{ background: "var(--rd-bg-white)", borderColor: "var(--rd-border-light)" }}>
         <div className="max-w-3xl mx-auto">
-          {content.intro.map((p, i) => (
-            <p key={i} className={`text-base leading-relaxed ${i < content.intro.length - 1 ? "mb-4" : ""}`} style={{ color: "var(--rd-text-secondary)" }}>
+          {page.intro.map((p, i) => (
+            <p key={i} className={`text-base leading-relaxed ${i < page.intro.length - 1 ? "mb-4" : ""}`} style={{ color: "var(--rd-text-secondary)" }}>
               {p}
             </p>
           ))}
@@ -34,7 +49,7 @@ export function FrameworkPageTemplate({ content }: { content: FrameworkContent }
       </section>
 
       {/* Sections */}
-      {content.sections.map((section, idx) => (
+      {page.sections.map((section, idx) => (
         <SectionBlock key={idx} section={section} idx={idx} />
       ))}
 
@@ -42,14 +57,16 @@ export function FrameworkPageTemplate({ content }: { content: FrameworkContent }
       <section className="py-16 px-4 text-white" style={{ background: "linear-gradient(160deg, var(--rd-blue-700), var(--rd-blue-600), var(--rd-blue-500))" }}>
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ fontFamily: "var(--rd-font-heading)" }}>
-            Ready to simplify {content.title} compliance?
+            {hydrated
+              ? t("footerLinkedPages.ctaFrameworkTitle", { title: page.title })
+              : FLP_EN.ctaFrameworkTitle.replace("{{title}}", page.title)}
           </h2>
           <p className="text-lg text-white/90 mb-8">
-            See how Opticini helps teams manage controls, evidence, and audit readiness.
+            {tr("footerLinkedPages.ctaFrameworkSubtitle", FLP_EN.ctaFrameworkSubtitle)}
           </p>
           <Button asChild size="lg" className="bg-white rounded-lg font-semibold hover:bg-white/95" style={{ color: "var(--rd-blue-700)" }}>
             <Link href="/request-demo">
-              Request Demo
+              {tr("footerLinkedPages.requestDemo", FLP_EN.requestDemo)}
             </Link>
           </Button>
         </div>

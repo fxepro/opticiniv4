@@ -1,5 +1,6 @@
 import { deepMergePublicPages } from "./deep-merge-public-pages"
 import { PUBLIC_PAGES_EN } from "./public-pages-en"
+import { UPGRADE_PAGE_CJK_HE_PATCH_BY_LANG } from "./upgrade-page-i18n-cjk-he"
 
 type UpgradePayload = { upgrade: typeof PUBLIC_PAGES_EN.upgrade }
 
@@ -1308,4 +1309,19 @@ const DA: UpgradePayload = {
       "Vælg den rigtige plan og byg et struktureret, skalerbart compliance-program.",
     seePlatform: "Se platformen",
   }),
+}
+
+/** Per-locale upgrade page trees merged in `buildPublicPagesBundle`. Locales without an entry keep English from `PUBLIC_PAGES_EN`. */
+export const UPGRADE_PAGE_PATCH_BY_LANG: Record<string, UpgradePayload> = {
+  en: EN,
+  es: ES,
+  fr: FR,
+  de: DE,
+  it: IT,
+  pt: PT,
+  ru: RU,
+  sv: SV,
+  no: NO,
+  da: DA,
+  ...UPGRADE_PAGE_CJK_HE_PATCH_BY_LANG,
 }

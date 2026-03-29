@@ -15,13 +15,22 @@ import { RISK_PAGE_PATCH_BY_LANG } from "./features/risk-page-i18n"
 import { CONTACT_SALES_PAGE_PATCH_BY_LANG } from "./contact-sales-page-i18n"
 import { REQUEST_DEMO_PAGE_PATCH_BY_LANG } from "./request-demo-page-i18n"
 import { PRIVACY_PAGE_PATCH_BY_LANG } from "./privacy-page-i18n"
+import { COOKIES_PAGE_PATCH_BY_LANG } from "./cookies-page-i18n"
 import { TERMS_PAGE_PATCH_BY_LANG } from "./terms-page-i18n"
 import { ABOUT_PAGE_PATCH_BY_LANG } from "./about-page-i18n"
 import { BLOG_PAGE_PATCH_BY_LANG } from "./blog-page-i18n"
 import { CONSULT_PAGE_PATCH_BY_LANG } from "./consult-page-i18n"
 import { WORKSPACE_LOGIN_PAGE_PATCH_BY_LANG } from "./workspace-login-page-i18n"
+import { UPGRADE_PAGE_PATCH_BY_LANG } from "./upgrade-page-i18n"
+import { FOOTER_LINKED_PAGES_PATCH_BY_LANG } from "./footer-linked-pages-i18n"
+import { PARTNERSHIPS_PAGES_PATCH_BY_LANG } from "./partnerships-pages-i18n"
+import { VERTICALS_PAGES_PATCH_BY_LANG } from "./verticals-pages-i18n"
+import { FRAMEWORKS_PAGES_PATCH_BY_LANG } from "./frameworks-pages-i18n"
 import { PUBLIC_PAGES_SPARSE_BY_LANG } from "./public-pages-locale-overlays"
 import { PUBLIC_PAGES_EN } from "./public-pages-en"
+import { PARTNERSHIPS } from "../partnerships-data"
+import { VERTICALS } from "../verticals-data"
+import { FRAMEWORKS } from "../frameworks-data"
 
 function shallowMergeTop(
   base: Record<string, unknown>,
@@ -66,6 +75,11 @@ export function buildPublicPagesBundle(
     landingOverlays.en
 
   let bundle = clonePublicPages(CANONICAL_EN)
+  bundle = deepMergePublicPages(bundle, {
+    partnershipsPages: PARTNERSHIPS,
+    verticalsPages: VERTICALS,
+    frameworksPages: FRAMEWORKS,
+  } as Record<string, unknown>)
   bundle = deepMergePublicPages(
     bundle,
     derivePublicPagesFromLanding(landing) as Record<string, unknown>
@@ -126,6 +140,10 @@ export function buildPublicPagesBundle(
   if (privacyPatch) {
     bundle = deepMergePublicPages(bundle, privacyPatch as Record<string, unknown>)
   }
+  const cookiesPatch = COOKIES_PAGE_PATCH_BY_LANG[primary]
+  if (cookiesPatch) {
+    bundle = deepMergePublicPages(bundle, cookiesPatch as Record<string, unknown>)
+  }
   const termsPatch = TERMS_PAGE_PATCH_BY_LANG[primary]
   if (termsPatch) {
     bundle = deepMergePublicPages(bundle, termsPatch as Record<string, unknown>)
@@ -145,6 +163,26 @@ export function buildPublicPagesBundle(
   const workspaceLoginPatch = WORKSPACE_LOGIN_PAGE_PATCH_BY_LANG[primary]
   if (workspaceLoginPatch) {
     bundle = deepMergePublicPages(bundle, workspaceLoginPatch as Record<string, unknown>)
+  }
+  const upgradePatch = UPGRADE_PAGE_PATCH_BY_LANG[primary]
+  if (upgradePatch) {
+    bundle = deepMergePublicPages(bundle, upgradePatch as Record<string, unknown>)
+  }
+  const footerLinkedPagesPatch = FOOTER_LINKED_PAGES_PATCH_BY_LANG[primary]
+  if (footerLinkedPagesPatch) {
+    bundle = deepMergePublicPages(bundle, footerLinkedPagesPatch as Record<string, unknown>)
+  }
+  const partnershipsPagesPatch = PARTNERSHIPS_PAGES_PATCH_BY_LANG[primary]
+  if (partnershipsPagesPatch) {
+    bundle = deepMergePublicPages(bundle, partnershipsPagesPatch as Record<string, unknown>)
+  }
+  const verticalsPagesPatch = VERTICALS_PAGES_PATCH_BY_LANG[primary]
+  if (verticalsPagesPatch) {
+    bundle = deepMergePublicPages(bundle, verticalsPagesPatch as Record<string, unknown>)
+  }
+  const frameworksPagesPatch = FRAMEWORKS_PAGES_PATCH_BY_LANG[primary]
+  if (frameworksPagesPatch) {
+    bundle = deepMergePublicPages(bundle, frameworksPagesPatch as Record<string, unknown>)
   }
   return bundle
 }
